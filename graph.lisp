@@ -68,16 +68,25 @@ Returns a new path for each possible next step."
 (defmethod cycles ((graph graph))
   (cycle- graph nil nil nil))
 
+(defun cycle-connected-components (graph &optional (cycles (cycles graph)))
+  "Return the groups nodes of GRAPH are connected by cycles."
+  (mapcar
+   (lambda (cc) (remove-duplicates cc :test #'tree-equal))
+   (reduce (lambda (acc cycle)
+             (let ((has (curry #'intersection cycle)))
+               (cons (apply #'append (cons cycle (remove-if-not has acc)))
+                     (remove-if has acc))))
+           cycles :initial-value nil)))
+
 
 ;;; tests
 #+testing
 (progn
-  (defvar *little-graph* (make-instance 'graph
-                           :nodes '(:foo :bar :baz :qux)
-                           :edges '(((:nodes . (0 1)))
-                                    ((:nodes . (0 2)))
-                                    ((:nodes . (1 2)))
-                                    ((:nodes . (1 3))))))
+  (defvar *g* (make-instance 'graph
+                :nodes '(:foo :bar :baz :qux)
+                :edges '(((:nodes . (0 1)))
+                         ((:nodes . (0 2)))
+                         ((:nodes . (1 2))))))
 
   (defvar *graph*
     (make-instance 'graph
@@ -97,4 +106,26 @@ Returns a new path for each possible next step."
                   '((C D E F B) (D E C))))
 
   ;; need to test not duplicating cycles
+
+
+  (is (tree-equal (cycle-connected-components *graph*)
+                  '((D E C C D E F B))))
+
+  (is (tree-equal (cycle-connected-components *g2*)
+                  '((:BAR :BAZ :FOO) (:ZAP :ZAF :QUX) (:FIZ))))
+
   )
+
+
+;;; utility
+(defun aget (item alist) (cdr (assoc item alist)))
+
+(defun partition (func list &aux results)
+  (loop :for el :in list :do
+     (let ((val (funcall func el)))
+       (if (assoc val results)
+           (push el (cdr (assoc val results)))
+           (push (list val el) results))))
+  results)
+
+(partition #'evenp (loop for i upto 8 collect i))
