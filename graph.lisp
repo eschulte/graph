@@ -45,13 +45,13 @@ Returns a new path for each possible next step."
   "Helper function for recursive portion of `cycles'."
   ;; take a step from every path
   (loop :for path :in (mapcan (curry #'dir-step graph) front) :do
-     (push (car path) seen)
      ;; detect cycles
      (let ((cycle-point (position (car path) (cdr path))))
        ;; remove cycles from the front and collection them
        (if cycle-point
            (push (reverse (subseq path 0 (1+ cycle-point))) cycles)
-           (push path next-front))))
+           (unless (member (car path) seen) (push path next-front))))
+     (push (car path) seen))
   ;; recurse
   (if next-front
       ;; continue with front
@@ -94,4 +94,7 @@ Returns a new path for each possible next step."
                   '(C F)))
 
   (is (tree-equal (cycles *graph*)
-                  '((C D E F B) (D E C)))))
+                  '((C D E F B) (D E C))))
+
+  ;; need to test not duplicating cycles
+  )
