@@ -48,7 +48,7 @@
   (setf (gethash it (ghash graph node-or-edge)) elements))
 
 (defmethod add-node ((graph graph) node &optional elements)
-    (add-it graph :node node elements))
+  (add-it graph :node node elements))
 
 (defmethod add-edge ((graph graph) edge &optional elements)
   (add-it graph :edge edge elements))
@@ -67,13 +67,13 @@
 
 (defun make-graph (&key (nodes nil) (edges nil) (test #'eql))
   (let ((g (make-graph :test test)))
-    (mapc (lambda (node) (add-node g (car node) (cdr node))) nodes)
+    (mapc (lambda (node) (add-node g (car node) (cdr node)))
+          (mapcar (lambda (node) (if (listp node) node (list node))) nodes))
     (mapc (lambda (edge) (add-edge g (car edge) (cdr edge))) edges)
     g))
 
 
 ;;; Complex graph methods
-
 (defmethod merge-nodes ((graph graph) node1 node2 val)
   "Combine NODE1 and NODE2 in GRAPH into new node VAL.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
@@ -166,54 +166,3 @@ Returns a new path for each possible next step."
   "Return the shortest in-GRAPH path from any member of A any member of B.
 Dijkstra's algorithm."
   (shortest-path- graph (mapcar #'list a) b nil))
-
-
-;;; tests
-#+testing
-(progn
-  (defvar *g* (make-instance 'graph
-                :nodes '(:foo :bar :baz :qux)
-                :edges '(((:nodes . (0 1)))
-                         ((:nodes . (0 2)))
-                         ((:nodes . (1 2))))))
-
-  (defvar *graph*
-    (make-instance 'graph
-      :nodes '(a b c d e f)
-      :edges '(((:nodes 0 1))
-               ((:nodes 1 2))
-               ((:nodes 2 3))
-               ((:nodes 3 4))
-               ((:nodes 4 2))
-               ((:nodes 4 5))
-               ((:nodes 5 1)))))
-
-  (is (tree-equal (dir-neighbors *graph* 'e)
-                  '(C F)))
-
-  (is (tree-equal (cycles *graph*)
-                  '((C D E F B) (D E C))))
-
-  ;; need to test not duplicating cycles
-
-
-  (is (tree-equal (cycle-connected-components *graph*)
-                  '((D E C C D E F B))))
-
-  (is (tree-equal (cycle-connected-components *g2*)
-                  '((:BAR :BAZ :FOO) (:ZAP :ZAF :QUX) (:FIZ))))
-
-  (is (tree-equal (shortest-path *g* '(:foo) '(:baz :qux))
-                  '(:FOO :BAZ))))
-
-
-;;; utility
-(defun aget (item alist) (cdr (assoc item alist)))
-
-(defun partition (func list &aux results)
-  (loop :for el :in list :do
-     (let ((val (funcall func el)))
-       (if (assoc val results)
-           (push el (cdr (assoc val results)))
-           (push (list val el) results))))
-  results)
