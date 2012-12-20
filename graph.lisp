@@ -4,12 +4,81 @@
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
+;;; Commentary
+
+;; Graphs are composed of two hash tables, one for nodes and one for
+;; edges.  Each node may hold an arbitrary value.  Each edge will be a
+;; list of nodes.  When a node is stored in the node hash table, its
+;; value will be a list of the edges holding the node.  Similarly the
+;; value of every edge will be a list of the nodes the edge contains.
+
+;; What if we only used 1 hash to hold all nodes and edges..., and
+;; what if nodes could hold other nodes in their edge list, and edges
+;; could hold other edges in their node list, what sort of structure
+;; would this be?  A useful generalization of a graph?
+
 ;;; Code:
 (in-package :modularize)
 
 (defclass graph ()
-  ((nodes :initarg :nodes :accessor nodes :initform nil)
-   (edges :initarg :edges :accessor edges :initform nil)))
+  ((test   :initarg :test   :accessor test   :initform #'eql)
+   (node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
+   (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table))))
+
+(defun gother (node-or-edge) (case node-or-edge (:edge :node) (:node :edge)))
+(defmethod ghash ((graph graph) node-or-edge)
+  (case node-or-edge
+    (:node (node-h graph))
+    (:edge (edge-h graph))))
+
+(defmethod has-it-p ((graph graph) node-or-edge it)
+  (multiple-value-bind (val contains) (gethash it (ghash graph node-or-edge))
+    (declare (ignorable val)) contains))
+
+(defmethod has-node-p ((graph graph) node)
+  (has-it-p graph :node node))
+
+(defmethod has-edge-p ((graph graph) edge)
+  (has-it-p graph :edge edge))
+
+(defmethod add-it ((graph graph) node-or-edge it &optional elements)
+  (mapcar (lambda (el) (pushnew it (gethash el (ghash graph (gother node-or-edge)))
+                           :test (test graph)))
+          elements)
+  (setf (gethash it (ghash graph node-or-edge)) elements))
+
+(defmethod add-node ((graph graph) node &optional elements)
+    (add-it graph :node node elements))
+
+(defmethod add-edge ((graph graph) edge &optional elements)
+  (add-it graph :edge edge elements))
+
+(defmethod elements ((graph graph) node-or-edge it)
+  (multiple-value-bind (edges hasp) (gethash it (ghash graph node-or-edge))
+    (if hasp
+        edges
+        (error 'missing-node "~s doesn't have ~a ~s" graph node-or-edge it))))
+
+(defmethod node-edges ((graph graph) node)
+  (elements graph :node node))
+
+(defmethod edge-nodes ((graph graph) edge)
+  (elements graph :edge edge))
+
+(defun make-graph (&key (nodes nil) (edges nil) (test #'eql))
+  (let ((g (make-graph :test test)))
+    (mapc (lambda (node) (add-node g (car node) (cdr node))) nodes)
+    (mapc (lambda (edge) (add-edge g (car edge) (cdr edge))) edges)
+    g))
+
+
+;;; Complex graph methods
+
+(defmethod merge-nodes ((graph graph) node1 node2 val)
+  "Combine NODE1 and NODE2 in GRAPH into new node VAL.
+All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
+holding VALUE."
+  (edges ))
 
 (defmethod neighbors ((graph graph) node)
   (let ((id (position node (nodes graph))))
