@@ -85,24 +85,18 @@
 
 
 ;;; Complex graph methods
-(defmethod merge-nodes ((graph graph) node1 node2 val)
-  "Combine NODE1 and NODE2 in GRAPH into new node VAL.
-All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
-holding VALUE."
-  (edges ))
+;; (defmethod merge-nodes ((graph graph) node1 node2 val)
+;;   "Combine NODE1 and NODE2 in GRAPH into new node VAL.
+;; All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
+;; holding VALUE."
+;;   (edges ))
 
 (defmethod neighbors ((graph graph) node)
-  )
+  (apply #'append (node-edges graph node)))
 
 (defmethod dir-neighbors ((graph graph) node)
-  (let ((id (position node (nodes graph))))
-    (mapcar (lambda (id) (nth id (nodes graph)))
-            (apply #'append
-                   (mapcar (compose
-                            #'cdr ;; remove the original element
-                            (curry #'member id) ;; only after orig in an edge
-                            (curry #'aget :nodes))
-                           (edges graph))))))
+  (let ((edges (node-edges graph node)))
+    (mapcan (compose #'cdr (curry #'member node)) (copy-tree edges))))
 
 (defun dir-step (graph path)
   "Take all steps forward from a path through a graph.

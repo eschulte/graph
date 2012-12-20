@@ -59,12 +59,22 @@
     (setf (edge-value *graph* '(:foo :bar)) 22)
     (is (= 22 (edge-value *graph* '(:foo :bar))))))
 
+(deftest neighbors-of-c-on-graph ()
+  (with-fixture graph
+    (is (every (lambda (it) (member it (neighbors *graph* 'b)))
+               '(a b c)))))
+
 (deftest dir-neighbors-on-graph ()
   (with-fixture graph
-    (is (tree-equal (dir-neighbors *graph* 'e)
-                    '(C F)))))
+    (is (set-equal (dir-neighbors *graph* 'e)
+                   '(C F)))))
 
-(deftest cycles ()
+(deftest dis-step-on-graph-from-e ()
+  (with-fixture graph
+    (is (set-equal (dir-step *graph* '(e))
+                   '((c e) (f e)) :test #'tree-equal))))
+
+(deftest cycles-of-graph ()
   (with-fixture graph
     (is (tree-equal (cycles *graph*)
                     '((C D E F B) (D E C))))))
@@ -79,7 +89,7 @@
     (is (tree-equal (cycle-connected-components *g2*)
                     '((:BAR :BAZ :FOO) (:ZAP :ZAF :QUX) (:FIZ))))))
 
-(deftest shortest-path ()
+(deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture small-graph
     (is (tree-equal (shortest-path *g* '(:foo) '(:baz :qux))
                     '(:FOO :BAZ)))))
