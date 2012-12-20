@@ -15,25 +15,26 @@
   "Variable for use in graph tests.")
 
 (defixture small-graph
-    (:setup (setf *graph*
-                  (make-graph
-                   :nodes '(:foo :bar :baz :qux)
-                   :edges '((nil :foo :bar)
-                            (nil :foo :baz)
-                            (nil :bar :baz)))))
+  (:setup (setf *graph*
+                (make-graph
+                 :nodes '(:foo :bar :baz :qux)
+                 :edges '((nil :foo :bar)
+                          (nil :foo :baz)
+                          (nil :bar :baz)))))
   (:teardown (setf *graph* nil)))
 
 (defixture graph
-    (:setup (setf *graph*
-                  (make-graph
-                   :nodes '(a b c d e f)
-                   :edges '((:nodes a b)
-                            (:nodes b c)
-                            (:nodes c d)
-                            (:nodes d e)
-                            (:nodes e c)
-                            (:nodes e f)
-                            (:nodes f b))))))
+  (:setup (setf *graph*
+                (make-graph
+                 :nodes '(a b c d e f)
+                 :edges '((:nodes a b)
+                          (:nodes b c)
+                          (:nodes c d)
+                          (:nodes d e)
+                          (:nodes e c)
+                          (:nodes e f)
+                          (:nodes f b)))))
+  (:teardown (setf *graph* nil)))
 
 
 ;;; Tests
