@@ -6,11 +6,15 @@
 
 ;;; Commentary
 
-;; Graphs are composed of two hash tables, one for nodes and one for
-;; edges.  Each node may hold an arbitrary value.  Each edge will be a
-;; list of nodes.  When a node is stored in the node hash table, its
-;; value will be a list of the edges holding the node.  Similarly the
-;; value of every edge will be a list of the nodes the edge contains.
+;; Graphs are composed of two hash tables, nodes and edges.
+;;
+;; node hash
+;;  key -- node value
+;;  val -- edge list
+;;
+;; edge hash
+;;  key -- node list
+;;  val -- edge value
 
 ;; What if we only used 1 hash to hold all nodes and edges..., and
 ;; what if nodes could hold other nodes in their edge list, and edges
@@ -23,17 +27,22 @@
 (defclass graph ()
   ((test   :initarg :test   :accessor test   :initform #'eql)
    (node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
-   (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table))))
+   (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table :test 'equalp))))
 
-(defun gother (node-or-edge) (case node-or-edge (:edge :node) (:node :edge)))
+(defmethod edges ((graph graph) &aux return)
+  (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
+
+(defmethod nodes ((graph graph))
+  (loop :for key :being :each :hash-key :of (node-h graph) :collect key))
+
 (defmethod ghash ((graph graph) node-or-edge)
   (case node-or-edge
     (:node (node-h graph))
     (:edge (edge-h graph))))
 
 (defmethod has-it-p ((graph graph) node-or-edge it)
-  (multiple-value-bind (val contains) (gethash it (ghash graph node-or-edge))
-    (declare (ignorable val)) contains))
+  (multiple-value-bind (val included) (gethash it (ghash graph node-or-edge))
+    (declare (ignorable val)) included))
 
 (defmethod has-node-p ((graph graph) node)
   (has-it-p graph :node node))
@@ -41,35 +50,37 @@
 (defmethod has-edge-p ((graph graph) edge)
   (has-it-p graph :edge edge))
 
-(defmethod add-it ((graph graph) node-or-edge it &optional elements)
-  (mapcar (lambda (el) (pushnew it (gethash el (ghash graph (gother node-or-edge)))
-                           :test (test graph)))
-          elements)
-  (setf (gethash it (ghash graph node-or-edge)) elements))
+(defmethod add-node ((graph graph) node)
+  (unless (has-node-p graph node)
+    (setf (gethash node (node-h graph)) nil)))
 
-(defmethod add-node ((graph graph) node &optional elements)
-  (add-it graph :node node elements))
-
-(defmethod add-edge ((graph graph) edge &optional elements)
-  (add-it graph :edge edge elements))
-
-(defmethod elements ((graph graph) node-or-edge it)
-  (multiple-value-bind (edges hasp) (gethash it (ghash graph node-or-edge))
-    (if hasp
-        edges
-        (error 'missing-node "~s doesn't have ~a ~s" graph node-or-edge it))))
+(defmethod add-edge ((graph graph) edge &optional value)
+  (mapc (lambda (node)
+          (add-node graph node)
+          (pushnew edge (gethash node (node-h graph))))
+        edge)
+  (setf (gethash edge (edge-h graph)) value))
 
 (defmethod node-edges ((graph graph) node)
-  (elements graph :node node))
+  (multiple-value-bind (edges included) (gethash node (node-h graph))
+    (unless included (error 'missing-node "~S doesn't include ~S" graph node))
+    edges))
 
-(defmethod edge-nodes ((graph graph) edge)
-  (elements graph :edge edge))
+(defmethod (setf node-edges) (new (graph graph) node)
+  (error 'todo "implement `node-edges'"))
+
+(defmethod edge-value ((graph graph) edge)
+  (multiple-value-bind (value included) (gethash edge (edge-h graph))
+    (unless included (error 'missing-edge "~S doesn't include ~S" graph edge))
+    value))
+
+(defmethod (setf edge-value) (new (graph graph) edge)
+  (setf (gethash edge (edge-h graph)) new))
 
 (defun make-graph (&key (nodes nil) (edges nil) (test #'eql))
-  (let ((g (make-graph :test test)))
-    (mapc (lambda (node) (add-node g (car node) (cdr node)))
-          (mapcar (lambda (node) (if (listp node) node (list node))) nodes))
-    (mapc (lambda (edge) (add-edge g (car edge) (cdr edge))) edges)
+  (let ((g (make-instance 'graph :test test)))
+    (mapc (curry #'add-node g) nodes)
+    (mapc (curry #'add-edge g) edges)
     g))
 
 
@@ -81,12 +92,7 @@ holding VALUE."
   (edges ))
 
 (defmethod neighbors ((graph graph) node)
-  (let ((id (position node (nodes graph))))
-    (mapcar (lambda (id) (nth id (nodes graph)))
-            (apply #'append
-                   (remove-if-not
-                    (curry #'member id)
-                    (mapcar (curry #'aget :nodes) (edges graph)))))))
+  )
 
 (defmethod dir-neighbors ((graph graph) node)
   (let ((id (position node (nodes graph))))

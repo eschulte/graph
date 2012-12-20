@@ -18,32 +18,48 @@
   (:setup (setf *graph*
                 (make-graph
                  :nodes '(:foo :bar :baz :qux)
-                 :edges '((nil :foo :bar)
-                          (nil :foo :baz)
-                          (nil :bar :baz)))))
+                 :edges '((:foo :bar)
+                          (:foo :baz)
+                          (:bar :baz)))))
   (:teardown (setf *graph* nil)))
 
 (defixture graph
   (:setup (setf *graph*
                 (make-graph
                  :nodes '(a b c d e f)
-                 :edges '((:nodes a b)
-                          (:nodes b c)
-                          (:nodes c d)
-                          (:nodes d e)
-                          (:nodes e c)
-                          (:nodes e f)
-                          (:nodes f b)))))
+                 :edges '((a b)
+                          (b c)
+                          (c d)
+                          (d e)
+                          (e c)
+                          (e f)
+                          (f b)))))
   (:teardown (setf *graph* nil)))
 
 
 ;;; Tests
-(deftest simple-make-test ()
-  (with-fixture simple-graph
-    (is (= 4 (length (edges *graph*))))
-    (is (= 3 (length (nodes *graph*))))))
+(deftest make-graph-sets-nodes ()
+  (with-fixture small-graph
+    (is (tree-equal (nodes *graph*)
+                    '(:FOO :BAR :BAZ :QUX)))))
 
-(deftest dir-neighbors ()
+(deftest make-graph-sets-edges ()
+  (with-fixture small-graph
+    (is (tree-equal (edges *graph*)
+                    '((:FOO :BAR) (:FOO :BAZ) (:BAR :BAZ))))))
+
+(deftest node-edge-for-foo ()
+  (with-fixture small-graph
+    (is (tree-equal (node-edges *graph* :foo)
+                    '((:FOO :BAZ) (:FOO :BAR))))))
+
+(deftest edge-value-for-foo-bar ()
+  (with-fixture small-graph
+    (is (null (edge-value *graph* '(:foo :bar))))
+    (setf (edge-value *graph* '(:foo :bar)) 22)
+    (is (= 22 (edge-value *graph* '(:foo :bar))))))
+
+(deftest dir-neighbors-on-graph ()
   (with-fixture graph
     (is (tree-equal (dir-neighbors *graph* 'e)
                     '(C F)))))
