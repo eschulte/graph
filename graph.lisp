@@ -148,5 +148,3 @@ Dijkstra's algorithm."
            (push el (cdr (assoc val results)))
            (push (list val el) results))))
   results)
-
-(partition #'evenp (loop for i upto 8 collect i))
