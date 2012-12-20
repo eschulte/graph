@@ -2,7 +2,7 @@
   :description "simple library for building and manipulating graphs"
   :version "0.0.0"
   :licence "GPL V3"
-  :depends-on (alexandria metabang-bind json)
+  :depends-on (alexandria metabang-bind cl-json)
   :components
   ((:static-file "COPYING")
    (:file "package")
