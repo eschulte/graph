@@ -78,6 +78,26 @@ Returns a new path for each possible next step."
                      (remove-if has acc))))
            cycles :initial-value nil)))
 
+(defun shortest-path- (graph paths dest seen)
+  (catch 'done
+    (dolist (path paths)
+      (when (member (car path) dest) (throw 'done (reverse path))))
+    (let ((next (mapcan
+                 (lambda (path)
+                   (mapcar (lambda (n)
+                             (unless (member n seen)
+                               (push n seen)
+                               (cons n path)))
+                           (neighbors graph (car path))))
+                 paths)))
+      (unless (null next)
+        (shortest-path- graph next dest seen)))))
+
+(defmethod shortest-path ((graph graph) a b)
+  "Return the shortest in-GRAPH path from any member of A any member of B.
+Dijkstra's algorithm."
+  (shortest-path- graph (mapcar #'list a) b nil))
+
 
 ;;; tests
 #+testing
@@ -114,7 +134,8 @@ Returns a new path for each possible next step."
   (is (tree-equal (cycle-connected-components *g2*)
                   '((:BAR :BAZ :FOO) (:ZAP :ZAF :QUX) (:FIZ))))
 
-  )
+  (is (tree-equal (shortest-path *g* '(:foo) '(:baz :qux))
+                  '(:FOO :BAZ))))
 
 
 ;;; utility
