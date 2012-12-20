@@ -18,7 +18,7 @@
 ;; would this be?  A useful generalization of a graph?
 
 ;;; Code:
-(in-package :modularize)
+(in-package :graph)
 
 (defclass graph ()
   ((test   :initarg :test   :accessor test   :initform #'eql)
