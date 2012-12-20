@@ -103,13 +103,6 @@
 Returns a new path for each possible next step."
   (mapcar (lambda (next) (cons next path)) (dir-neighbors graph (car path))))
 
-(defun cycle (path)
-  "Return any cycle that may exist in path."
-  (loop :for i :below (length path) :do
-     (let* ((rest (subseq path (1+ i)))
-            (pos  (position (nth i path) rest)))
-       (when pos (return (cons (nth i path) (subseq rest 0 pos)))))))
-
 (defun cycle- (graph front seen cycles &aux next-front)
   "Helper function for recursive portion of `cycles'."
   ;; take a step from every path
