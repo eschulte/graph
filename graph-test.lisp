@@ -23,6 +23,19 @@
                           (:bar :baz)))))
   (:teardown (setf *graph* nil)))
 
+(defixture less-small-graph
+  (:setup (setf *graph*
+                (make-graph
+                 :nodes '(:foo :bar :baz :qux :zap :zaf :fiz)
+                 :edges '((:foo :bar)
+                          (:bar :baz)
+                          (:baz :foo)
+                          (:zap :zaf)
+                          (:zaf :qux)
+                          (:qux :zap)
+                          (:fiz :fiz)))))
+  (:teardown (setf *graph* nil)))
+
 (defixture graph
   (:setup (setf *graph*
                 (make-graph
@@ -81,15 +94,16 @@
 
 (deftest cycle-connected-components-1 ()
   (with-fixture graph
-    (is (tree-equal (cycle-connected-components *graph*)
-                    '((D E C C D E F B))))))
+    (is (set-equal (cycle-connected-components *graph*)
+                   '((C D E F B)) :test #'set-equal))))
 
 (deftest cycle-connected-components-2 ()
-  (with-fixture graph
-    (is (tree-equal (cycle-connected-components *g2*)
-                    '((:BAR :BAZ :FOO) (:ZAP :ZAF :QUX) (:FIZ))))))
+  (with-fixture less-small-graph
+    (is (set-equal (cycle-connected-components *graph*)
+                   '((:BAR :BAZ :FOO) (:ZAP :ZAF :QUX) (:FIZ))
+                   :test #'set-equal))))
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()
-  (with-fixture small-graph
-    (is (tree-equal (shortest-path *g* '(:foo) '(:baz :qux))
+  (with-fixture less-small-graph
+    (is (tree-equal (shortest-path *graph* '(:foo) '(:baz :qux))
                     '(:FOO :BAZ)))))
