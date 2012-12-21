@@ -30,9 +30,11 @@
    (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table :test 'equalp))))
 
 (defmethod edges ((graph graph) &aux return)
+  "Return a list of the edges in GRAPH."
   (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
 
 (defmethod nodes ((graph graph))
+  "Return a list of the nodes in GRAPH."
   (loop :for key :being :each :hash-key :of (node-h graph) :collect key))
 
 (defmethod ghash ((graph graph) node-or-edge)
@@ -45,16 +47,20 @@
     (declare (ignorable val)) included))
 
 (defmethod has-node-p ((graph graph) node)
-  (has-it-p graph :node node))
+  "Return `true' if GRAPH has node NODE."
+    (has-it-p graph :node node))
 
 (defmethod has-edge-p ((graph graph) edge)
+  "Return `true' if GRAPH has edge EDGE."
   (has-it-p graph :edge edge))
 
 (defmethod add-node ((graph graph) node)
+  "Add NODE to GRAPH."
   (unless (has-node-p graph node)
     (setf (gethash node (node-h graph)) nil)))
 
 (defmethod add-edge ((graph graph) edge &optional value)
+  "Add EDGE to GRAPH with optional VALUE."
   (mapc (lambda (node)
           (add-node graph node)
           (pushnew edge (gethash node (node-h graph))))
@@ -62,22 +68,27 @@
   (setf (gethash edge (edge-h graph)) value))
 
 (defmethod node-edges ((graph graph) node)
+  "Return the value of NODE in GRAPH."
   (multiple-value-bind (edges included) (gethash node (node-h graph))
     (unless included (error 'missing-node "~S doesn't include ~S" graph node))
     edges))
 
 (defmethod (setf node-edges) (new (graph graph) node)
+  "Set the value of NODE in GRAPH to NEW."
   (error 'todo "implement `node-edges'"))
 
 (defmethod edge-value ((graph graph) edge)
+  "Return the value of EDGE in GRAPH."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
     (unless included (error 'missing-edge "~S doesn't include ~S" graph edge))
     value))
 
 (defmethod (setf edge-value) (new (graph graph) edge)
+  "Set the value of EDGE in GRAPH to NEW."
   (setf (gethash edge (edge-h graph)) new))
 
 (defun make-graph (&key (nodes nil) (edges nil) (test #'eql))
+  "Make a graph."
   (let ((g (make-instance 'graph :test test)))
     (mapc (curry #'add-node g) nodes)
     (mapc (curry #'add-edge g) edges)
@@ -92,14 +103,16 @@
 ;;   (edges ))
 
 (defmethod neighbors ((graph graph) node)
+  "Return all nodes which share an edge with NODE in GRAPH."
   (apply #'append (node-edges graph node)))
 
 (defmethod dir-neighbors ((graph graph) node)
+  "Return all nodes after NODE in GRAPH along directed edges."
   (let ((edges (node-edges graph node)))
     (mapcan (compose #'cdr (curry #'member node)) (copy-tree edges))))
 
-(defun dir-step (graph path)
-  "Take all steps forward from a path through a graph.
+(defmethod dir-step ((graph graph) path)
+  "Take all directed steps forward from PATH through GRAPH.
 Returns a new path for each possible next step."
   (mapcar (lambda (next) (cons next path)) (dir-neighbors graph (car path))))
 
@@ -128,10 +141,12 @@ Returns a new path for each possible next step."
             cycles))))
 
 (defmethod cycles ((graph graph))
+  "Return all directed `cycles' in GRAPH."
   (cycle- graph nil nil nil))
 
-(defun cycle-connected-components (graph &optional (cycles (cycles graph)))
-  "Return the groups nodes of GRAPH are connected by cycles."
+(defmethod cycle-connected-components
+    ((graph graph) &optional (cycles (cycles graph)))
+  "Return the groups of nodes of GRAPH which are connected by cycles."
   (mapcar
    (lambda (cc) (remove-duplicates cc :test #'tree-equal))
    (reduce (lambda (acc cycle)
