@@ -1,2 +1,3 @@
 *.fasl
 stuff
+scratch.lisp
