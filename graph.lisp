@@ -29,7 +29,7 @@
    (node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
    (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table :test 'equalp))))
 
-(defmethod edges ((graph graph) &aux return)
+(defmethod edges ((graph graph))
   "Return a list of the edges in GRAPH."
   (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
 
@@ -73,15 +73,33 @@
     (unless included (error 'missing-node "~S doesn't include ~S" graph node))
     edges))
 
+(defmethod delete-node ((graph graph) node)
+  "Delete NODE from GRAPH.
+Delete and return the old edges of NODE in GRAPH."
+  (prog1 (mapc (curry #'delete-edge graph) (node-edges graph node))
+    (remhash node (node-h graph))))
+
 (defmethod (setf node-edges) (new (graph graph) node)
-  "Set the value of NODE in GRAPH to NEW."
-  (error 'todo "implement `node-edges'"))
+  "Set the edges of NODE in GRAPH to NEW.
+Delete and return the old edges of NODE in GRAPH."
+  (prog1 (mapc (curry #'delete-edge graph) (gethash node (node-h graph)))
+    (mapc (curry #'add-edge graph) new)))
 
 (defmethod edge-value ((graph graph) edge)
   "Return the value of EDGE in GRAPH."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
     (unless included (error 'missing-edge "~S doesn't include ~S" graph edge))
     value))
+
+(defmethod delete-edge ((graph graph) edge)
+  "Delete EDGE from GRAPH.
+Return the old value of EDGE."
+  (prog1 (edge-value graph edge)
+    (mapc (lambda (node) (setf (gethash node (node-h graph))
+                          (delete edge (gethash node (node-h graph))
+                                  :test #'equalp)))
+          edge)
+    (remhash edge (edge-h graph))))
 
 (defmethod (setf edge-value) (new (graph graph) edge)
   "Set the value of EDGE in GRAPH to NEW."

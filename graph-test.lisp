@@ -36,7 +36,7 @@
                           (:fiz :fiz)))))
   (:teardown (setf *graph* nil)))
 
-(defixture graph
+(defixture normal-graph
   (:setup (setf *graph*
                 (make-graph
                  :nodes '(a b c d e f)
@@ -66,6 +66,12 @@
     (is (tree-equal (node-edges *graph* :foo)
                     '((:FOO :BAZ) (:FOO :BAR))))))
 
+(deftest delete-an-edge-from-small-graph ()
+  (with-fixture small-graph
+    (is (null (delete-edge *graph* '(:foo :bar))))
+    (is (= 2 (length (edges *graph*))))
+    (is (= 1 (length (node-edges *graph* :foo))))))
+
 (deftest edge-value-for-foo-bar ()
   (with-fixture small-graph
     (is (null (edge-value *graph* '(:foo :bar))))
@@ -73,27 +79,27 @@
     (is (= 22 (edge-value *graph* '(:foo :bar))))))
 
 (deftest neighbors-of-c-on-graph ()
-  (with-fixture graph
+  (with-fixture normal-graph
     (is (every (lambda (it) (member it (neighbors *graph* 'b)))
                '(a b c)))))
 
 (deftest dir-neighbors-on-graph ()
-  (with-fixture graph
+  (with-fixture normal-graph
     (is (set-equal (dir-neighbors *graph* 'e)
                    '(C F)))))
 
 (deftest dis-step-on-graph-from-e ()
-  (with-fixture graph
+  (with-fixture normal-graph
     (is (set-equal (dir-step *graph* '(e))
                    '((c e) (f e)) :test #'tree-equal))))
 
 (deftest cycles-of-graph ()
-  (with-fixture graph
+  (with-fixture normal-graph
     (is (tree-equal (cycles *graph*)
                     '((C D E F B) (D E C))))))
 
 (deftest cycle-connected-components-1 ()
-  (with-fixture graph
+  (with-fixture normal-graph
     (is (set-equal (cycle-connected-components *graph*)
                    '((C D E F B)) :test #'set-equal))))
 
