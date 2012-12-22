@@ -64,7 +64,14 @@
 (deftest node-edge-for-foo ()
   (with-fixture small-graph
     (is (tree-equal (node-edges *graph* :foo)
-                    '((:FOO :BAZ) (:FOO :BAR))))))
+                    '((:FOO :BAZ) (:FOO :BAR))))
+    (is (tree-equal (setf (node-edges *graph* :foo) '((:foo :qux)))
+                    '((:FOO :BAZ) (:FOO :BAR))))
+    (is (tree-equal (node-edges *graph* :foo)
+                    '((:FOO :QUX))))
+    (is (set-equal (edges *graph*)
+                   '((:FOO :QUX) (:BAR :BAZ))
+                   :test #'tree-equal))))
 
 (deftest delete-an-edge-from-small-graph ()
   (with-fixture small-graph
