@@ -213,6 +213,8 @@ Returns a new path for each possible next step."
                      (remove-if has acc))))
            cycles :initial-value nil)))
 
+
+;;; Shortest Path
 (defun shortest-path- (graph paths dest seen)
   (catch 'done
     (dolist (path paths)
@@ -232,3 +234,21 @@ Returns a new path for each possible next step."
   "Return the shortest in-GRAPH path from any member of A any member of B.
 Dijkstra's algorithm."
   (shortest-path- graph (mapcar #'list a) b nil))
+
+
+;;; Node partitions (bipartite etc...)
+(defmethod partition-node ((graph graph) partitions node)
+  (let ((near (unique (remove node (neighbors node)))) done)
+    (loop :for partition :in partitions :do
+       (when (null (intersection near partition))
+         (push node partition) (setf done t) (return)))
+    (if done partitions (cons (list node) partitions))))
+
+(defmethod partition-nodes ((graph graph))
+  (reduce (curry #'partition-node graph) (nodes graph) :initial-value nil))
+
+(defmethod bipartitep ((graph graph))
+  (= 2 (length (partition-nodes graph))))
+
+(defmethod tripartitep ((graph graph))
+  (= 3 (length (partition-nodes graph))))
