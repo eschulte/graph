@@ -114,11 +114,17 @@ Return the old value of EDGE."
 
 
 ;;; Complex graph methods
-;; (defmethod merge-nodes ((graph graph) node1 node2 val)
-;;   "Combine NODE1 and NODE2 in GRAPH into new node VAL.
-;; All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
-;; holding VALUE."
-;;   (edges ))
+
+(defmethod merge-nodes ((graph graph) node1 node2 val)
+  "Combine NODE1 and NODE2 in GRAPH into new node VAL.
+All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
+holding VALUE."
+  (add-node graph val)
+  (mapc (compose (curry #'add-edge graph) (curry #'cons val))
+        (remove nil
+          (mapcar (lambda (edge) (set-difference edge (list node1 node2)))
+                  (append (delete-node graph node1)
+                          (delete-node graph node2))))))
 
 (defmethod neighbors ((graph graph) node)
   "Return all nodes which share an edge with NODE in GRAPH."
@@ -215,6 +221,7 @@ Returns a new path for each possible next step."
 
 
 ;;; Shortest Path
+
 (defun shortest-path- (graph paths dest seen)
   (catch 'done
     (dolist (path paths)

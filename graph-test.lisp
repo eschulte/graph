@@ -85,6 +85,14 @@
     (setf (edge-value *graph* '(:foo :bar)) 22)
     (is (= 22 (edge-value *graph* '(:foo :bar))))))
 
+(deftest merge-nodes-in-two-graphs ()
+  (with-fixture small-graph
+    (is (set-equal (merge-nodes *graph* :bar :baz :zap) '((:foo) (:foo))
+                   :test #'tree-equal))
+    (is (set-equal (nodes *graph*) '(:FOO :QUX :ZAP)))
+    (is (set-equal (edges *graph*) '((:ZAP :FOO))
+                   :test #'tree-equal))))
+
 (deftest neighbors-of-c-on-graph ()
   (with-fixture normal-graph
     (is (every (lambda (it) (member it (neighbors *graph* 'b)))
