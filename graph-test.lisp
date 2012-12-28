@@ -8,8 +8,8 @@
 (in-package :graph)
 (require :stefil)
 (use-package :stefil)
-(defsuite graph)
-(in-suite graph)
+(defsuite graph-test)
+(in-suite graph-test)
 
 (defvar *graph* nil
   "Variable for use in graph tests.")
