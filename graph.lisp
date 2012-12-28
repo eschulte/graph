@@ -57,7 +57,8 @@
 (defmethod add-node ((graph graph) node)
   "Add NODE to GRAPH."
   (unless (has-node-p graph node)
-    (setf (gethash node (node-h graph)) nil)))
+    (setf (gethash node (node-h graph)) nil)
+    node))
 
 (defmethod add-edge ((graph graph) edge &optional value)
   "Add EDGE to GRAPH with optional VALUE."
@@ -65,7 +66,8 @@
           (add-node graph node)
           (pushnew edge (gethash node (node-h graph))))
         edge)
-  (setf (gethash edge (edge-h graph)) value))
+  (setf (gethash edge (edge-h graph)) value)
+  edge)
 
 (defmethod node-edges ((graph graph) node)
   "Return the value of NODE in GRAPH."
@@ -120,13 +122,15 @@ Return the old value of EDGE."
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE."
   (add-node graph val)
-  (mapc (compose (curry #'add-edge graph) (curry #'cons val))
-        (remove nil
-          (mapcar (lambda (edge) (set-difference edge (list node1 node2)))
-                  (append (delete-node graph node1)
-                          (delete-node graph node2))))))
+  (mapcar (compose (curry #'add-edge graph) (curry #'cons val))
+          (remove nil
+            (mapcar (lambda (edge) (set-difference edge (list node1 node2)))
+                    (append (delete-node graph node1)
+                            (delete-node graph node2))))))
 
 (defmethod merge-edges ((graph graph) edge1 edge2 &optional val)
+  "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
+Optionally provide a value for the new edge."
   (add-edge graph (remove-duplicates (append edge1 edge2)) val)
   (append (delete-edge graph edge1)
           (delete-edge graph edge2)))
