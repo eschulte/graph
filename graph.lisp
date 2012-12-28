@@ -137,7 +137,7 @@ Optionally provide a value for the new edge."
 
 (defmethod neighbors ((graph graph) node)
   "Return all nodes which share an edge with NODE in GRAPH."
-  (apply #'append (node-edges graph node)))
+  (apply (curry #'concatenate 'list) (node-edges graph node)))
 
 (defmethod dir-neighbors ((graph graph) node)
   "Return all nodes after NODE in GRAPH along directed edges."
