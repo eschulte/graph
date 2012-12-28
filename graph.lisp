@@ -126,6 +126,11 @@ holding VALUE."
                   (append (delete-node graph node1)
                           (delete-node graph node2))))))
 
+(defmethod merge-edges ((graph graph) edge1 edge2 &optional val)
+  (add-edge graph (remove-duplicates (append edge1 edge2)) val)
+  (append (delete-edge graph edge1)
+          (delete-edge graph edge2)))
+
 (defmethod neighbors ((graph graph) node)
   "Return all nodes which share an edge with NODE in GRAPH."
   (apply #'append (node-edges graph node)))
@@ -241,3 +246,14 @@ Returns a new path for each possible next step."
   "Return the shortest in-GRAPH path from any member of A any member of B.
 Dijkstra's algorithm."
   (shortest-path- graph (mapcar #'list a) b nil))
+
+
+;;; Min Cut
+;;
+;; Stoer, M. and Wagner, Frank. 1997. A Simple Min-Cut Algorithm.
+;; Journal of the ACM
+;;
+;; Theorem: Let s,t ∈ (nodes G), let G' be the result of merging s and
+;;          t in G.  Then (min-cut G) is equal to the minimum of
+;;          (min-s-t-cut G) and (min-cut G').
+;;

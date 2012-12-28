@@ -93,6 +93,12 @@
     (is (set-equal (edges *graph*) '((:ZAP :FOO))
                    :test #'tree-equal))))
 
+(deftest merge-edges-in-small-graph ()
+  (with-fixture small-graph
+    (merge-edges *graph* '(:foo :bar) '(:foo :baz))
+    (is (set-equal (edges *graph*) '((:BAR :BAZ) (:BAR :FOO :BAZ))
+                   :test #'tree-equal))))
+
 (deftest neighbors-of-c-on-graph ()
   (with-fixture normal-graph
     (is (every (lambda (it) (member it (neighbors *graph* 'b)))
