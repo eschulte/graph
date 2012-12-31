@@ -48,7 +48,7 @@
 
 (defmethod has-node-p ((graph graph) node)
   "Return `true' if GRAPH has node NODE."
-    (has-it-p graph :node node))
+  (has-it-p graph :node node))
 
 (defmethod has-edge-p ((graph graph) edge)
   "Return `true' if GRAPH has edge EDGE."
@@ -116,7 +116,6 @@ Return the old value of EDGE."
 
 
 ;;; Complex graph methods
-
 (defmethod merge-nodes ((graph graph) node1 node2 val)
   "Combine NODE1 and NODE2 in GRAPH into new node VAL.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
@@ -230,7 +229,6 @@ Returns a new path for each possible next step."
 
 
 ;;; Shortest Path
-
 (defun shortest-path- (graph paths dest seen)
   (catch 'done
     (dolist (path paths)
@@ -250,6 +248,34 @@ Returns a new path for each possible next step."
   "Return the shortest in-GRAPH path from any member of A any member of B.
 Dijkstra's algorithm."
   (shortest-path- graph (mapcar #'list a) b nil))
+
+
+;;; Max Flow
+;;
+;; Ford-Fulkerson
+;; http://lucatrevisan.wordpress.com/2011/02/04/cs261-lecture-9-maximum-flow/
+;;
+;; Must be a "network" (digraph in which each edge has a positive weight)
+;;
+(defun capacity (graph node1 node2)
+  )
+
+;; in residual network each edge has capacity c' = c - real + virtual
+
+;; "augmenting path" is path through residual network in which each
+;; edge has positive capacity
+
+(defun max-flow- (graph s t flow)
+  "Ford-Fulkerson max flow in `graph'."
+  ;; compute residuals of each edge based on current flow
+  ;; while ∃ a path from s to t with all positive residual capacities
+  ;; update flow with that edge
+  )
+
+(defmethod max-flow ((graph graph) s t)
+  "Return the maximum flow between nodes S and T in GRAPH.
+Needs graphs with numeric values."
+  (max-flow- graph (list s) t nil))
 
 
 ;;; Min Cut
