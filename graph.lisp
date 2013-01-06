@@ -266,6 +266,7 @@ Returns a new path for each possible next step."
       (unless (null next)
         (shortest-path- graph next dest seen)))))
 
+;; TODO: should return a list of edges *not* nodes
 (defmethod shortest-path ((graph graph) a b)
   "Return the shortest path in GRAPH from any member of A to any member of B.
 GRAPH must be a directed graph.  Dijkstra's algorithm is used."
