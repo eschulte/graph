@@ -114,6 +114,18 @@ Return the old value of EDGE."
     (mapc (curry #'add-edge g) edges)
     g))
 
+(defun copy-hash (hash)
+  (let ((copy (make-hash-table)))
+    (maphash (lambda (k v) (setf (gethash k copy) v)) hash)
+    copy))
+
+(defmethod copy ((graph graph))
+  "Return a copy of GRAPH."
+  (make-instance 'graph
+    :test (test graph)
+    :node-h (copy-hash (node-h graph))
+    :edge-h (copy-hash (edge-h graph))))
+
 
 ;;; Complex graph methods
 (defmethod merge-nodes ((graph graph) node1 node2 val)
