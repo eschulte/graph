@@ -245,7 +245,7 @@ Returns a new path for each possible next step."
         (shortest-path- graph next dest seen)))))
 
 (defmethod shortest-path ((graph graph) a b)
-  "Return the shortest in-GRAPH path from any member of A any member of B.
+  "Return the shortest in-GRAPH path from any member of A to any member of B.
 Dijkstra's algorithm."
   (shortest-path- graph (mapcar #'list a) b nil))
 
@@ -265,14 +265,18 @@ Dijkstra's algorithm."
 ;; "augmenting path" is path through residual network in which each
 ;; edge has positive capacity
 
-(defun max-flow- (graph s t flow)
+(defun max-flow- (graph node-s node-t flow)
   "Ford-Fulkerson max flow in `graph'."
-  ;; compute residuals of each edge based on current flow
-  ;; while ∃ a path from s to t with all positive residual capacities
-  ;; update flow with that edge
+  ;; compute residuals of each edge based on current flow, and
+  ;; construct a graph in which only those edges with positive
+  ;; residual capacities remain
+  ;; 
+  ;; while ∃ a path from s to t in the residual graph
+  ;; 
+  ;; update flow in the original graph with that edge
   )
 
-(defmethod max-flow ((graph graph) s t)
+(defmethod max-flow ((graph graph) node-s node-t)
   "Return the maximum flow between nodes S and T in GRAPH.
 Needs graphs with numeric values."
   (max-flow- graph (list s) t nil))
