@@ -273,15 +273,8 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
 
 
 ;;; Max Flow
-;;
-;; Ford-Fulkerson
-;; http://lucatrevisan.wordpress.com/2011/02/04/cs261-lecture-9-maximum-flow/
-;;
-;; Must be a "network" (digraph in which each edge has a positive weight)
-;;
-;; "augmenting path" is path through residual network in which each
-;; edge has positive capacity
-
+;; - Must be a "network" (digraph in which each edge has a positive weight)
+;; - Ford-Fulkerson is used
 (defmethod residual ((graph graph) flow)
   "Return the residual graph of GRAPH with FLOW.
 Each edge in the residual has a value equal to the original capacity
@@ -299,21 +292,42 @@ minus the current flow, or equal to the negative of the current flow."
             (edges graph))
       residual)))
 
-(defun max-flow- (graph node-s node-t flow)
-  "Ford-Fulkerson max flow in `graph'."
-  ;; compute residuals of each edge based on current flow, and
-  ;; construct a graph in which only those edges with positive
-  ;; residual capacities remain
-  ;; 
-  ;; while ∃ a path from s to t in the residual graph
-  ;; 
-  ;; update flow in the original graph with that edge
-  )
+(defun add-paths (path1 path2)
+  "Return the combination of numerically valued paths PATH1 and PATH2."
+  (let ((comb (copy-tree path1)))
+    (mapc (lambda (edge-w-val)
+            (let ((e (car edge-w-val))
+                  (v  (cdr edge-w-val)))
+              (cond
+                ((assoc e comb :test #'tree-equal)
+                 (incf (cdr (assoc e comb :test #'tree-equal)) v))
+                ((assoc (reverse e) comb :test #'tree-equal)
+                 (decf (cdr (assoc (reverse e) comb :test #'tree-equal)) v))
+                (t
+                 (push edge-w-val comb)))))
+          path2)
+    comb))
 
-(defmethod max-flow ((graph graph) node-s node-t)
-  "Return the maximum flow between nodes S and T in GRAPH.
-Needs graphs with numeric values."
-  (max-flow- graph (list s) t nil))
+(defun max-flow- (graph from to flow)
+  (let* ((residual (residual graph flow))
+         ;; "augmenting path" is path through residual network in
+         ;; which each edge has positive capacity
+         (augment (mapcar
+                   (lambda (edge)
+                     (format t "checking edge:~S~%" edge)
+                     (cons edge (edge-value residual edge)))
+                   (shortest-path residual (list from) (list to)))))
+    (if augment
+        ;; if ∃ an augmenting path, add it to the flow and repeat
+        (max-flow- graph from to (add-paths flow augment))
+        ;; otherwise we already have the max flow
+        flow)))
+
+(defmethod max-flow ((graph graph) from to)
+  "Return the maximum flow from FROM and TO in GRAPH.
+GRAPHS must be a network with numeric values of all edges.
+The Ford-Fulkerson algorithm is used."
+  (max-flow- graph from to nil))
 
 
 ;;; Min Cut

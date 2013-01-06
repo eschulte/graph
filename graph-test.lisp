@@ -177,7 +177,7 @@
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
     (is (tree-equal (shortest-path *graph* '(:foo) '(:baz :qux))
-                    '(:FOO :BAZ)))))
+                    '(:FOO :BAR :BAZ)))))
 
 (deftest residual-of-a-small-network ()
   (with-fixture small-network
@@ -192,3 +192,14 @@
            ((:B :S) . 1) ((:S :B) . 1) ((:A :S) . 2)
            ((:B :A) . 1))
          :test #'tree-equal))))
+
+(deftest test-path-addition ()
+  (is (set-equal
+       (add-paths
+        '(((:foo :bar) . 4)
+          ((:bar :baz) . 2))
+        '(((:foo :bar) . 2)
+          ((:baz :bar) . 1)
+          ((:baz :qux) . 1)))
+       '(((:BAZ :QUX) . 1) ((:FOO :BAR) . 6) ((:BAR :BAZ) . 1))
+       :test #'tree-equal)))
