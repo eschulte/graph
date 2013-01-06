@@ -148,40 +148,40 @@ Optionally provide a value for the new edge."
 Returns a new path for each possible next step."
   (mapcar (lambda (next) (cons next path)) (dir-neighbors graph (car path))))
 
-(defun connected-to- (graph from prev)
+(defun reachable-from- (graph from prev)
   (if (null from) (reverse prev)
       (let ((next (remove-duplicates (mapcan (curry #'neighbors graph) from))))
-        (connected-to- graph (set-difference next prev) (union next prev)))))
+        (reachable-from- graph (set-difference next prev) (union next prev)))))
 
-(defmethod connected-to ((graph graph) node)
+(defmethod reachable-from ((graph graph) node)
   "Return all nodes reachable from NODE."
-  (connected-to- graph (list node) (list node)))
+  (reachable-from- graph (list node) (list node)))
 
-(defun dir-connected-to- (graph new prev)
+(defun dir-reachable-from- (graph new prev)
   (if (null new) (reverse prev)
       (let ((next (mapcan (curry #'dir-neighbors graph) new)))
-        (dir-connected-to-
+        (dir-reachable-from-
          graph (set-difference next prev) (union next prev)))))
 
-(defmethod dir-connected-to ((graph graph) node)
-  "Return all node reachable along directed edges from NODE."
-  (dir-connected-to- graph (list node) nil))
+(defmethod dir-reachable-from ((graph graph) node)
+  "Return all nodes reachable along directed edges from NODE."
+  (dir-reachable-from- graph (list node) nil))
 
 (defmethod connectedp ((graph graph))
   "Return true if the graph is connected."
   (let ((nodes (nodes graph)))
-    (subsetp (nodes *graph*) (connected-to graph (car nodes)))))
+    (subsetp (nodes *graph*) (reachable-from graph (car nodes)))))
 
 (defmethod dir-connectedp ((graph graph))
-  "Return true if directed nodes connect every pair of edges."
+  "Return true if directed edges connect every pair of nodes."
   (let ((nodes (nodes *graph*)))
     (every (compose (curry #'subsetp nodes)
-                    (curry #'dir-connected-to graph))
+                    (curry #'dir-reachable-from graph))
            nodes)))
 
 (defun connected-components- (graph nodes ccs)
   (if (null nodes) ccs
-      (let ((cc (connected-to graph (car nodes))))
+      (let ((cc (reachable-from graph (car nodes))))
         (connected-compoents- graph (set-difference nodes cc) (cons cc ccs)))))
 
 (defmethod connected-components ((graph graph))
