@@ -261,14 +261,14 @@ Returns a new path for each possible next step."
                              (unless (member n seen)
                                (push n seen)
                                (cons n path)))
-                           (neighbors graph (car path))))
+                           (dir-neighbors graph (car path))))
                  paths)))
       (unless (null next)
         (shortest-path- graph next dest seen)))))
 
 (defmethod shortest-path ((graph graph) a b)
-  "Return the shortest in-GRAPH path from any member of A to any member of B.
-Dijkstra's algorithm."
+  "Return the shortest path in GRAPH from any member of A to any member of B.
+GRAPH must be a directed graph.  Dijkstra's algorithm is used."
   (shortest-path- graph (mapcar #'list a) b nil))
 
 
