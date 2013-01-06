@@ -33,9 +33,19 @@
   "Return a list of the edges in GRAPH."
   (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
 
+(defmethod edges-w-values ((graph graph) &aux alist)
+  "Return an alist of edges of GRAPH with their values."
+  (maphash (lambda (edge value) (push (cons edge value) alist)) (edge-h graph))
+  alist)
+
 (defmethod nodes ((graph graph))
   "Return a list of the nodes in GRAPH."
   (loop :for key :being :each :hash-key :of (node-h graph) :collect key))
+
+(defmethod nodes-w-values ((graph graph) &aux alist)
+  "Return an alist of nodes of GRAPH with their values."
+  (maphash (lambda (node value) (push (cons node value) alist)) (node-h graph))
+  alist)
 
 (defmethod ghash ((graph graph) node-or-edge)
   (case node-or-edge
@@ -269,13 +279,25 @@ Dijkstra's algorithm."
 ;;
 ;; Must be a "network" (digraph in which each edge has a positive weight)
 ;;
-(defun capacity (graph node1 node2)
-  )
-
-;; in residual network each edge has capacity c' = c - real + virtual
-
 ;; "augmenting path" is path through residual network in which each
 ;; edge has positive capacity
+
+(defmethod residual ((graph graph) flow)
+  "Return the residual graph of GRAPH with FLOW.
+Each edge in the residual has a value equal to the original capacity
+minus the current flow, or equal to the negative of the current flow."
+  (flet ((flow-value (edge) (or (cdr (assoc edge flow :test #'tree-equal)) 0)))
+    (let ((residual (make-instance 'graph
+                      :test (test graph)
+                      :node-h (copy-hash (node-h graph)))))
+      (mapc (lambda (edge)
+              (let ((left (- (edge-value graph edge) (flow-value edge))))
+                (when (not (zerop left))
+                  (add-edge residual edge left)))
+              (when (not (zerop (flow-value edge)))
+                (add-edge residual (reverse edge) (flow-value edge))))
+            (edges graph))
+      residual)))
 
 (defun max-flow- (graph node-s node-t flow)
   "Ford-Fulkerson max flow in `graph'."

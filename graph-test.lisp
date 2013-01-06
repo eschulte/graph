@@ -49,6 +49,20 @@
                           (f b)))))
   (:teardown (setf *graph* nil)))
 
+(defixture small-network
+  (:setup (setf *network*
+                (let ((n (make-instance 'graph)))
+                  (mapc (curry #'add-node n) '(:a :b :s :t))
+                  (mapc (lambda (edge-w-value)
+                          (add-edge n (cdr edge-w-value) (car edge-w-value)))
+                        '((1 :a :b)
+                          (2 :s :a)
+                          (2 :s :b)
+                          (4 :a :t)
+                          (2 :b :t)))
+                  n)))
+  (:teardown (setf *network* nil)))
+
 
 ;;; Tests
 (deftest make-graph-sets-nodes ()
@@ -164,3 +178,17 @@
   (with-fixture less-small-graph
     (is (tree-equal (shortest-path *graph* '(:foo) '(:baz :qux))
                     '(:FOO :BAZ)))))
+
+(deftest residual-of-a-small-network ()
+  (with-fixture small-network
+    (is (set-equal
+         (edges-w-values (residual *network*
+                                   '(((:s :a) . 2)
+                                     ((:s :b) . 1)
+                                     ((:a :b) . 1)
+                                     ((:a :t) . 1)
+                                     ((:b :t) . 2))))
+         '(((:T :B) . 2) ((:T :A) . 1) ((:A :T) . 3)
+           ((:B :S) . 1) ((:S :B) . 1) ((:A :S) . 2)
+           ((:B :A) . 1))
+         :test #'tree-equal))))
