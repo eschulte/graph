@@ -251,26 +251,27 @@ Returns a new path for each possible next step."
 
 
 ;;; Shortest Path
-(defun shortest-path- (graph paths dest seen)
-  (catch 'done
-    (dolist (path paths)
-      (when (member (car path) dest) (throw 'done (reverse path))))
-    (let ((next (mapcan
-                 (lambda (path)
-                   (mapcar (lambda (n)
-                             (unless (member n seen)
-                               (push n seen)
-                               (cons n path)))
-                           (dir-neighbors graph (car path))))
-                 paths)))
-      (unless (null next)
-        (shortest-path- graph next dest seen)))))
-
-;; TODO: should return a list of edges *not* nodes
-(defmethod shortest-path ((graph graph) a b)
-  "Return the shortest path in GRAPH from any member of A to any member of B.
+(defmethod shortest-path ((graph graph) a b &aux seen)
+  "Return the shortest path in GRAPH from A to B.
 GRAPH must be a directed graph.  Dijkstra's algorithm is used."
-  (shortest-path- graph (mapcar #'list a) b nil))
+  (block nil
+    (let ((next (list (list a))))
+      (loop :until (null next) :do
+         (setf next
+               (mapcan
+                (lambda (pair)
+                  (let ((from (car pair)) (rest (cdr pair)))
+                    (mapcan
+                     (lambda (edge)
+                       (if (member b (cdr (member from edge)))
+                           (return (reverse (cons edge rest)))
+                           (unless (member edge seen :test #'tree-equal)
+                             (push edge seen)
+                             (mapcar (lambda (n) (cons n (cons edge rest)))
+                                     ;; nodes after from in edge
+                                     (cdr (member from edge))))))
+                     (node-edges graph from))))
+                next))))))
 
 
 ;;; Max Flow
