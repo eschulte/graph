@@ -204,7 +204,7 @@ Returns a new path for each possible next step."
 (defun connected-components- (graph nodes ccs)
   (if (null nodes) ccs
       (let ((cc (reachable-from graph (car nodes))))
-        (connected-compoents- graph (set-difference nodes cc) (cons cc ccs)))))
+        (connected-components- graph (set-difference nodes cc) (cons cc ccs)))))
 
 (defmethod connected-components ((graph graph))
   "Return a list of the connected components of GRAPH."
