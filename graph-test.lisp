@@ -210,4 +210,5 @@
   (with-fixture small-network
     (is (set-equal (max-flow *network* :s :t)
                    '(((:A :T) . 4) ((:S :A) . 2) ((:B :T) . 2) ((:S :B) . 2))
-                   :test #'tree-equal))))
+                   :test #'tree-equal))
+    (is (= (flow-value-into (max-flow *network* :s :t) :t) 6))))

@@ -328,6 +328,15 @@ GRAPHS must be a network with numeric values of all edges.
 The Ford-Fulkerson algorithm is used."
   (max-flow- graph from to nil))
 
+(defun flow-value-into (flow node)
+  "Return the value of the flow into NODE from FLOW."
+  (reduce #'+ (remove-if-not (lambda (el) (equal (lastcar (car el)) node)) flow)
+          :key #'cdr))
+
+(defmethod max-flow-value ((graph graph) from to)
+  "Return the value of the max flow from FROM to TO in GRAPH."
+  (flow-value-into (max-flow graph from to) to))
+
 
 ;;; Min Cut
 ;;
