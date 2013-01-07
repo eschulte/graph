@@ -322,20 +322,17 @@ Each element of path has the form (cons edge value)."
           ;; otherwise we already have the max flow
           flow))))
 
-(defmethod max-flow ((graph graph) from to)
-  "Return the maximum flow from FROM and TO in GRAPH.
-GRAPHS must be a network with numeric values of all edges.
-The Ford-Fulkerson algorithm is used."
-  (max-flow- graph from to nil))
-
 (defun flow-value-into (flow node)
   "Return the value of the flow into NODE from FLOW."
   (reduce #'+ (remove-if-not (lambda (el) (equal (lastcar (car el)) node)) flow)
           :key #'cdr))
 
-(defmethod max-flow-value ((graph graph) from to)
-  "Return the value of the max flow from FROM to TO in GRAPH."
-  (flow-value-into (max-flow graph from to) to))
+(defmethod max-flow ((graph graph) from to)
+  "Return the maximum flow from FROM and TO in GRAPH.
+GRAPHS must be a network with numeric values of all edges.
+The Ford-Fulkerson algorithm is used."
+  (let ((flow (max-flow- graph from to nil)))
+    (values flow (flow-value-into flow to))))
 
 
 ;;; Min Cut
@@ -347,3 +344,15 @@ The Ford-Fulkerson algorithm is used."
 ;;          t in G.  Then (min-cut G) is equal to the minimum of
 ;;          (min-s-t-cut G) and (min-cut G').
 ;;
+(defmethod min-cut ((graph graph))
+  (let ((from (random-elt (nodes graph)))
+        (to (random-elt (remove from (nodes graph)))))
+    (multiple-value-bind (cut c-size) (min-cut (merge-nodes graph from to from))
+      (multiple-value-bind (flow f-size) (max-flow graph from to)
+        (if (< f-size c-size)
+            ;; The connected component of FROM in the residual of
+            ;; GRAPH with FLOW is one half of the cut
+            (let ((half (reachable-from (residual graph flow) from)))
+              (values (list half (set-difference (nodes graph) half)) f-size))
+            ;; return cut and c-size
+            (values cut c-size))))))
