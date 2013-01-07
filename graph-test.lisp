@@ -138,19 +138,19 @@
     (is (set-equal (dir-step *graph* '(e))
                    '((c e) (f e)) :test #'tree-equal))))
 
-(deftest reachable-from-e-in-normal-graph ()
+(deftest connected-to-e-in-normal-graph ()
   (with-fixture normal-graph
-    (is (set-equal (reachable-from *graph* 'e)
+    (is (set-equal (connected-to *graph* 'e)
                    (nodes *graph*)))))
 
-(deftest dir-reachable-from-e-in-normal-graph ()
+(deftest dir-connected-to-e-in-normal-graph ()
   (with-fixture normal-graph
-    (is (set-equal (dir-reachable-from *graph* 'e)
+    (is (set-equal (dir-connected-to *graph* 'e)
                    '(C F B D E)))))
 
-(deftest dir-reachable-from-foo-in-small-graph ()
+(deftest dir-connected-to-foo-in-small-graph ()
   (with-fixture small-graph
-    (is (set-equal (dir-reachable-from *graph* :foo)
+    (is (set-equal (dir-connected-to *graph* :foo)
                    '(:bar :baz)))))
 
 (deftest connectedp-of-multiple-graphs ()
