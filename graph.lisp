@@ -282,9 +282,7 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
 Each edge in the residual has a value equal to the original capacity
 minus the current flow, or equal to the negative of the current flow."
   (flet ((flow-value (edge) (or (cdr (assoc edge flow :test #'tree-equal)) 0)))
-    (let ((residual (make-instance 'graph
-                      :test (test graph)
-                      :node-h (copy-hash (node-h graph)))))
+    (let ((residual (make-instance 'graph :test (test graph))))
       (mapc (lambda (edge)
               (let ((left (- (edge-value graph edge) (flow-value edge))))
                 (when (not (zerop left))
@@ -295,11 +293,12 @@ minus the current flow, or equal to the negative of the current flow."
       residual)))
 
 (defun add-paths (path1 path2)
-  "Return the combination of numerically valued paths PATH1 and PATH2."
+  "Return the combination of numerically valued paths PATH1 and PATH2.
+Each element of path has the form (cons edge value)."
   (let ((comb (copy-tree path1)))
     (mapc (lambda (edge-w-val)
             (let ((e (car edge-w-val))
-                  (v  (cdr edge-w-val)))
+                  (v (cdr edge-w-val)))
               (cond
                 ((assoc e comb :test #'tree-equal)
                  (incf (cdr (assoc e comb :test #'tree-equal)) v))
@@ -311,19 +310,17 @@ minus the current flow, or equal to the negative of the current flow."
     comb))
 
 (defun max-flow- (graph from to flow)
-  (let* ((residual (residual graph flow))
-         ;; "augmenting path" is path through residual network in
-         ;; which each edge has positive capacity
-         (augment (mapcar
-                   (lambda (edge)
-                     (format t "checking edge:~S~%" edge)
-                     (cons edge (edge-value residual edge)))
-                   (shortest-path residual (list from) (list to)))))
-    (if augment
-        ;; if ∃ an augmenting path, add it to the flow and repeat
-        (max-flow- graph from to (add-paths flow augment))
-        ;; otherwise we already have the max flow
-        flow)))
+  ;; "augmenting path" is path through residual network in which each
+  ;; edge has positive capacity
+  (flet ((shortest-w-value (graph from to)
+           (mapcar (lambda (edge) (cons edge (edge-value graph edge)))
+                   (shortest-path graph from to))))
+    (let ((augment (shortest-w-value (residual graph flow) from to)))
+      (if augment
+          ;; if ∃ an augmenting path, add it to the flow and repeat
+          (max-flow- graph from to (add-paths flow augment))
+          ;; otherwise we already have the max flow
+          flow))))
 
 (defmethod max-flow ((graph graph) from to)
   "Return the maximum flow from FROM and TO in GRAPH.

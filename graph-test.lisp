@@ -181,17 +181,19 @@
 
 (deftest residual-of-a-small-network ()
   (with-fixture small-network
-    (is (set-equal
-         (edges-w-values (residual *network*
-                                   '(((:s :a) . 2)
-                                     ((:s :b) . 1)
-                                     ((:a :b) . 1)
-                                     ((:a :t) . 1)
-                                     ((:b :t) . 2))))
-         '(((:T :B) . 2) ((:T :A) . 1) ((:A :T) . 3)
-           ((:B :S) . 1) ((:S :B) . 1) ((:A :S) . 2)
-           ((:B :A) . 1))
-         :test #'tree-equal))))
+    (let ((orig-edges (copy-tree (edges-w-values *network*))))
+      (is (set-equal
+           (edges-w-values (residual *network*
+                                     '(((:s :a) . 2)
+                                       ((:s :b) . 1)
+                                       ((:a :b) . 1)
+                                       ((:a :t) . 1)
+                                       ((:b :t) . 2))))
+           '(((:T :B) . 2) ((:T :A) . 1) ((:A :T) . 3)
+             ((:B :S) . 1) ((:S :B) . 1) ((:A :S) . 2)
+             ((:B :A) . 1))
+           :test #'tree-equal))
+      (is (tree-equal orig-edges (edges-w-values *network*))))))
 
 (deftest test-path-addition ()
   (is (set-equal
@@ -203,3 +205,9 @@
           ((:baz :qux) . 1)))
        '(((:BAZ :QUX) . 1) ((:FOO :BAR) . 6) ((:BAR :BAZ) . 1))
        :test #'tree-equal)))
+
+(deftest test-max-flow ()
+  (with-fixture small-network
+    (is (set-equal (max-flow *network* :s :t)
+                   '(((:A :T) . 4) ((:S :A) . 2) ((:B :T) . 2) ((:S :B) . 2))
+                   :test #'tree-equal))))
