@@ -259,18 +259,17 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
       (loop :until (null next) :do
          (setf next
                (mapcan
-                (lambda (pair)
-                  (let ((from (car pair)) (rest (cdr pair)))
-                    (mapcan
-                     (lambda (edge)
-                       (if (member b (cdr (member from edge)))
-                           (return (reverse (cons edge rest)))
-                           (unless (member edge seen :test #'tree-equal)
-                             (push edge seen)
-                             (mapcar (lambda (n) (cons n (cons edge rest)))
-                                     ;; nodes after from in edge
-                                     (cdr (member from edge))))))
-                     (node-edges graph from))))
+                (lambda-bind ((from . rest))
+                  (mapcan
+                   (lambda (edge)
+                     (if (member b (cdr (member from edge)))
+                         (return (reverse (cons edge rest)))
+                         (unless (member edge seen :test #'tree-equal)
+                           (push edge seen)
+                           (mapcar (lambda (n) (cons n (cons edge rest)))
+                                   ;; nodes after from in edge
+                                   (cdr (member from edge))))))
+                   (node-edges graph from)))
                 next))))))
 
 
