@@ -204,11 +204,11 @@ Returns a new path for each possible next step."
 (defmethod connectedp ((graph graph))
   "Return true if the graph is connected."
   (let ((nodes (nodes graph)))
-    (subsetp (nodes *graph*) (connected-to graph (car nodes)))))
+    (subsetp (nodes graph) (connected-to graph (car nodes)))))
 
 (defmethod dir-connectedp ((graph graph))
   "Return true if directed nodes connect every pair of edges."
-  (let ((nodes (nodes *graph*)))
+  (let ((nodes (nodes graph)))
     (every (compose (curry #'subsetp nodes)
                     (curry #'dir-connected-to graph))
            nodes)))
@@ -329,7 +329,7 @@ Each element of path has the form (cons edge value)."
          (trim-path (path)
            (when path
              (let ((flow (apply #'min (mapcar #'cdr path))))
-               (mapcar (lambda-bind ((edge . cap)) (cons edge flow)) path)))))
+               (mapcar (lambda (el) (cons (car el) flow)) path)))))
     (let ((augment (trim-path (shortest-w-value (residual graph flow) from to))))
       (if augment
           ;; if ∃ an augmenting path, add it to the flow and repeat
@@ -360,22 +360,31 @@ The Ford-Fulkerson algorithm is used."
 ;;          (min-s-t-cut G) and (min-cut G').
 ;;
 (defmethod min-cut ((graph graph))
-  (if (= (length (nodes graph)) 2)
-      (values (mapcar #'list (nodes graph))
-              (apply #'+ (mapcar (lambda (edge)
-                                   (if (has-edge-p graph edge)
-                                       (edge-value graph edge)
-                                       0))
-                                 (list (nodes graph) (reverse (nodes graph))))))
-      (let* ((from (random-elt (nodes graph)))
-             (to (random-elt (remove from (nodes graph)))))
-        (multiple-value-bind (flow f-size) (max-flow graph from to)
-          (multiple-value-bind (cut c-size)
-              (min-cut (merge-nodes (copy graph) from to from))
-            (if (< f-size c-size)
-                ;; The connected component of FROM in the residual of
-                ;; GRAPH with FLOW is one half of the cut
-                (let ((half (reachable-from (residual graph flow) from)))
-                  (values (list half (set-difference (nodes graph) half)) f-size))
-                ;; return cut and c-size
-                (values cut c-size)))))))
+  (format t "min-cut: start ~S~%" (edges-w-values graph))
+  (flet ((flow-to-cut (graph flow from)
+           (format t "flow-to-cut: flow ~S~%" flow)
+           (let* ((residual (residual graph flow))
+                  (half (dir-connected-to residual from)))
+             (format t "min-cut: flow-to-cut: residual ~S~%"
+                   (edges-w-values residual))
+             (list half (set-difference (nodes graph) half)))))
+    (if (= (length (nodes graph)) 2)
+        (progn
+          (format t "min-cut: base case graph ~S~%" (edges-w-values graph))
+          (values (mapcar #'list (nodes graph))
+                  (reduce (lambda (acc edge) (+ (abs (edge-value graph edge)) acc))
+                          (remove-if-not (curry #'subsetp (nodes graph))
+                                         (edges graph))
+                          :initial-value 0)))
+        (let* ((from (random-elt (nodes graph)))
+               (to (random-elt (remove from (nodes graph)))))
+          (format t "min-cut: (from to) (~S ~S)~%" from to)
+          (multiple-value-bind (flow f-size) (max-flow graph from to)
+            (if (zerop f-size)
+                (values (flow-to-cut graph flow from) f-size)
+                (multiple-value-bind (cut c-size)
+                    (min-cut (merge-nodes (copy graph) from to from))
+                  (format t "flow=~S cut=~S~%" f-size c-size)
+                  (if (< f-size c-size)
+                      (values (flow-to-cut graph flow from) f-size)
+                      (values cut c-size)))))))))
