@@ -330,7 +330,8 @@ Each element of path has the form (cons edge value)."
            (when path
              (let ((flow (apply #'min (mapcar #'cdr path))))
                (mapcar (lambda (el) (cons (car el) flow)) path)))))
-    (let ((augment (trim-path (shortest-w-value (residual graph flow) from to))))
+    (let* ((residual (residual graph flow))
+           (augment (trim-path (shortest-w-value residual from to))))
       (if augment
           ;; if ∃ an augmenting path, add it to the flow and repeat
           (max-flow- graph from to (add-paths flow augment))
