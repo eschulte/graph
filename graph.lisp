@@ -313,8 +313,12 @@ Each element of path has the form (cons edge value)."
   ;; edge has positive capacity
   (flet ((shortest-w-value (graph from to)
            (mapcar (lambda (edge) (cons edge (edge-value graph edge)))
-                   (shortest-path graph from to))))
-    (let ((augment (shortest-w-value (residual graph flow) from to)))
+                   (shortest-path graph from to)))
+         (trim-path (path)
+           (when path
+             (let ((flow (apply #'min (mapcar #'cdr path))))
+               (mapcar (lambda-bind ((edge . cap)) (cons edge flow)) path)))))
+    (let ((augment (trim-path (shortest-w-value (residual graph flow) from to))))
       (if augment
           ;; if ∃ an augmenting path, add it to the flow and repeat
           (max-flow- graph from to (add-paths flow augment))
