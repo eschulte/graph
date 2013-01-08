@@ -110,9 +110,7 @@
 
 (deftest merge-nodes-in-small-graph ()
   (with-fixture small-graph
-    (is (set-equal (merge-nodes *graph* :bar :baz :zap)
-                   '((:ZAP :FOO) (:ZAP :FOO))
-                   :test #'tree-equal))
+    (setf *graph* (merge-nodes *graph* :bar :baz :zap))
     (is (set-equal (nodes *graph*) '(:FOO :QUX :ZAP)))
     (is (set-equal (edges *graph*) '((:ZAP :FOO))
                    :test #'tree-equal))))

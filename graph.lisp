@@ -147,7 +147,8 @@ holding VALUE."
           (remove nil
             (mapcar (lambda (edge) (set-difference edge (list node1 node2)))
                     (append (delete-node graph node1)
-                            (delete-node graph node2))))))
+                            (delete-node graph node2)))))
+  graph)
 
 (defmethod merge-edges ((graph graph) edge1 edge2 &optional val)
   "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
