@@ -63,6 +63,21 @@
                   n)))
   (:teardown (setf *network* nil)))
 
+(defixture cycle
+  (:setup (setf *cycle*
+                (let ((c (make-instance 'graph)))
+                  (mapc (curry #'add-node c) '(:a :b :s :t))
+                  (mapc (lambda (edge-w-value)
+                          (add-edge c (cdr edge-w-value) (car edge-w-value)))
+                        '((1 :s :a)
+                          (3 :s :b)
+                          (1 :b :a)
+                          (2 :a :t)
+                          (2 :b :t)
+                          (2 :t :s)))
+                  c)))
+  (:teardown (setf *cycle* nil)))
+
 
 ;;; Tests
 (deftest make-graph-sets-nodes ()
@@ -215,10 +230,38 @@
        '(((:BAZ :QUX) . 1) ((:FOO :BAR) . 6) ((:BAR :BAZ) . 1))
        :test #'tree-equal)))
 
-(deftest test-max-flow ()
+(deftest max-flow-on-a-small-network ()
   (with-fixture small-network
     (multiple-value-bind (path flow) (max-flow *network* :s :t)
       (is (set-equal path
                      '(((:A :T) . 2) ((:S :A) . 2) ((:B :T) . 1) ((:S :B) . 1))
                      :test #'tree-equal))
       (is (= flow 3)))))
+
+(deftest max-flow-with-a-cycle ()
+  (with-fixture cycle
+    (multiple-value-bind (flow value) (max-flow *cycle* :s :t)
+      (is (set-equal flow
+                     '(((:B :A) . 1)
+                       ((:A :T) . 2)
+                       ((:S :A) . 1)
+                       ((:B :T) . 2)
+                       ((:S :B) . 3))
+                     :test #'tree-equal))
+      (is (= value 4)))))
+
+(deftest combine-max-flows-in-a-cycle ()
+  (with-fixture cycle
+    (multiple-value-bind (flow value)
+        (multiple-value-call #'combine-flows
+          (max-flow *cycle* :s :t)
+          (max-flow *cycle* :t :s))
+      (is (set-equal flow
+                     '(((:B :A) . 1)
+                       ((:A :T) . 2)
+                       ((:S :A) . 1)
+                       ((:B :T) . 2)
+                       ((:S :B) . 3)
+                       ((:T :S) . 2))
+                     :test #'tree-equal))
+      (is (= value 6)))))

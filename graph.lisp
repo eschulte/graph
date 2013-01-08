@@ -342,6 +342,9 @@ Each element of path has the form (cons edge value)."
   (reduce #'+ (remove-if-not (lambda (el) (equal (lastcar (car el)) node)) flow)
           :key #'cdr))
 
+(defun combine-flows (flow1 val1 flow2 val2)
+  (values (append flow1 flow2) (+ val1 val2)))
+
 (defmethod max-flow ((graph graph) from to)
   "Return the maximum flow from FROM and TO in GRAPH.
 GRAPHS must be a network with numeric values of all edges.
