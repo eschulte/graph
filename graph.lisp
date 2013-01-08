@@ -142,6 +142,9 @@ Return the old value of EDGE."
   "Combine NODE1 and NODE2 in GRAPH into new node VAL.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE."
+  ;; TODO: needs a way of assigning values to the new edges
+  ;;       a good opportunity to make use of edge/node value
+  ;;       combination functions
   (add-node graph val)
   (mapcar (compose (curry #'add-edge graph) (curry #'cons val))
           (remove nil
@@ -349,14 +352,22 @@ The Ford-Fulkerson algorithm is used."
 ;;          (min-s-t-cut G) and (min-cut G').
 ;;
 (defmethod min-cut ((graph graph))
-  (let ((from (random-elt (nodes graph)))
-        (to (random-elt (remove from (nodes graph)))))
-    (multiple-value-bind (cut c-size) (min-cut (merge-nodes graph from to from))
-      (multiple-value-bind (flow f-size) (max-flow graph from to)
-        (if (< f-size c-size)
-            ;; The connected component of FROM in the residual of
-            ;; GRAPH with FLOW is one half of the cut
-            (let ((half (reachable-from (residual graph flow) from)))
-              (values (list half (set-difference (nodes graph) half)) f-size))
-            ;; return cut and c-size
-            (values cut c-size))))))
+  (if (= (length (nodes graph)) 2)
+      (values (mapcar #'list (nodes graph))
+              (apply #'+ (mapcar (lambda (edge)
+                                   (if (has-edge-p graph edge)
+                                       (edge-value graph edge)
+                                       0))
+                                 (list (nodes graph) (reverse (nodes graph))))))
+      (let* ((from (random-elt (nodes graph)))
+             (to (random-elt (remove from (nodes graph)))))
+        (multiple-value-bind (flow f-size) (max-flow graph from to)
+          (multiple-value-bind (cut c-size)
+              (min-cut (merge-nodes (copy graph) from to from))
+            (if (< f-size c-size)
+                ;; The connected component of FROM in the residual of
+                ;; GRAPH with FLOW is one half of the cut
+                (let ((half (reachable-from (residual graph flow) from)))
+                  (values (list half (set-difference (nodes graph) half)) f-size))
+                ;; return cut and c-size
+                (values cut c-size)))))))
