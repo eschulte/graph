@@ -25,9 +25,11 @@
 (in-package :graph)
 
 (defclass graph ()
-  ((test   :initarg :test   :accessor test   :initform #'eql)
-   (node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
-   (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table :test 'equalp))))
+  ((node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
+   (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table :test 'equalp))
+   (test   :initarg :test   :accessor test   :initform #'eql)
+   (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil)
+   (node-comb :initarg :node-comb :accessor node-comb :initform nil)))
 
 (defmethod edges ((graph graph))
   "Return a list of the edges in GRAPH."
@@ -88,7 +90,8 @@
 (defmethod delete-node ((graph graph) node)
   "Delete NODE from GRAPH.
 Delete and return the old edges of NODE in GRAPH."
-  (prog1 (mapc (curry #'delete-edge graph) (node-edges graph node))
+  (prog1 (mapcar (lambda (edge) (cons edge (delete-edge graph edge)))
+                 (node-edges graph node))
     (remhash node (node-h graph))))
 
 (defmethod (setf node-edges) (new (graph graph) node)
@@ -138,19 +141,24 @@ Return the old value of EDGE."
 
 
 ;;; Complex graph methods
-(defmethod merge-nodes ((graph graph) node1 node2 val)
-  "Combine NODE1 and NODE2 in GRAPH into new node VAL.
+(defmethod merge-nodes ((graph graph) node1 node2 new)
+  "Combine NODE1 and NODE2 in GRAPH into new node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE."
-  ;; TODO: needs a way of assigning values to the new edges
-  ;;       a good opportunity to make use of edge/node value
-  ;;       combination functions
-  (add-node graph val)
-  (mapcar (compose (curry #'add-edge graph) (curry #'cons val))
-          (remove nil
-            (mapcar (lambda (edge) (set-difference edge (list node1 node2)))
-                    (append (delete-node graph node1)
-                            (delete-node graph node2)))))
+  (add-node graph new)
+  (mapcar (lambda-bind ((edge . val))
+            (let ((edge (mapcar (lambda (node)
+                                  (if (member node (list node1 node2))
+                                      new node))
+                                edge)))
+              (if (has-edge-p graph edge)
+                  (when (edge-comb graph)
+                    (setf (edge-value graph edge)
+                          (funcall (edge-comb graph)
+                                   (edge-value graph edge) val)))
+                  (add-edge graph edge val))))
+          (append (delete-node graph node1)
+                  (delete-node graph node2)))
   graph)
 
 (defmethod merge-edges ((graph graph) edge1 edge2 &optional val)

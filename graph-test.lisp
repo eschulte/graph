@@ -51,7 +51,7 @@
 
 (defixture small-network
   (:setup (setf *network*
-                (let ((n (make-instance 'graph)))
+                (let ((n (make-instance 'graph :edge-comb #'+)))
                   (mapc (curry #'add-node n) '(:a :b :s :t))
                   (mapc (lambda (edge-w-value)
                           (add-edge n (cdr edge-w-value) (car edge-w-value)))
@@ -112,8 +112,16 @@
   (with-fixture small-graph
     (setf *graph* (merge-nodes *graph* :bar :baz :zap))
     (is (set-equal (nodes *graph*) '(:FOO :QUX :ZAP)))
-    (is (set-equal (edges *graph*) '((:ZAP :FOO))
+    (is (set-equal (edges *graph*) '((:FOO :ZAP) (:ZAP :ZAP))
                    :test #'tree-equal))))
+
+(deftest merge-nodes-in-small-network ()
+    (with-fixture small-network
+      (setf *network* (merge-nodes *network* :a :b :ab))
+      (is (set-equal (nodes *network*) '(:S :T :AB)))
+      (is (set-equal (edges-w-values *network*)
+                     '(((:S :AB) . 3) ((:AB :T) . 6) ((:AB :AB) . 1))
+                     :test #'tree-equal))))
 
 (deftest merge-edges-in-small-graph ()
   (with-fixture small-graph
