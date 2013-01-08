@@ -354,7 +354,9 @@ The Ford-Fulkerson algorithm is used."
 
 
 ;;; Min Cut
-;;
+(defmethod min-s-t-cut ((graph graph) from to)
+  "Return the minimum cut between FROM and TO in GRAPH.")
+
 ;; Stoer, M. and Wagner, Frank. 1997. A Simple Min-Cut Algorithm.
 ;; Journal of the ACM
 ;;
