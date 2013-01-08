@@ -118,10 +118,10 @@
   (with-fixture small-graph
     (let ((c (copy *graph*)))
       (is (set-equal (nodes *graph*) (nodes c)))
-      (is (tree-equal (nodes *graph*) (nodes c) :test #'tree-equal))
+      (is (tree-equal (edges *graph*) (edges c) :test #'tree-equal))
       (delete-node c :foo)
       (is (not (set-equal (nodes *graph*) (nodes c))))
-      (is (not (tree-equal (nodes *graph*) (nodes c) :test #'tree-equal))))))
+      (is (not (tree-equal (edges *graph*) (edges c) :test #'tree-equal))))))
 
 (deftest merge-nodes-in-small-graph ()
   (with-fixture small-graph

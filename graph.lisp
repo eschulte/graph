@@ -31,6 +31,29 @@
    (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil)
    (node-comb :initarg :node-comb :accessor node-comb :initform nil)))
 
+(defclass digraph (graph) ())
+
+(defun copy-hash (hash)
+  (let ((copy (make-hash-table :test (hash-table-test hash))))
+    (maphash (lambda (k v) (setf (gethash k copy) v)) hash)
+    copy))
+
+(defmethod digraph-of ((graph graph))
+  (make-instance 'digraph
+    :node-h (copy-hash (node-h graph))
+    :edge-h (copy-hash (edge-h graph))
+    :test   (test graph)
+    :edge-comb (edge-comb graph)
+    :node-comb (node-comb graph)))
+
+(defmethod graph-of ((digraph digraph))
+  (make-instance 'digraph
+    :node-h (copy-hash (node-h digraph))
+    :edge-h (copy-hash (edge-h digraph))
+    :test   (test digraph)
+    :edge-comb (edge-comb digraph)
+    :node-comb (node-comb digraph)))
+
 (defmethod edges ((graph graph))
   "Return a list of the edges in GRAPH."
   (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
@@ -49,22 +72,15 @@
   (maphash (lambda (node value) (push (cons node value) alist)) (node-h graph))
   alist)
 
-(defmethod ghash ((graph graph) node-or-edge)
-  (case node-or-edge
-    (:node (node-h graph))
-    (:edge (edge-h graph))))
-
-(defmethod has-it-p ((graph graph) node-or-edge it)
-  (multiple-value-bind (val included) (gethash it (ghash graph node-or-edge))
-    (declare (ignorable val)) included))
-
 (defmethod has-node-p ((graph graph) node)
   "Return `true' if GRAPH has node NODE."
-  (has-it-p graph :node node))
+  (multiple-value-bind (value included) (gethash node (node-h graph))
+    (declare (ignorable value)) included))
 
 (defmethod has-edge-p ((graph graph) edge)
   "Return `true' if GRAPH has edge EDGE."
-  (has-it-p graph :edge edge))
+  (multiple-value-bind (value included) (gethash edge (edge-h graph))
+    (declare (ignorable value)) included))
 
 (defmethod add-node ((graph graph) node)
   "Add NODE to GRAPH."
@@ -76,7 +92,10 @@
   "Add EDGE to GRAPH with optional VALUE."
   (mapc (lambda (node)
           (add-node graph node)
-          (pushnew edge (gethash node (node-h graph))))
+          (pushnew (case (type-of graph)
+                     (graph (remove-duplicates edge))
+                     (digraph edge))
+                   (gethash node (node-h graph))))
         edge)
   (setf (gethash edge (edge-h graph)) value)
   edge)
@@ -87,6 +106,12 @@
     (unless included (error 'missing-node "~S doesn't include ~S" graph node))
     edges))
 
+(defmethod (setf node-edges) (new (graph graph) node)
+  "Set the edges of NODE in GRAPH to NEW.
+Delete and return the old edges of NODE in GRAPH."
+  (prog1 (mapc (curry #'delete-edge graph) (gethash node (node-h graph)))
+    (mapc (curry #'add-edge graph) new)))
+
 (defmethod delete-node ((graph graph) node)
   "Delete NODE from GRAPH.
 Delete and return the old edges of NODE in GRAPH."
@@ -94,17 +119,15 @@ Delete and return the old edges of NODE in GRAPH."
                  (node-edges graph node))
     (remhash node (node-h graph))))
 
-(defmethod (setf node-edges) (new (graph graph) node)
-  "Set the edges of NODE in GRAPH to NEW.
-Delete and return the old edges of NODE in GRAPH."
-  (prog1 (mapc (curry #'delete-edge graph) (gethash node (node-h graph)))
-    (mapc (curry #'add-edge graph) new)))
-
 (defmethod edge-value ((graph graph) edge)
   "Return the value of EDGE in GRAPH."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
     (unless included (error 'missing-edge "~S doesn't include ~S" graph edge))
     value))
+
+(defmethod (setf edge-value) (new (graph graph) edge)
+  "Set the value of EDGE in GRAPH to NEW."
+  (setf (gethash edge (edge-h graph)) new))
 
 (defmethod delete-edge ((graph graph) edge)
   "Delete EDGE from GRAPH.
@@ -116,21 +139,12 @@ Return the old value of EDGE."
           edge)
     (remhash edge (edge-h graph))))
 
-(defmethod (setf edge-value) (new (graph graph) edge)
-  "Set the value of EDGE in GRAPH to NEW."
-  (setf (gethash edge (edge-h graph)) new))
-
 (defun make-graph (&key (nodes nil) (edges nil) (test #'eql))
   "Make a graph."
   (let ((g (make-instance 'graph :test test)))
     (mapc (curry #'add-node g) nodes)
     (mapc (curry #'add-edge g) edges)
     g))
-
-(defun copy-hash (hash)
-  (let ((copy (make-hash-table)))
-    (maphash (lambda (k v) (setf (gethash k copy) v)) hash)
-    copy))
 
 (defmethod copy ((graph graph))
   "Return a copy of GRAPH."
@@ -142,7 +156,7 @@ Return the old value of EDGE."
 
 ;;; Complex graph methods
 (defmethod merge-nodes ((graph graph) node1 node2 new)
-  "Combine NODE1 and NODE2 in GRAPH into new node NEW.
+  "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE."
   (add-node graph new)
@@ -163,7 +177,8 @@ holding VALUE."
 
 (defmethod merge-edges ((graph graph) edge1 edge2 &optional val)
   "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
-Optionally provide a value for the new edge."
+Optionally provide a value for the new edge, otherwise if `edge-comb'
+is defined for GRAPH it will be used or no value will be assigned."
   (add-edge graph (remove-duplicates (append edge1 edge2)) val)
   (append (delete-edge graph edge1)
           (delete-edge graph edge2)))
