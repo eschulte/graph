@@ -144,6 +144,12 @@
     (is (set-equal (edges *graph*) '((:BAR :BAZ) (:BAR :FOO :BAZ))
                    :test #'tree-equal))))
 
+(deftest edge-neighbors-of-c-on-graph ()
+  (with-fixture less-small-graph
+    (is (set-equal (edge-neighbors *graph* '(:foo :bar))
+                   '((:BAZ :FOO) (:FOO :BAR) (:BAR :BAZ) (:FOO :BAR))
+                   :test #'tree-equal))))
+
 (deftest neighbors-of-c-on-graph ()
   (with-fixture normal-graph
     (is (every (lambda (it) (member it (neighbors *graph* 'b)))

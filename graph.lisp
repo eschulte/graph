@@ -186,6 +186,10 @@ is defined for GRAPH it will be used or no value will be assigned."
   (append (delete-edge graph edge1)
           (delete-edge graph edge2)))
 
+(defmethod edge-neighbors ((graph graph) edge)
+  "Return all edges which share a node with EDGE in GRAPH."
+  (mapcan (curry #'node-edges graph) edge))
+
 (defmethod neighbors ((graph graph) node)
   "Return all nodes which share an edge with NODE in GRAPH."
   (apply (curry #'concatenate 'list) (node-edges graph node)))
