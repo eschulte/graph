@@ -40,17 +40,17 @@
 
 (defmethod digraph-of ((graph graph))
   (make-instance 'digraph
-    :node-h (copy-hash (node-h graph))
-    :edge-h (copy-hash (edge-h graph))
-    :test   (test graph)
+    :node-h    (node-h graph)
+    :edge-h    (edge-h graph)
+    :test      (test graph)
     :edge-comb (edge-comb graph)
     :node-comb (node-comb graph)))
 
 (defmethod graph-of ((digraph digraph))
   (make-instance 'digraph
-    :node-h (copy-hash (node-h digraph))
-    :edge-h (copy-hash (edge-h digraph))
-    :test   (test digraph)
+    :node-h    (node-h digraph)
+    :edge-h    (edge-h digraph)
+    :test      (test digraph)
     :edge-comb (edge-comb digraph)
     :node-comb (node-comb digraph)))
 
@@ -175,11 +175,14 @@ holding VALUE."
                 (delete-node graph node2)))
   graph)
 
-(defmethod merge-edges ((graph graph) edge1 edge2 &optional val)
+(defmethod merge-edges ((graph graph) edge1 edge2)
   "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
 Optionally provide a value for the new edge, otherwise if `edge-comb'
 is defined for GRAPH it will be used or no value will be assigned."
-  (add-edge graph (remove-duplicates (append edge1 edge2)) val)
+  (add-edge graph (remove-duplicates (append edge1 edge2))
+            (when (edge-comb graph)
+              (funcall (edge-comb graph)
+                       (edge-value graph edge1) (edge-value graph edge2))))
   (append (delete-edge graph edge1)
           (delete-edge graph edge2)))
 
@@ -187,50 +190,54 @@ is defined for GRAPH it will be used or no value will be assigned."
   "Return all nodes which share an edge with NODE in GRAPH."
   (apply (curry #'concatenate 'list) (node-edges graph node)))
 
-(defmethod dir-neighbors ((graph graph) node)
-  "Return all nodes after NODE in GRAPH along directed edges."
-  (let ((edges (node-edges graph node)))
-    (mapcan (compose #'cdr (curry #'member node)) (copy-tree edges))))
+(defmethod outgoing-neighbors ((digraph digraph) node)
+  "Return all nodes after NODE in DIGRAPH along directed edges."
+  (mapcan (compose #'cdr (curry #'member node))
+          (node-edges digraph node)))
 
-(defmethod dir-step ((graph graph) path)
-  "Take all directed steps forward from PATH through GRAPH.
-Returns a new path for each possible next step."
-  (mapcar (lambda (next) (cons next path)) (dir-neighbors graph (car path))))
+(defmethod incoming-neighbors ((digraph digraph) node)
+  "Return all nodes before NODE in DIGRAPH along directed edges."
+  (mapcan (compose #'cdr (curry #'member node) #'reverse)
+          (copy-tree (node-edges digraph node))))
 
-(defun connected-to- (graph from prev)
-  (if (null from) (reverse prev)
-      (let ((next (remove-duplicates (mapcan (curry #'neighbors graph) from))))
-        (connected-to- graph (set-difference next prev) (union next prev)))))
+(defmethod path-step ((graph graph) path)
+  "∀ edge e leaving PATH in GRAPH return a new path of (cons e PATH)."
+  (mapcar (lambda (next) (cons next path))
+          (case (type-of graph)
+            (graph   (neighbors graph (car path)))
+            (digraph (outgoing-neighbors graph (car path))))))
 
-(defmethod connected-to ((graph graph) node)
+(defmethod connected-by ((graph graph) node func)
+  "Return the components of GRAPH connected to NODE by FUNC."
+  (let ((from (list node)) (seen))
+    (loop :until (null from) :do
+       (let ((next (remove-duplicates (mapcan func from))))
+         (setf from (remove node (set-difference next seen)))
+         (setf seen (union next seen))))
+    (reverse seen)))
+
+(defmethod connected-component ((graph graph) node)
   "Return all nodes reachable from NODE."
-  (connected-to- graph (list node) (list node)))
+  (connected-by graph node (curry #'neighbors graph)))
 
-(defun dir-connected-to- (graph new prev)
-  (if (null new) (reverse prev)
-      (let ((next (mapcan (curry #'dir-neighbors graph) new)))
-        (dir-connected-to-
-         graph (set-difference next prev) (union next prev)))))
-
-(defmethod dir-connected-to ((graph graph) node)
-  "Return all node reachable along directed edges from NODE."
-  (dir-connected-to- graph (list node) nil))
+(defmethod reachable-from ((digraph digraph) node)
+  "Return all node reachable along directed edges from NODE in DIGRAPH."
+  (connected-by digraph node (curry #'outgoing-neighbors digraph)))
 
 (defmethod connectedp ((graph graph))
   "Return true if the graph is connected."
   (let ((nodes (nodes graph)))
-    (subsetp (nodes graph) (connected-to graph (car nodes)))))
+    (subsetp (nodes graph) (connected-component graph (car nodes)))))
 
-(defmethod dir-connectedp ((graph graph))
-  "Return true if directed nodes connect every pair of edges."
-  (let ((nodes (nodes graph)))
-    (every (compose (curry #'subsetp nodes)
-                    (curry #'dir-connected-to graph))
-           nodes)))
+(defmethod fully-reachable ((digraph digraph))
+  "Return true if directed edges connect every pair of nodes."
+  (every (compose (curry #'subsetp (nodes digraph))
+                  (curry #'reachable-from digraph))
+         (nodes digraph)))
 
 (defun connected-components- (graph nodes ccs)
   (if (null nodes) ccs
-      (let ((cc (connected-to graph (car nodes))))
+      (let ((cc (connected-component graph (car nodes))))
         (connected-components- graph (set-difference nodes cc) (cons cc ccs)))))
 
 (defmethod connected-components ((graph graph))
@@ -240,7 +247,7 @@ Returns a new path for each possible next step."
 (defun cycle- (graph front seen cycles &aux next-front)
   "Helper function for recursive portion of `cycles'."
   ;; take a step from every path
-  (loop :for path :in (mapcan (curry #'dir-step graph) front) :do
+  (loop :for path :in (mapcan (curry #'path-step graph) front) :do
      ;; detect cycles
      (let ((cycle-point (position (car path) (cdr path))))
        ;; remove cycles from the front and collection them
@@ -384,7 +391,7 @@ The Ford-Fulkerson algorithm is used."
   (format t "start: ~S~%" (edges-w-values graph))
   (flet ((flow-to-cut (graph flow from)
            (let* ((residual (residual graph flow))
-                  (half (dir-connected-to residual from)))
+                  (half (dir-connected-component residual from)))
              (list half (set-difference (nodes graph) half)))))
     (if (= (length (nodes graph)) 2)
         (progn

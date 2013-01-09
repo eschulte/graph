@@ -149,29 +149,33 @@
     (is (every (lambda (it) (member it (neighbors *graph* 'b)))
                '(a b c)))))
 
-(deftest dir-neighbors-on-graph ()
+(deftest outgoing-neighbors-of-e-on-graph ()
   (with-fixture normal-graph
-    (is (set-equal (dir-neighbors *graph* 'e)
+    (is (set-equal (outgoing-neighbors (digraph-of *graph*) 'e)
                    '(C F)))))
 
-(deftest dis-step-on-graph-from-e ()
+(deftest reachable-from-e-on-graph ()
   (with-fixture normal-graph
-    (is (set-equal (dir-step *graph* '(e))
-                   '((c e) (f e)) :test #'tree-equal))))
+    (is (set-equal (reachable-from (digraph-of *graph*) 'e)
+                   '(C E D B F)))))
 
-(deftest connected-to-e-in-normal-graph ()
+(deftest is-normal-graph-fully-reachable ()
   (with-fixture normal-graph
-    (is (set-equal (connected-to *graph* 'e)
+    (is (not (fully-reachable (digraph-of *graph*))))))
+
+(deftest connected-component-e-in-normal-graph ()
+  (with-fixture normal-graph
+    (is (set-equal (connected-component *graph* 'e)
                    (nodes *graph*)))))
 
-(deftest dir-connected-to-e-in-normal-graph ()
+(deftest reachable-from-e-in-normal-graph ()
   (with-fixture normal-graph
-    (is (set-equal (dir-connected-to *graph* 'e)
+    (is (set-equal (reachable-from (digraph-of *graph*) 'e)
                    '(C F B D E)))))
 
-(deftest dir-connected-to-foo-in-small-graph ()
+(deftest reachable-from-foo-in-small-graph ()
   (with-fixture small-graph
-    (is (set-equal (dir-connected-to *graph* :foo)
+    (is (set-equal (reachable-from (digraph-of *graph*) :foo)
                    '(:bar :baz)))))
 
 (deftest connectedp-of-multiple-graphs ()
