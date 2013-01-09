@@ -235,14 +235,14 @@ is defined for GRAPH it will be used or no value will be assigned."
                   (curry #'reachable-from digraph))
          (nodes digraph)))
 
-(defun connected-components- (graph nodes ccs)
-  (if (null nodes) ccs
-      (let ((cc (connected-component graph (car nodes))))
-        (connected-components- graph (set-difference nodes cc) (cons cc ccs)))))
-
 (defmethod connected-components ((graph graph))
   "Return a list of the connected components of GRAPH."
-  (connected-components- graph (nodes graph) nil))
+  (let ((nodes (nodes graph)) ccs)
+    (loop :until (null nodes) :do
+       (let ((cc (connected-component graph (car nodes))))
+         (setf nodes (set-difference nodes cc))
+         (setf ccs (cons cc ccs))))
+    ccs))
 
 (defun cycle- (graph front seen cycles &aux next-front)
   "Helper function for recursive portion of `cycles'."
