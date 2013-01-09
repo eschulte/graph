@@ -204,13 +204,6 @@ is defined for GRAPH it will be used or no value will be assigned."
   (mapcan (compose #'cdr (curry #'member node) #'reverse)
           (copy-tree (node-edges digraph node))))
 
-(defmethod path-step ((graph graph) path)
-  "∀ edge e leaving PATH in GRAPH return a new path of (cons e PATH)."
-  (mapcar (lambda (next) (cons next path))
-          (case (type-of graph)
-            (graph   (neighbors graph (car path)))
-            (digraph (outgoing-neighbors graph (car path))))))
-
 (defmethod connected-by ((graph graph) node func)
   "Return the components of GRAPH connected to NODE by FUNC."
   (let ((from (list node)) (seen))
@@ -248,29 +241,24 @@ is defined for GRAPH it will be used or no value will be assigned."
          (setf ccs (cons cc ccs))))
     ccs))
 
-(defun cycle- (graph front seen cycles &aux next-front)
-  "Helper function for recursive portion of `cycles'."
-  ;; take a step from every path
-  (loop :for path :in (mapcan (curry #'path-step graph) front) :do
-     ;; detect cycles
-     (let ((cycle-point (position (car path) (cdr path))))
-       ;; remove cycles from the front and collection them
-       (if cycle-point
-           (push (reverse (subseq path 0 (1+ cycle-point))) cycles)
-           (unless (member (car path) seen) (push path next-front))))
-     (push (car path) seen))
-  ;; recurse
-  (if next-front
-      ;; continue with front
-      (cycle- graph next-front seen cycles)
-      ;; or restart with any previously unseen node, or return
-      (let ((remaining (remove-if (lambda (it) (member it seen)) (nodes graph))))
-        (if remaining
-            (cycle- graph
-                    (list (list (car remaining)))
-                    (cons (car remaining) seen)
-                    cycles)
-            cycles))))
+(defmethod cycles-from ((graph graph) node)
+  "Return all cycles in GRAPH containing NODE."
+  (let* ((paths (mapcar #'list (node-edges graph node)))
+         (seen (node-edges graph node))
+         cycles)
+    (loop :until (null paths) :do
+       (format t "paths:~S~%" paths)
+       (let ((path (pop paths)))
+         (mapc (lambda (edge)
+                 (if (member node edge :test #'tree-equal)
+                     ;; pushing everything here...
+                     (push (reverse (cons edge path)) cycles)
+                     (unless (member edge seen)
+                       (push edge seen)
+                       (push (cons edge path) paths))))
+               (remove-if (lambda (edge) (member edge path :test #'tree-equal))
+                          (edge-neighbors graph (car path))))))
+    cycles))
 
 (defmethod cycles ((graph graph))
   "Return all directed `cycles' in GRAPH."
