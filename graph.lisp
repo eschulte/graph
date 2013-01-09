@@ -139,8 +139,8 @@
 (defmethod (setf node-edges) (new (graph graph) node)
   "Set the edges of NODE in GRAPH to NEW.
 Delete and return the old edges of NODE in GRAPH."
-  (prog1 (mapc (curry #'delete-edge graph) (gethash node (node-h graph)))
-    (mapc (curry #'add-edge graph) new)))
+  (prog1 (mapc {delete-edge graph} (gethash node (node-h graph)))
+    (mapc {add-edge graph} new)))
 
 (defmethod delete-node ((graph graph) node)
   "Delete NODE from GRAPH.
@@ -172,8 +172,8 @@ Return the old value of EDGE."
 (defun make-graph (&key (nodes nil) (edges nil) (test #'eql))
   "Make a graph."
   (let ((g (make-instance 'graph :test test)))
-    (mapc (curry #'add-node g) nodes)
-    (mapc (curry #'add-edge g) edges)
+    (mapc {add-node g} nodes)
+    (mapc {add-edge g} edges)
     g))
 
 (defmethod copy ((graph graph))
@@ -218,21 +218,19 @@ is defined for GRAPH it will be used or no value will be assigned."
 
 (defmethod edge-neighbors ((graph graph) edge)
   "Return all edges which share a node with EDGE in GRAPH."
-  (mapcan (curry #'node-edges graph) edge))
+  (mapcan {node-edges graph} edge))
 
 (defmethod neighbors ((graph graph) node)
   "Return all nodes which share an edge with NODE in GRAPH."
-  (apply (curry #'concatenate 'list) (node-edges graph node)))
+  (apply {concatenate 'list} (node-edges graph node)))
 
 (defmethod outgoing-neighbors ((digraph digraph) node)
   "Return all nodes after NODE in DIGRAPH along directed edges."
-  (mapcan (compose #'cdr (curry #'member node))
-          (node-edges digraph node)))
+  (mapcan [cdr {member node}] (node-edges digraph node)))
 
 (defmethod incoming-neighbors ((digraph digraph) node)
   "Return all nodes before NODE in DIGRAPH along directed edges."
-  (mapcan (compose #'cdr (curry #'member node) #'reverse)
-          (copy-tree (node-edges digraph node))))
+  (mapcan [cdr {member node} reverse] (copy-tree (node-edges digraph node))))
 
 (defmethod connected-by ((graph graph) node func)
   "Return the components of GRAPH connected to NODE by FUNC."
@@ -245,11 +243,11 @@ is defined for GRAPH it will be used or no value will be assigned."
 
 (defmethod connected-component ((graph graph) node)
   "Return all nodes reachable from NODE."
-  (connected-by graph node (curry #'neighbors graph)))
+  (connected-by graph node {neighbors graph}))
 
 (defmethod reachable-from ((digraph digraph) node)
   "Return all node reachable along directed edges from NODE in DIGRAPH."
-  (connected-by digraph node (curry #'outgoing-neighbors digraph)))
+  (connected-by digraph node {outgoing-neighbors digraph}))
 
 (defmethod connectedp ((graph graph))
   "Return true if the graph is connected."
@@ -258,9 +256,7 @@ is defined for GRAPH it will be used or no value will be assigned."
 
 (defmethod fully-reachable ((digraph digraph))
   "Return true if directed edges connect every pair of nodes."
-  (every (compose (curry #'subsetp (nodes digraph))
-                  (curry #'reachable-from digraph))
-         (nodes digraph)))
+  (every [{subsetp (nodes digraph)} {reachable-from digraph}] (nodes digraph)))
 
 (defmethod connected-components ((graph graph))
   "Return a list of the connected components of GRAPH."
@@ -298,9 +294,9 @@ is defined for GRAPH it will be used or no value will be assigned."
     ((graph graph) &optional (cycles (cycles graph)))
   "Return the groups of nodes of GRAPH which are connected by cycles."
   (mapcar
-   (rcurry #'remove-duplicates :test #'tree-equal)
+   {remove-duplicates _ :test #'tree-equal}
    (reduce (lambda (acc cycle)
-             (let ((has (curry #'intersection cycle)))
+             (let ((has {intersection cycle}))
                (cons (apply #'append (cons cycle (remove-if-not has acc)))
                      (remove-if has acc))))
            cycles :initial-value nil)))
@@ -420,8 +416,7 @@ The Ford-Fulkerson algorithm is used."
           (format t "base: ~S~%" (edges-w-values graph))
           (values (mapcar #'list (nodes graph))
                   (reduce (lambda (acc edge) (+ (abs (edge-value graph edge)) acc))
-                          (remove-if-not (curry #'subsetp (nodes graph))
-                                         (edges graph))
+                          (remove-if-not {subsetp (nodes graph)} (edges graph))
                           :initial-value 0)))
         (let* ((from (random-elt (nodes graph)))
                (to (random-elt (remove from (nodes graph)))))
