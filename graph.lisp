@@ -280,7 +280,7 @@ is defined for GRAPH it will be used or no value will be assigned."
     ((graph graph) &optional (cycles (cycles graph)))
   "Return the groups of nodes of GRAPH which are connected by cycles."
   (mapcar
-   (lambda (cc) (remove-duplicates cc :test #'tree-equal))
+   (rcurry #'remove-duplicates :test #'tree-equal)
    (reduce (lambda (acc cycle)
              (let ((has (curry #'intersection cycle)))
                (cons (apply #'append (cons cycle (remove-if-not has acc)))
