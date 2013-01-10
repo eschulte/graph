@@ -311,16 +311,26 @@ Uses Tarjan's algorithm."
           (follow node (list node) nil))))
     cycles))
 
-(defmethod cycle-connected-components
-    ((graph graph) &optional (cycles (cycles graph)))
-  "Return the groups of nodes of GRAPH which are connected by cycles."
-  (mapcar
-   {remove-duplicates _ :test #'tree-equal}
-   (reduce (lambda (acc cycle)
-             (let ((has {intersection cycle}))
-               (cons (apply #'append (cons cycle (remove-if-not has acc)))
-                     (remove-if has acc))))
-           cycles :initial-value nil)))
+(defmethod cycles ((graph graph))
+  (flet ((combine (c1 c2)
+           (let (done)
+             (reduce (lambda (acc el)
+                       (append
+                        (if (and (not done) (member el c1))
+                            (progn
+                              (setf done t)
+                              (append (member el c1)
+                                      (reverse (member el (reverse c1)))))
+                            (list el))
+                        acc))
+                     c2 :initial-value nil))))
+    (let ((basic-cycles (basic-cycles graph)) cycles)
+      (loop :for cycle = (pop basic-cycles) :do
+         (push cycle cycles)
+         (mapc (lambda (c) (push (combine c cycle) cycles))
+               (remove-if-not {intersection cycle} basic-cycles))
+         :until (null basic-cycles))
+      cycles)))
 
 
 ;;; Shortest Path
