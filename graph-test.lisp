@@ -155,33 +155,28 @@
     (is (every (lambda (it) (member it (neighbors *graph* 'b)))
                '(a b c)))))
 
-(deftest outgoing-neighbors-of-e-on-graph ()
+(deftest neighbors-of-e-on-digraph ()
   (with-fixture normal-graph
-    (is (set-equal (outgoing-neighbors (digraph-of *graph*) 'e)
+    (is (set-equal (neighbors (digraph-of *graph*) 'e)
                    '(C F)))))
 
-(deftest reachable-from-e-on-graph ()
+(deftest conected-component-of-e-on-digraph ()
   (with-fixture normal-graph
-    (is (set-equal (reachable-from (digraph-of *graph*) 'e)
+    (is (set-equal (connected-component (digraph-of *graph*) 'e)
                    '(C E D B F)))))
 
-(deftest is-normal-graph-fully-reachable ()
+(deftest is-normal-digraph-connected ()
   (with-fixture normal-graph
-    (is (not (fully-reachable (digraph-of *graph*))))))
+    (is (not (connectedp (digraph-of *graph*))))))
 
 (deftest connected-component-e-in-normal-graph ()
   (with-fixture normal-graph
     (is (set-equal (connected-component *graph* 'e)
                    (nodes *graph*)))))
 
-(deftest reachable-from-e-in-normal-graph ()
-  (with-fixture normal-graph
-    (is (set-equal (reachable-from (digraph-of *graph*) 'e)
-                   '(C F B D E)))))
-
-(deftest reachable-from-foo-in-small-graph ()
+(deftest connected-component-of-foo-in-small-digraph ()
   (with-fixture small-graph
-    (is (set-equal (reachable-from (digraph-of *graph*) :foo)
+    (is (set-equal (connected-component (digraph-of *graph*) :foo)
                    '(:bar :baz)))))
 
 (deftest connectedp-of-multiple-graphs ()
@@ -219,15 +214,10 @@
                    '((C E F B) (D C E))
                    :test #'set-equal))))
 
-(deftest cycle-connected-components-1 ()
+(deftest cycles-of-graph ()
   (with-fixture normal-graph
-    (is (set-equal (cycle-connected-components *graph*)
-                   '((C D E F B)) :test #'set-equal))))
-
-(deftest cycle-connected-components-2 ()
-  (with-fixture less-small-graph
-    (is (set-equal (cycle-connected-components *graph*)
-                   '((:BAR :BAZ :FOO) (:ZAP :ZAF :QUX) (:FIZ))
+    (is (set-equal (cycles *graph*)
+                   '((D C E) (B F E C E D C) (C E F B))
                    :test #'set-equal))))
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()
