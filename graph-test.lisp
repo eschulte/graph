@@ -192,8 +192,14 @@
 (deftest connected-components-of-less-small-graph ()
   (with-fixture less-small-graph
     (is (set-equal (connected-components *graph*)
-                   ((:ZAP :ZAF :QUX) (:FIZ) (:BAZ :FOO :BAR))
+                   '((:ZAP :ZAF :QUX) (:FIZ) (:BAZ :FOO :BAR))
                    :test #'tree-equal))))
+
+(deftest strongly-connected-components-of-small-graph ()
+  (with-fixture small-graph
+    (is (set-equal (strongly-connected-components *graph*)
+                   '((:QUX) (:BAR :BAZ :FOO))
+                   :test #'set-equal))))
 
 (deftest cycles-of-graph ()
   (with-fixture normal-graph

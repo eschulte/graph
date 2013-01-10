@@ -226,11 +226,12 @@ is defined for GRAPH it will be used or no value will be assigned."
 
 (defmethod outgoing-neighbors ((digraph digraph) node)
   "Return all nodes after NODE in DIGRAPH along directed edges."
-  (mapcan [cdr {member node}] (node-edges digraph node)))
+  (mapcan [#'cdr {member node}] (node-edges digraph node)))
 
 (defmethod incoming-neighbors ((digraph digraph) node)
   "Return all nodes before NODE in DIGRAPH along directed edges."
-  (mapcan [cdr {member node} reverse] (copy-tree (node-edges digraph node))))
+  (mapcan [#'cdr {member node} #'reverse]
+          (copy-tree (node-edges digraph node))))
 
 (defmethod connected-by ((graph graph) node func)
   "Return the components of GRAPH connected to NODE by FUNC."
@@ -266,6 +267,41 @@ is defined for GRAPH it will be used or no value will be assigned."
          (setf nodes (set-difference nodes cc))
          (setf ccs (cons cc ccs))))
     ccs))
+
+
+;;; Cycles and strongly connected components
+(defmethod strongly-connected-components ((graph graph))
+  "Return the nodes of GRAPH partitioned into strongly connected components.
+Uses Tarjan's algorithm."
+  (let ((index (make-hash-table))
+        (lowlink (make-hash-table))
+        (counter 0) stack sccs)
+    (labels ((tarjan (node)
+               ;; mark this node
+               (setf (gethash node index) counter)
+               (setf (gethash node lowlink) counter)
+               (incf counter)
+               (push node stack)
+               ;; consider successors
+               (mapc (lambda (neighbor)
+                       (cond
+                         ((not (gethash neighbor index))
+                          (tarjan neighbor)
+                          (setf (gethash node lowlink)
+                                (min (gethash node lowlink)
+                                     (gethash neighbor lowlink))))
+                         ((member neighbor stack)
+                          (setf (gethash node lowlink)
+                                (min (gethash node lowlink)
+                                     (gethash neighbor index))))))
+                     (remove-duplicates (remove node (neighbors graph node))))
+               ;; is NODE the root of a strongly connected component
+               (when (= (gethash node index) (gethash node lowlink))
+                 (push (loop :for v = (pop stack) :collect v :until (eq v node))
+                       sccs))))
+      (mapc (lambda (node) (unless (gethash node index) (tarjan node)))
+            (nodes graph))
+      sccs)))
 
 (defmethod cycles-from ((graph graph) node)
   "Return all cycles in GRAPH containing NODE."
@@ -409,7 +445,7 @@ The Ford-Fulkerson algorithm is used."
   (format t "start: ~S~%" (edges-w-values graph))
   (flet ((flow-to-cut (graph flow from)
            (let* ((residual (residual graph flow))
-                  (half (dir-connected-component residual from)))
+                  (half (connected-component residual from)))
              (list half (set-difference (nodes graph) half)))))
     (if (= (length (nodes graph)) 2)
         (progn
