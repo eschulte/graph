@@ -1,5 +1,5 @@
 (defpackage #:graph
-  (:use :common-lisp :alexandria :metabang-bind :json)
+  (:use :common-lisp :alexandria :metabang-bind)
   (:export
    :edges
    :nodes
