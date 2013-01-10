@@ -224,40 +224,28 @@ is defined for GRAPH it will be used or no value will be assigned."
   "Return all nodes which share an edge with NODE in GRAPH."
   (apply {concatenate 'list} (node-edges graph node)))
 
-(defmethod outgoing-neighbors ((digraph digraph) node)
-  "Return all nodes after NODE in DIGRAPH along directed edges."
+(defmethod neighbors ((digraph digraph) node)
+  "Return all nodes following NODE in an edge in DIGRAPH."
   (mapcan [#'cdr {member node}] (node-edges digraph node)))
 
-(defmethod incoming-neighbors ((digraph digraph) node)
-  "Return all nodes before NODE in DIGRAPH along directed edges."
+(defmethod precedents ((digraph digraph) node)
+  "Return all nodes preceding NODE in an edge of DIGRAPH."
   (mapcan [#'cdr {member node} #'reverse]
           (copy-tree (node-edges digraph node))))
 
-(defmethod connected-by ((graph graph) node func)
-  "Return the components of GRAPH connected to NODE by FUNC."
+(defmethod connected-component ((graph graph) node)
+  "Return the connected component of NODE in GRAPH."
   (let ((from (list node)) (seen))
     (loop :until (null from) :do
-       (let ((next (remove-duplicates (mapcan func from))))
+       (let ((next (remove-duplicates (mapcan {neighbors graph} from))))
          (setf from (remove node (set-difference next seen)))
          (setf seen (union next seen))))
     (reverse seen)))
-
-(defmethod connected-component ((graph graph) node)
-  "Return all nodes reachable from NODE."
-  (connected-by graph node {neighbors graph}))
-
-(defmethod reachable-from ((digraph digraph) node)
-  "Return all node reachable along directed edges from NODE in DIGRAPH."
-  (connected-by digraph node {outgoing-neighbors digraph}))
 
 (defmethod connectedp ((graph graph))
   "Return true if the graph is connected."
   (let ((nodes (nodes graph)))
     (subsetp (nodes graph) (connected-component graph (car nodes)))))
-
-(defmethod fully-reachable ((digraph digraph))
-  "Return true if directed edges connect every pair of nodes."
-  (every [{subsetp (nodes digraph)} {reachable-from digraph}] (nodes digraph)))
 
 (defmethod connected-components ((graph graph))
   "Return a list of the connected components of GRAPH."
@@ -294,7 +282,7 @@ Uses Tarjan's algorithm."
                           (setf (gethash node lowlink)
                                 (min (gethash node lowlink)
                                      (gethash neighbor index))))))
-                     (remove-duplicates (remove node (neighbors graph node))))
+                     (neighbors graph node))
                ;; is NODE the root of a strongly connected component
                (when (= (gethash node index) (gethash node lowlink))
                  (push (loop :for v = (pop stack) :collect v :until (eq v node))
