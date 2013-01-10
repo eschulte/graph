@@ -288,31 +288,28 @@ Uses Tarjan's algorithm."
                  (push (loop :for v = (pop stack) :collect v :until (eq v node))
                        sccs))))
       (mapc (lambda (node) (unless (gethash node index) (tarjan node)))
-            (nodes graph))
-      sccs)))
+            (nodes graph)))
+    sccs))
 
-(defmethod cycles-from ((graph graph) node)
-  "Return all cycles in GRAPH containing NODE."
-  (let* ((paths (mapcar #'list (node-edges graph node)))
-         (seen (node-edges graph node))
-         cycles)
-    (loop :until (null paths) :do
-       (format t "paths:~S~%" paths)
-       (let ((path (pop paths)))
-         (mapc (lambda (edge)
-                 (if (member node edge :test #'tree-equal)
-                     ;; pushing everything here...
-                     (push (reverse (cons edge path)) cycles)
-                     (unless (member edge seen)
-                       (push edge seen)
-                       (push (cons edge path) paths))))
-               (remove-if (lambda (edge) (member edge path :test #'tree-equal))
-                          (edge-neighbors graph (car path))))))
+(defmethod basic-cycles ((graph graph))
+  "Return all basic in GRAPH."
+  (let (cycles seen)
+    (labels ((follow (node path used-edges)
+               (push node seen)
+               (dolist (edge (node-edges graph node))
+                 (unless (member edge used-edges :test #'tree-equal)
+                   (dolist (neighbor (remove node edge))
+                     (cond ((member neighbor path)
+                            (push (subseq path 0 (1+ (position neighbor path)))
+                                  cycles))
+                           ((not (member neighbor seen))
+                            (follow neighbor
+                                    (cons neighbor path)
+                                    (cons edge used-edges)))))))))
+      (dolist (node (nodes graph))
+        (unless (member node seen)
+          (follow node (list node) nil))))
     cycles))
-
-(defmethod cycles ((graph graph))
-  "Return all directed `cycles' in GRAPH."
-  (cycle- graph nil nil nil))
 
 (defmethod cycle-connected-components
     ((graph graph) &optional (cycles (cycles graph)))

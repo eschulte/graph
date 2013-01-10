@@ -201,10 +201,23 @@
                    '((:QUX) (:BAR :BAZ :FOO))
                    :test #'set-equal))))
 
-(deftest cycles-of-graph ()
+(deftest basic-cycles-of-small-graph ()
+  (with-fixture small-graph
+    (is (set-equal (basic-cycles *graph*)
+                   '((:BAR :BAZ :FOO))
+                   :test #'set-equal))))
+
+(deftest basic-cycles-of-less-small-graph ()
+  (with-fixture less-small-graph
+    (is (set-equal (basic-cycles *graph*)
+                   '((:ZAF :ZAP :QUX) (:BAR :BAZ :FOO))
+                   :test #'set-equal))))
+
+(deftest basic-cycles-of-graph ()
   (with-fixture normal-graph
-    (is (tree-equal (cycles *graph*)
-                    '((C D E F B) (D E C))))))
+    (is (set-equal (basic-cycles *graph*)
+                   '((C E F B) (D C E))
+                   :test #'set-equal))))
 
 (deftest cycle-connected-components-1 ()
   (with-fixture normal-graph
