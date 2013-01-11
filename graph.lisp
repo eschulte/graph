@@ -476,3 +476,19 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
           (if (< weight1 weight2)
               (values cut1 weight1)
               (values cut2 weight2))))))
+
+
+;;; Visualization
+(defmethod to-dot ((graph graph) &optional (stream t))
+  "Print the dot code representing GRAPH."
+  (format stream "graph to_dot {~%")
+  (mapc {format stream "  \"~a\";~%"} (nodes graph))
+  (mapc {apply #'format stream "  \"~a\" -- \"~a\";~%"} (edges graph))
+  (format stream "}~%"))
+
+(defmethod to-dot ((digraph digraph) &optional (stream t))
+  "Print the dot code representing DIGRAPH."
+  (format stream "digraph to_dot {~%")
+  (mapc {format stream "  \"~a\";~%"} (nodes digraph))
+  (mapc {apply #'format stream "  \"~a\" -> \"~a\";~%"} (edges digraph))
+  (format stream "}~%"))
