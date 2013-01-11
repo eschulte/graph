@@ -54,10 +54,38 @@
   (set-macro-character #\] (get-macro-character #\) )))
 
 
+;;; Hashes keyed on equality for edges (sets)
+(defun symbol< (symbol1 symbol2)
+  (string< (symbol-name symbol1) (symbol-name symbol2)))
+
+(defun edge-hash (edge)
+  (sxhash (sort edge (cond
+                       ((symbolp (car edge)) #'symbol<)
+                       ((stringp (car edge)) #'string<)
+                       ((numberp (car edge)) #'<)
+                       (t        (lambda (a b) (string< (format nil "~a" a)
+                                                   (format nil "~a" b))))))))
+
+(defun edge-equal (edge1 edge2) (set-equal edge1 edge2))
+#+sbcl
+(sb-ext:define-hash-table-test edge-equal edge-hash)
+
+(defun make-edge-hash ()
+  #+sbcl
+  (make-hash-table :test 'edge-equal)
+  #+ecl
+  (make-custom-hash-table :test 'edge-equal :hash-function 'edge-hash)
+  #-(or sbcl ecl)
+  (error "unsupported lisp distribution"))
+
+
 ;;; Graph objects and basic methods
 (defclass graph ()
-  ((node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
-   (edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table :test 'equalp))
+  ((node-t :initarg :node-t :accessor node-t :initform 'symbol)
+   (edge-t :initarg :edge-t :accessor edge-t :initform 'number)
+   (node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
+   (edge-h :initarg :edge-h :accessor edge-h
+           :initform (make-hash-table :test 'edge-equal))
    (test   :initarg :test   :accessor test   :initform #'eql)
    (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil)
    (node-comb :initarg :node-comb :accessor node-comb :initform nil)))
