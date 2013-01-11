@@ -14,6 +14,12 @@
 (defvar *graph* nil
   "Variable for use in graph tests.")
 
+(defvar *network* nil
+  "Variable for use in graph tests.")
+
+(defvar *cycle* nil
+  "Variable for use in graph tests.")
+
 (defixture small-graph
   (:setup (setf *graph*
                 (make-graph
