@@ -480,16 +480,25 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
 
 
 ;;; Visualization
+(defun edge-to-dot (graph edge)
+  (concatenate 'string
+    (if (eq 'digraph (type-of graph))
+        (apply #'format nil "  \"~a\" -> \"~a\"" edge)
+        (apply #'format nil "  \"~a\" -- \"~a\"" edge))
+    (if (edge-value graph edge)
+        (format nil "[label=\"~a\"];~%" (edge-value graph edge))
+        ";")))
+
 (defmethod to-dot ((graph graph) &optional (stream t))
   "Print the dot code representing GRAPH."
   (format stream "graph to_dot {~%")
   (mapc {format stream "  \"~a\";~%"} (nodes graph))
-  (mapc {apply #'format stream "  \"~a\" -- \"~a\";~%"} (edges graph))
+  (mapc [{format stream "~a"} {edge-to-dot graph}] (edges graph))
   (format stream "}~%"))
 
 (defmethod to-dot ((digraph digraph) &optional (stream t))
   "Print the dot code representing DIGRAPH."
   (format stream "digraph to_dot {~%")
   (mapc {format stream "  \"~a\";~%"} (nodes digraph))
-  (mapc {apply #'format stream "  \"~a\" -> \"~a\";~%"} (edges digraph))
+  (mapc [{format stream "~a"} {edge-to-dot digraph}] (edges digraph))
   (format stream "}~%"))
