@@ -27,30 +27,31 @@
 
 ;;; Reader macros
 
-;; partial application with {} using Alexandria's `curry' and `rcurry'
-(set-syntax-from-char #\{ #\( )
-(set-syntax-from-char #\} #\) )
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; partial application with {} using Alexandria's `curry' and `rcurry'
+  (set-syntax-from-char #\{ #\( )
+  (set-syntax-from-char #\} #\) )
 
-(defun lcurly-brace-reader (stream inchar)
-  (declare (ignore inchar))
-  (let ((spec (read-delimited-list #\} stream t)))
-    (if (eq (cadr spec) '_)
-        `(rcurry (function ,(car spec)) ,@(cddr spec))
-        `(curry (function ,(car spec)) ,@(cdr spec)))))
+  (defun lcurly-brace-reader (stream inchar)
+    (declare (ignore inchar))
+    (let ((spec (read-delimited-list #\} stream t)))
+      (if (eq (cadr spec) '_)
+          `(rcurry (function ,(car spec)) ,@(cddr spec))
+          `(curry (function ,(car spec)) ,@(cdr spec)))))
 
-(set-macro-character #\{ #'lcurly-brace-reader)
-(set-macro-character #\} (get-macro-character #\) ))
+  (set-macro-character #\{ #'lcurly-brace-reader)
+  (set-macro-character #\} (get-macro-character #\) ))
 
-;; composition with [] using Alexandria's `compose'
-(set-syntax-from-char #\[ #\( )
-(set-syntax-from-char #\] #\) )
+  ;; composition with [] using Alexandria's `compose'
+  (set-syntax-from-char #\[ #\( )
+  (set-syntax-from-char #\] #\) )
 
-(defun lsquare-brace-reader (stream inchar)
-  (declare (ignore inchar))
-  (cons 'compose (read-delimited-list #\] stream t)))
+  (defun lsquare-brace-reader (stream inchar)
+    (declare (ignore inchar))
+    (cons 'compose (read-delimited-list #\] stream t)))
 
-(set-macro-character #\[ #'lsquare-brace-reader)
-(set-macro-character #\] (get-macro-character #\) ))
+  (set-macro-character #\[ #'lsquare-brace-reader)
+  (set-macro-character #\] (get-macro-character #\) )))
 
 
 ;;; Graph objects and basic methods
