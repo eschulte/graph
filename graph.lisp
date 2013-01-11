@@ -26,7 +26,6 @@
 
 
 ;;; Reader macros
-
 (eval-when (:compile-toplevel :load-toplevel :execute)
   ;; partial application with {} using Alexandria's `curry' and `rcurry'
   (set-syntax-from-char #\{ #\( )
@@ -87,9 +86,9 @@
    (edge-h :initarg :edge-h :accessor edge-h
            :initform (make-hash-table :test 'edge-equal))
    (test   :initarg :test   :accessor test   :initform #'eql)
-   (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil)
-   (node-comb :initarg :node-comb :accessor node-comb :initform nil)))
+   (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil)))
 
+;; TODO: this should use normal hashes for the edge hash
 (defclass digraph (graph) ())
 
 (defun copy-hash (hash)
@@ -102,16 +101,14 @@
     :node-h    (node-h graph)
     :edge-h    (edge-h graph)
     :test      (test graph)
-    :edge-comb (edge-comb graph)
-    :node-comb (node-comb graph)))
+    :edge-comb (edge-comb graph)))
 
 (defmethod graph-of ((digraph digraph))
   (make-instance 'digraph
     :node-h    (node-h digraph)
     :edge-h    (edge-h digraph)
     :test      (test digraph)
-    :edge-comb (edge-comb digraph)
-    :node-comb (node-comb digraph)))
+    :edge-comb (edge-comb digraph)))
 
 (defmethod edges ((graph graph))
   "Return a list of the edges in GRAPH."
@@ -231,6 +228,7 @@ Return the old value of EDGE."
   "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
+  ;; TODO: ensure that this actually does add all of the required new edges
   (mapc (lambda-bind ((edge . val))
           (let ((edge (mapcar (lambda (node)
                                 (if (member node (list node1 node2))
@@ -253,14 +251,17 @@ holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
           (node-edges graph new) (remove-if-not {member new} (edges graph)))
   graph)
 
-(defmethod merge-edges ((graph graph) edge1 edge2)
+(defmethod merge-edges ((graph graph) edge1 edge2
+                        &key value (edge-comb (edge-comb graph)))
   "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
 Optionally provide a value for the new edge, otherwise if `edge-comb'
 is defined for GRAPH it will be used or no value will be assigned."
   (add-edge graph (remove-duplicates (append edge1 edge2))
-            (when (edge-comb graph)
-              (funcall (edge-comb graph)
-                       (edge-value graph edge1) (edge-value graph edge2))))
+            (or value
+                (when edge-comb
+                  (funcall edge-comb
+                           (edge-value graph edge1)
+                           (edge-value graph edge2)))))
   (append (delete-edge graph edge1)
           (delete-edge graph edge2)))
 
