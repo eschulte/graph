@@ -117,6 +117,12 @@
   "Return a list of the edges in GRAPH."
   (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
 
+(defmethod (setf edges) (new (graph graph))
+  "Set the edges in GRAPH to NEW."
+  (mapc {delete-edge graph} (set-difference (edges graph) new :test 'set-equal))
+  (mapc {add-edge graph} (set-difference new (edges graph) :test 'set-equal))
+  (edges graph))
+
 (defmethod edges-w-values ((graph graph) &aux alist)
   "Return an alist of edges of GRAPH with their values."
   (maphash (lambda (edge value) (push (cons edge value) alist)) (edge-h graph))
@@ -125,6 +131,12 @@
 (defmethod nodes ((graph graph))
   "Return a list of the nodes in GRAPH."
   (loop :for key :being :each :hash-key :of (node-h graph) :collect key))
+
+(defmethod (setf nodes) (new (graph graph))
+  "Set the nodes in GRAPH to NEW."
+  (mapc {delete-node graph} (set-difference (nodes graph) new))
+  (mapc {add-node graph} (set-difference new (nodes graph)))
+  (nodes graph))
 
 (defmethod nodes-w-values ((graph graph) &aux alist)
   "Return an alist of nodes of GRAPH with their values."
