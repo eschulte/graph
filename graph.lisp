@@ -228,27 +228,22 @@ Return the old value of EDGE."
   "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
-  ;; TODO: ensure that this actually does add all of the required new edges
-  (mapc (lambda-bind ((edge . val))
-          (let ((edge (mapcar (lambda (node)
-                                (if (member node (list node1 node2))
-                                    new node))
-                              edge)))
-            (unless (subsetp edge (list node1 node2))
-              (if (has-edge-p graph edge)
-                  (when edge-comb
-                    (setf (edge-value graph edge)
-                          (funcall edge-comb (edge-value graph edge) val)))
-                  (add-edge graph edge val)))))
-        (prog1 (append (delete-node graph node1)
-                       (delete-node graph node2))
-          (add-node graph new)))
-  (assert (set-equal (node-edges graph new)
-                     (remove-if-not {member new} (edges graph))
-                     :test #'tree-equal)
-          (new graph) "inconsistent edges for ~S in ~S with ~S ≠ ~S"
-          new graph
-          (node-edges graph new) (remove-if-not {member new} (edges graph)))
+  ;; replace all removed edges with NEW instead of NODE1 or NODE2
+  (mapcar
+   (lambda-bind ((edge . value))
+     (let ((e (mapcar (lambda (n) (if (member n (list node1 node2)) new n)) edge)))
+       (if (has-edge-p graph e)
+           (when edge-comb
+             (setf (edge-value graph e)
+                   (funcall edge-comb (edge-value graph e) value)))
+           (add-edge graph e value))))
+   ;; drop edges between only node1 and node2
+   (remove-if-not [{set-difference _ (list node1 node2)} #'car]
+                  ;; delete both nodes keeping their edges and values
+                  (prog1 (append (delete-node graph node1)
+                                 (delete-node graph node2))
+                    ;; add the new node
+                    (add-node graph new))))
   graph)
 
 (defmethod merge-edges ((graph graph) edge1 edge2
