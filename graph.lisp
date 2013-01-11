@@ -133,8 +133,7 @@
 (defmethod node-edges ((graph graph) node)
   "Return the value of NODE in GRAPH."
   (multiple-value-bind (edges included) (gethash node (node-h graph))
-    ;; TODO: this needs to be declared as a real error
-    (unless included (error 'missing-node "~S doesn't include ~S" graph node))
+    (assert included (node graph) "~S doesn't include ~S" graph node)
     edges))
 
 (defmethod (setf node-edges) (new (graph graph) node)
@@ -153,8 +152,7 @@ Delete and return the old edges of NODE in GRAPH."
 (defmethod edge-value ((graph graph) edge)
   "Return the value of EDGE in GRAPH."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
-    ;; TODO: this needs to be declared as a real error
-    (unless included (error 'missing-edge "~S doesn't include ~S" graph edge))
+    (assert included (edge graph) "~S doesn't include ~S" graph edge)
     value))
 
 (defmethod (setf edge-value) (new (graph graph) edge)
@@ -190,21 +188,27 @@ Return the old value of EDGE."
 (defmethod merge-nodes ((graph graph) node1 node2 &optional (new node1))
   "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
-holding VALUE."
-  (add-node graph new)
+holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
   (mapc (lambda-bind ((edge . val))
           (let ((edge (mapcar (lambda (node)
                                 (if (member node (list node1 node2))
                                     new node))
                               edge)))
-            (if (has-edge-p graph edge)
-                (when (edge-comb graph)
-                  (setf (edge-value graph edge)
-                        (funcall (edge-comb graph)
-                                 (edge-value graph edge) val)))
-                (add-edge graph edge val))))
-        (append (delete-node graph node1)
-                (delete-node graph node2)))
+            (unless (subsetp edge (list node1 node2))
+              (if (has-edge-p graph edge)
+                  (when (edge-comb graph)
+                    (setf (edge-value graph edge)
+                          (funcall (edge-comb graph)
+                                   (edge-value graph edge) val)))
+                  (add-edge graph edge val)))))
+        (prog1 (append (delete-node graph node1)
+                       (delete-node graph node2))
+          (add-node graph new)))
+  (assert (set-equal (node-edges graph new)
+                     (remove-if-not {member new} (edges graph))
+                     :test #'tree-equal)
+          (new graph) "inconsistent edges for ~S in ~S with ~S ≠ ~S"
+          new graph (node-edges new) (remove-if-not {member new} (edges graph)))
   graph)
 
 (defmethod merge-edges ((graph graph) edge1 edge2)
@@ -459,12 +463,14 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
 ;;          min cut of s and t in G and (min-cut G').
 (defmethod min-cut ((graph graph))
   "Return the global min-cut of GRAPH with the weight of the cut."
+  (format t "min-cut ~S~%" (edges-w-values graph))
   (if (<= (length (nodes graph)) 2)
-      (if (< (length (nodes graph)) 2)
-          (error 'uncuttable "Can't cut a graph with <2 nodes.")
-          (values (nodes graph)
-                  (reduce #'+ (mapcar {edge-value graph} (edges graph)))))
+      (progn
+        (assert (= (length (nodes graph)) 2) (graph) "%S has <2 nodes" graph)
+        (values (nodes graph)
+                (reduce #'+ (mapcar {edge-value graph} (edges graph)))))
       (multiple-value-bind (cut1 weight1) (min-s-t-cut graph)
+        (format t "cut1 ~S -> weight1 ~S ~%" cut1 weight1)
         (multiple-value-bind (cut2 weight2)
             (min-cut (merge-nodes (copy graph) (first cut1) (second cut1)))
           (if (< weight1 weight2)
