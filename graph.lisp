@@ -186,7 +186,8 @@ Return the old value of EDGE."
 
 
 ;;; Complex graph methods
-(defmethod merge-nodes ((graph graph) node1 node2 &optional (new node1))
+(defmethod merge-nodes ((graph graph) node1 node2
+                        &key (edge-comb (edge-comb graph)) (new node1))
   "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
@@ -441,20 +442,25 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
                                                 (node-edges g node))))))
       (loop :while (> (length (nodes g)) 1) :do
          (let* ((a (list (random-elt (nodes g))))
-                (nodes (remove (car a) (nodes g))))
-           (loop :while nodes :do
+                (rest (remove (car a) (nodes g))))
+           (loop :while rest :do
               ;; grow A by adding the node most tightly connected to A
-              (let ((new (car (sort nodes #'> :key {connection-weight a}))))
-                (setf nodes (remove new nodes))
+              (let ((new (car (sort rest #'> :key {connection-weight a}))))
+                (setf rest (remove new rest))
                 (push new a)))
+           (assert (set-equal (nodes g) a) ((nodes g) a)
+                   "at this point all nodes of g~S should be in a~S"
+                   (nodes g) a)
            ;; store the cut-of-phase
+           (format t "g~S a~S w~S~%"
+                   (edges-w-values g) a (connection-weight (cdr a) (car a)))
            (push (cons (connection-weight (cdr a) (car a)) (subseq a 0 2))
                  cuts-of-phase)
-           ;; merge two last added nodes after removing edges between them
+           ;; merge two last added nodes
            (mapc {delete-edge g} (intersection (node-edges g (first a))
                                                (node-edges g (second a))
                                                :test #'tree-equal))
-           (merge-nodes g (first a) (second a))))
+           (merge-nodes g (first a) (second a) :edge-comb #'+)))
       ;; return the minimum cut-of-phase
       (let ((weight-and-cut (car (sort cuts-of-phase #'< :key #'car))))
         (values (cdr weight-and-cut) (car weight-and-cut))))))
