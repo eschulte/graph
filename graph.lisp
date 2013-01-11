@@ -133,6 +133,7 @@
 (defmethod node-edges ((graph graph) node)
   "Return the value of NODE in GRAPH."
   (multiple-value-bind (edges included) (gethash node (node-h graph))
+    ;; TODO: this needs to be declared as a real error
     (unless included (error 'missing-node "~S doesn't include ~S" graph node))
     edges))
 
@@ -152,6 +153,7 @@ Delete and return the old edges of NODE in GRAPH."
 (defmethod edge-value ((graph graph) edge)
   "Return the value of EDGE in GRAPH."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
+    ;; TODO: this needs to be declared as a real error
     (unless included (error 'missing-edge "~S doesn't include ~S" graph edge))
     value))
 
@@ -185,7 +187,7 @@ Return the old value of EDGE."
 
 
 ;;; Complex graph methods
-(defmethod merge-nodes ((graph graph) node1 node2 new)
+(defmethod merge-nodes ((graph graph) node1 node2 &optional (new node1))
   "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE."
@@ -419,44 +421,41 @@ The Ford-Fulkerson algorithm is used."
 
 
 ;;; Min Cut
-(defun combine-flows (flow1 val1 flow2 val2)
-  (values (append flow1 flow2) (+ val1 val2)))
-
-
-;; "maximum adjacency search" or "maximum carnality search"
-(defmethod min-s-t-cut ((graph graph) &aux cuts-of-phase)
-  "Return two arbitrary nodes in G and the minimum cut between them.
-Use \"maximum carnality search\" aka \"maximum adjacency search\"."
-  (flet ((connection-weight (group node)
-           ;; return the weight between GROUP and NODE
-           ))
-    (loop :while (> (length (nodes graph)))
-       ;; A will be one half of the cut, which we will grow incrementally
-       (let ((a (list from)) (nodes-left (nodes graph)))
-         (loop :while nodes-left
-            ;; grow A by adding the node most tightly connected to A
-            (let ((new (car (sort (map 'list #'cons
-                                       (mapcar {connection-weight a} nodes-left)
-                                       nodes-left)
-                                  #'> :key #'cdr))))
-              (setf nodes-left (remove new nodes-left))
-              (push new a)))
-         ;; merge two last added nodes
-         
-         ;; store the cut-of-phase
-         
-         )))
-  
-  ;; return the minimum cut-of-phase
-  )
-
+;;
 ;; Stoer, M. and Wagner, Frank. 1997. A Simple Min-Cut Algorithm.
 ;; Journal of the ACM
 ;;
+(defmethod min-s-t-cut ((graph graph))
+  "Return two arbitrary nodes in G and the minimum cut between them.
+Use \"maximum carnality search\" aka \"maximum adjacency search\"."
+  (let ((g (copy graph)) cuts-of-phase)
+    (flet ((connection-weight (group node)
+             ;; return the weight of edges between GROUP and NODE
+             (reduce #'+ (mapcar {edge-value g}
+                                 (remove-if-not {intersection group}
+                                                (node-edges g node))))))
+      (loop :while (> (length (nodes g)) 1) :do
+         (let* ((a (list (random-elt (nodes g))))
+                (nodes (remove (car a) (nodes g))))
+           (loop :while nodes :do
+              ;; grow A by adding the node most tightly connected to A
+              (let ((new (car (sort nodes #'> :key {connection-weight a}))))
+                (setf nodes (remove new nodes))
+                (push new a)))
+           ;; store the cut-of-phase
+           (push (cons (connection-weight (cdr a) (car a)) (subseq a 0 2))
+                 cuts-of-phase)
+           ;; merge two last added nodes after removing edges between them
+           (mapc {delete-edge g} (intersection (node-edges g (first a))
+                                               (node-edges g (second a))
+                                               :test #'tree-equal))
+           (merge-nodes g (first a) (second a))))
+      ;; return the minimum cut-of-phase
+      (car (sort cuts-of-phase #'< :key #'car)))))
+
 ;; Theorem: Let s,t ∈ (nodes G), let G' be the result of merging s and
 ;;          t in G.  Then (min-cut G) is equal to the minimum of
 ;;          (min-s-t-cut G) and (min-cut G').
-;;
 (defmethod min-cut ((graph graph))
   (format t "start: ~S~%" (edges-w-values graph))
   (flet ((flow-to-cut (graph flow from)
