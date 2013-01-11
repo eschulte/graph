@@ -391,41 +391,37 @@ Each element of path has the form (cons edge value)."
           path2)
     comb))
 
-(defun max-flow- (graph from to flow)
-  ;; "augmenting path" is path through residual network in which each
-  ;; edge has positive capacity
-  (flet ((shortest-w-value (graph from to)
-           (mapcar (lambda (edge) (cons edge (edge-value graph edge)))
-                   (shortest-path graph from to)))
-         (trim-path (path)
-           (when path
-             (let ((flow (apply #'min (mapcar #'cdr path))))
-               (mapcar (lambda (el) (cons (car el) flow)) path)))))
-    (let* ((residual (residual graph flow))
-           (augment (trim-path (shortest-w-value residual from to))))
-      (if augment
-          ;; if ∃ an augmenting path, add it to the flow and repeat
-          (max-flow- graph from to (add-paths flow augment))
-          ;; otherwise we already have the max flow
-          flow))))
-
-(defun flow-value-into (flow node)
-  "Return the value of the flow into NODE from FLOW."
-  (reduce #'+ (remove-if-not (lambda (el) (equal (lastcar (car el)) node)) flow)
-          :key #'cdr))
-
-(defun combine-flows (flow1 val1 flow2 val2)
-  (values (append flow1 flow2) (+ val1 val2)))
-
 (defmethod max-flow ((graph graph) from to)
   "Return the maximum flow from FROM and TO in GRAPH.
 GRAPHS must be a network with numeric values of all edges.
 The Ford-Fulkerson algorithm is used."
-  (let ((flow (max-flow- graph from to nil)))
-    (values flow (flow-value-into flow to))))
+  (flet ((trim-path (path)
+           (when path
+             (let ((flow (apply #'min (mapcar #'cdr path))))
+               (mapcar (lambda (el) (cons (car el) flow)) path))))
+         (flow-value-into (flow node)
+           (reduce #'+ (remove-if-not (lambda (el) (equal (lastcar (car el)) node))
+                                      flow)
+                   :key #'cdr)))
+    (let ((from from) (to to) augment residual flow)
+      (loop :do
+         (setf residual (residual graph flow))
+         ;; "augmenting path" is path through residual network in which each
+         ;; edge has positive capacity
+         (setf augment (trim-path
+                        (mapcar (lambda (edge)
+                                  (cons edge (edge-value residual edge)))
+                                (shortest-path residual from to))))
+         :while augment :do
+         ;; if ∃ an augmenting path, add it to the flow and repeat
+         (setf flow (add-paths flow augment)))
+      (values flow (flow-value-into flow to)))))
 
 
 ;;; Min Cut
+(defun combine-flows (flow1 val1 flow2 val2)
+  (values (append flow1 flow2) (+ val1 val2)))
+
 (defmethod min-s-t-cut ((graph graph) from to)
   "Return the minimum cut between FROM and TO in GRAPH.")
 
