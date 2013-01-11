@@ -22,66 +22,62 @@
 
 (defixture small-graph
   (:setup (setf *graph*
-                (make-graph
-                 :nodes '(:foo :bar :baz :qux)
-                 :edges '((:foo :bar)
-                          (:foo :baz)
-                          (:bar :baz)))))
+                (populate (make-instance 'graph)
+                  :nodes '(:foo :bar :baz :qux)
+                  :edges '((:foo :bar)
+                           (:foo :baz)
+                           (:bar :baz)))))
   (:teardown (setf *graph* nil)))
 
 (defixture less-small-graph
   (:setup (setf *graph*
-                (make-graph
-                 :nodes '(:foo :bar :baz :qux :zap :zaf :fiz)
-                 :edges '((:foo :bar)
-                          (:bar :baz)
-                          (:baz :foo)
-                          (:zap :zaf)
-                          (:zaf :qux)
-                          (:qux :zap)
-                          (:fiz :fiz)))))
+                (populate (make-instance 'graph)
+                  :nodes '(:foo :bar :baz :qux :zap :zaf :fiz)
+                  :edges '((:foo :bar)
+                           (:bar :baz)
+                           (:baz :foo)
+                           (:zap :zaf)
+                           (:zaf :qux)
+                           (:qux :zap)
+                           (:fiz :fiz)))))
   (:teardown (setf *graph* nil)))
 
 (defixture normal-graph
   (:setup (setf *graph*
-                (make-graph
-                 :nodes '(a b c d e f)
-                 :edges '((a b)
-                          (b c)
-                          (c d)
-                          (d e)
-                          (e c)
-                          (e f)
-                          (f b)))))
+                (populate (make-instance 'graph)
+                  :nodes '(a b c d e f)
+                  :edges '((a b)
+                           (b c)
+                           (c d)
+                           (d e)
+                           (e c)
+                           (e f)
+                           (f b)))))
   (:teardown (setf *graph* nil)))
 
 (defixture small-network
   (:setup (setf *network*
-                (let ((n (make-instance 'graph :edge-comb #'+)))
-                  (mapc (curry #'add-node n) '(:a :b :s :t))
-                  (mapc (lambda (edge-w-value)
-                          (add-edge n (cdr edge-w-value) (car edge-w-value)))
-                        '((1 :a :b)
-                          (2 :s :a)
-                          (1 :s :b)
-                          (4 :a :t)
-                          (2 :b :t)))
-                  n)))
+                (populate (make-instance 'graph :edge-comb #'+)
+                  :nodes '(:a :b :s :t)
+                  :edges-w-values
+                  '(((:a :b) . 1)
+                    ((:s :a) . 2)
+                    ((:s :b) . 1)
+                    ((:a :t) . 4)
+                    ((:b :t) . 2)))))
   (:teardown (setf *network* nil)))
 
 (defixture cycle
   (:setup (setf *cycle*
-                (let ((c (make-instance 'graph)))
-                  (mapc (curry #'add-node c) '(:a :b :s :t))
-                  (mapc (lambda (edge-w-value)
-                          (add-edge c (cdr edge-w-value) (car edge-w-value)))
-                        '((1 :s :a)
-                          (3 :s :b)
-                          (1 :b :a)
-                          (2 :a :t)
-                          (2 :b :t)
-                          (2 :t :s)))
-                  c)))
+                (populate (make-instance 'graph :edge-comb #'+)
+                  :nodes '(:a :b :s :t)
+                  :edges-w-values
+                  '(((:s :a) . 1)
+                    ((:s :b) . 3)
+                    ((:b :a) . 1)
+                    ((:a :t) . 2)
+                    ((:b :t) . 2)
+                    ((:t :s) . 2)))))
   (:teardown (setf *cycle* nil)))
 
 
@@ -143,6 +139,9 @@
       (is (set-equal (edges-w-values *network*)
                      '(((:S :AB) . 3) ((:AB :T) . 6))
                      :test #'tree-equal))))
+
+(with-fixture small-network
+  (nodes *network*))
 
 (deftest merge-edges-in-small-graph ()
   (with-fixture small-graph
@@ -250,17 +249,6 @@
            :test #'tree-equal))
       (is (tree-equal orig-edges (edges-w-values *network*))))))
 
-(deftest test-path-addition ()
-  (is (set-equal
-       (add-paths
-        '(((:foo :bar) . 4)
-          ((:bar :baz) . 2))
-        '(((:foo :bar) . 2)
-          ((:baz :bar) . 1)
-          ((:baz :qux) . 1)))
-       '(((:BAZ :QUX) . 1) ((:FOO :BAR) . 6) ((:BAR :BAZ) . 1))
-       :test #'tree-equal)))
-
 (deftest max-flow-on-a-small-network ()
   (with-fixture small-network
     (multiple-value-bind (path flow) (max-flow *network* :s :t)
@@ -280,22 +268,6 @@
                        ((:S :B) . 3))
                      :test #'tree-equal))
       (is (= value 4)))))
-
-(deftest combine-max-flows-in-a-cycle ()
-  (with-fixture cycle
-    (multiple-value-bind (flow value)
-        (multiple-value-call #'combine-flows
-          (max-flow *cycle* :s :t)
-          (max-flow *cycle* :t :s))
-      (is (set-equal flow
-                     '(((:B :A) . 1)
-                       ((:A :T) . 2)
-                       ((:S :A) . 1)
-                       ((:B :T) . 2)
-                       ((:S :B) . 3)
-                       ((:T :S) . 2))
-                     :test #'tree-equal))
-      (is (= value 6)))))
 
 (deftest min-s-t-cut-on-small-networks ()
   (with-fixture small-network

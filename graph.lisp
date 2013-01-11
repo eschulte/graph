@@ -81,44 +81,76 @@
 
 ;;; Graph objects and basic methods
 (defclass graph ()
-  ((node-t :initarg :node-t :accessor node-t :initform 'symbol)
-   (edge-t :initarg :edge-t :accessor edge-t :initform 'number)
-   (node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
-   (edge-h :initarg :edge-h :accessor edge-h
-           :initform (make-hash-table :test 'edge-equal))
-   (test   :initarg :test   :accessor test   :initform #'eql)
+  ((node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
+   (edge-h :initarg :edge-h :accessor edge-h :initform (make-edge-hash))
+   (edge-eq :initarg :edge-eq :accessor edge-eq :initform #'edge-equal)
+   (node-eq :initarg :node-eq :accessor node-eq :initform #'eql)
    (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil)))
 
-;; TODO: this should use normal hashes for the edge hash
-(defclass digraph (graph) ())
+(defclass digraph (graph)
+  ((edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table))
+   (edge-r-comb :initarg :edge-r-comb :accessor edge-r-comb :initform nil)))
 
-(defun copy-hash (hash)
-  (let ((copy (make-hash-table :test (hash-table-test hash))))
-    (maphash (lambda (k v) (setf (gethash k copy) v)) hash)
+(defun copy-hash (hash &optional test comb)
+  "Return a copy of HASH.
+Optional argument TEST specifies a new equality test to use for the
+copy.  Second optional argument COMB specifies a function to use to
+combine the values of elements of HASH which collide in the copy due
+to a new equality test specified with TEST."
+  (let ((copy (make-hash-table :test (or test (hash-table-test hash)))))
+    (maphash (lambda (k v) (setf (gethash k copy)
+                            (if (and (gethash k copy) comb)
+                                (funcall comb (gethash k copy) v)
+                                v)))
+             hash)
     copy))
+
+(defmethod copy ((graph graph))
+  "Return a copy of GRAPH.
+Optional argument CLASS may be used to copy into a new type of graph,
+e.g., from a graph into a digraph."
+  (make-instance (type-of graph)
+    :node-h    (copy-hash (node-h graph))
+    :edge-h    (copy-hash (edge-h graph))
+    :edge-eq   (edge-eq graph)
+    :node-eq   (node-eq graph)
+    :edge-comb (edge-comb graph)))
 
 (defmethod digraph-of ((graph graph))
   (make-instance 'digraph
-    :node-h    (node-h graph)
-    :edge-h    (edge-h graph)
-    :test      (test graph)
+    :node-h    (copy-hash (node-h graph))
+    :edge-h    (copy-hash (edge-h graph) 'edge-equal (edge-comb graph))
+    :edge-eq   (edge-eq graph)
+    :node-eq   (node-eq graph)
     :edge-comb (edge-comb graph)))
 
 (defmethod graph-of ((digraph digraph))
-  (make-instance 'digraph
-    :node-h    (node-h digraph)
-    :edge-h    (edge-h digraph)
-    :test      (test digraph)
+  (make-instance 'graph
+    :node-h    (copy-hash (node-h digraph))
+    :edge-h    (copy-hash (edge-h digraph) 'equalp)
+    :edge-eq   (edge-eq digraph)
+    :node-eq   (node-eq digraph)
     :edge-comb (edge-comb digraph)))
 
+(defmethod populate ((graph graph) &key nodes edges edges-w-values)
+  "Populate the nodes and edges of GRAPH based on keyword arguments."
+  (mapc {add-node graph} nodes)
+  (mapc {add-edge graph} edges)
+  (mapc (lambda-bind ((edge . value)) (add-edge graph edge value)) edges-w-values)
+  graph)
+
+
+;;; Simple graph methods
 (defmethod edges ((graph graph))
   "Return a list of the edges in GRAPH."
   (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
 
 (defmethod (setf edges) (new (graph graph))
   "Set the edges in GRAPH to NEW."
-  (mapc {delete-edge graph} (set-difference (edges graph) new :test 'set-equal))
-  (mapc {add-edge graph} (set-difference new (edges graph) :test 'set-equal))
+  (mapc {delete-edge graph} (set-difference (edges graph) new
+                                            :test (edge-eq graph)))
+  (mapc {add-edge graph} (set-difference new (edges graph)
+                                         :test (edge-eq graph)))
   (edges graph))
 
 (defmethod edges-w-values ((graph graph) &aux alist)
@@ -204,23 +236,9 @@ Return the old value of EDGE."
   (prog1 (edge-value graph edge)
     (mapc (lambda (node) (setf (gethash node (node-h graph))
                           (remove edge (gethash node (node-h graph))
-                                  :test 'set-equal)))
+                                  :test (edge-eq graph))))
           edge)
     (remhash edge (edge-h graph))))
-
-(defun make-graph (&key (nodes nil) (edges nil) (test #'eql))
-  "Make a graph."
-  (let ((g (make-instance 'graph :test test)))
-    (mapc {add-node g} nodes)
-    (mapc {add-edge g} edges)
-    g))
-
-(defmethod copy ((graph graph))
-  "Return a copy of GRAPH."
-  (make-instance 'graph
-    :test (test graph)
-    :node-h (copy-hash (node-h graph))
-    :edge-h (copy-hash (edge-h graph))))
 
 
 ;;; Complex graph methods
@@ -342,7 +360,7 @@ Uses Tarjan's algorithm."
     (labels ((follow (node path used-edges)
                (push node seen)
                (dolist (edge (node-edges graph node))
-                 (unless (member edge used-edges :test #'tree-equal)
+                 (unless (member edge used-edges :test (edge-eq graph))
                    (dolist (neighbor (remove node edge))
                      (cond ((member neighbor path)
                             (push (subseq path 0 (1+ (position neighbor path)))
@@ -392,7 +410,7 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
                    (lambda (edge)
                      (if (member b (cdr (member from edge)))
                          (return (reverse (cons edge rest)))
-                         (unless (member edge seen :test #'tree-equal)
+                         (unless (member edge seen :test (edge-eq graph))
                            (push edge seen)
                            (mapcar (lambda (n) (cons n (cons edge rest)))
                                    ;; nodes after from in edge
@@ -408,8 +426,11 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
   "Return the residual graph of GRAPH with FLOW.
 Each edge in the residual has a value equal to the original capacity
 minus the current flow, or equal to the negative of the current flow."
-  (flet ((flow-value (edge) (or (cdr (assoc edge flow :test #'tree-equal)) 0)))
-    (let ((residual (make-instance 'graph :test (test graph))))
+  (flet ((flow-value (edge) (or (cdr (assoc edge flow :test (edge-eq graph))) 0)))
+    (let ((residual (make-instance 'graph
+                      :edge-eq   (edge-eq graph)
+                      :node-eq   (node-eq graph)
+                      :edge-comb (edge-comb graph))))
       (mapc (lambda (edge)
               (let ((left (- (edge-value graph edge) (flow-value edge))))
                 (when (not (zerop left))
@@ -419,20 +440,38 @@ minus the current flow, or equal to the negative of the current flow."
             (edges graph))
       residual)))
 
-(defun add-paths (path1 path2)
-  "Return the combination of numerically valued paths PATH1 and PATH2.
-Each element of path has the form (cons edge value)."
+(defmethod add-paths ((graph graph) path1 path2)
+  "Return the combination of paths PATH1 and PATH2 through GRAPH.
+Each element of PATH has the form (cons edge value)."
   (let ((comb (copy-tree path1)))
-    (mapc (lambda (edge-w-val)
-            (let ((e (car edge-w-val))
-                  (v (cdr edge-w-val)))
-              (cond
-                ((assoc e comb :test #'tree-equal)
-                 (incf (cdr (assoc e comb :test #'tree-equal)) v))
-                ((assoc (reverse e) comb :test #'tree-equal)
-                 (decf (cdr (assoc (reverse e) comb :test #'tree-equal)) v))
-                (t
-                 (push edge-w-val comb)))))
+    (mapc (lambda-bind ((edge . value))
+            (if (assoc edge comb :test (edge-eq graph))
+                (setf (cdr (assoc edge comb :test (edge-eq graph)))
+                      (funcall (edge-comb graph)
+                               (cdr (assoc edge comb :test (edge-eq graph)))
+                               value))
+                (push (cons edge value) comb)))
+          path2)
+    comb))
+
+(defmethod add-paths ((digraph digraph) path1 path2)
+  "Return the combination of paths PATH1 and PATH2 through DIGRAPH.
+Each element of path has the form (cons edge value).  Reverse edges
+will have their values combined with (EDGE-R-COMB DIGRAPH)."
+  (let ((comb (copy-tree path1)))
+    (mapc (lambda-bind ((edge . value))
+            (cond
+              ((assoc edge comb :test (edge-eq digraph))
+               (setf (cdr (assoc edge comb :test (edge-eq digraph)))
+                     (funcall (edge-comb digraph)
+                              (cdr (assoc edge comb :test (edge-eq digraph)))
+                              value)))
+              ((assoc (reverse edge) comb :test (edge-eq digraph))
+               (setf (cdr (assoc (reverse edge) comb :test (edge-eq digraph)))
+                     (funcall (edge-r-comb digraph)
+                              (cdr (assoc edge comb :test (edge-eq digraph)))
+                              value)))
+              (t (push (cons edge value) comb))))
           path2)
     comb))
 
@@ -459,7 +498,7 @@ The Ford-Fulkerson algorithm is used."
                                 (shortest-path residual from to))))
          :while augment :do
          ;; if ∃ an augmenting path, add it to the flow and repeat
-         (setf flow (add-paths flow augment)))
+         (setf flow (add-paths graph flow augment)))
       (values flow (flow-value-into flow to)))))
 
 
@@ -496,7 +535,7 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
            ;; merge two last added nodes
            (mapc {delete-edge g} (intersection (node-edges g (first a))
                                                (node-edges g (second a))
-                                               :test #'tree-equal))
+                                               :test (edge-eq g)))
            (merge-nodes g (first a) (second a) :edge-comb #'+)))
       ;; return the minimum cut-of-phase
       (let ((weight-and-cut (car (sort cuts-of-phase #'< :key #'car))))
