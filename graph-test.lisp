@@ -296,3 +296,14 @@
                        ((:T :S) . 2))
                      :test #'tree-equal))
       (is (= value 6)))))
+
+(deftest min-s-t-cut-on-small-networks ()
+  (with-fixture small-network
+    (multiple-value-bind (cut weight) (min-s-t-cut *network*)
+      (is (member :s cut))
+      (is (= 3 weight))))
+  (with-fixture small-network
+    (setf (edge-value *network* '(:s :a)) 5)
+    (multiple-value-bind (cut weight) (min-s-t-cut *network*)
+      (is (member :b cut))
+      (is (= 4 weight)))))
