@@ -131,17 +131,17 @@
 
 (deftest merge-nodes-in-small-graph ()
   (with-fixture small-graph
-    (setf *graph* (merge-nodes *graph* :bar :baz :zap))
+    (setf *graph* (merge-nodes *graph* :bar :baz :new :zap))
     (is (set-equal (nodes *graph*) '(:FOO :QUX :ZAP)))
-    (is (set-equal (edges *graph*) '((:FOO :ZAP) (:ZAP :ZAP))
+    (is (set-equal (edges *graph*) '((:FOO :ZAP))
                    :test #'tree-equal))))
 
 (deftest merge-nodes-in-small-network ()
     (with-fixture small-network
-      (setf *network* (merge-nodes *network* :a :b :ab))
+      (setf *network* (merge-nodes *network* :a :b :new :ab))
       (is (set-equal (nodes *network*) '(:S :T :AB)))
       (is (set-equal (edges-w-values *network*)
-                     '(((:S :AB) . 3) ((:AB :T) . 6) ((:AB :AB) . 1))
+                     '(((:S :AB) . 3) ((:AB :T) . 6))
                      :test #'tree-equal))))
 
 (deftest merge-edges-in-small-graph ()
@@ -235,7 +235,7 @@
   (with-fixture small-network
     (let ((orig-edges (copy-tree (edges-w-values *network*))))
       (is (set-equal
-           (edges-w-values (residual *network*
+           (edges-w-values (residual (digraph-of *network*)
                                      '(((:s :a) . 2)
                                        ((:s :b) . 1)
                                        ((:a :b) . 1)

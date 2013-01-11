@@ -58,12 +58,13 @@
   (string< (symbol-name symbol1) (symbol-name symbol2)))
 
 (defun edge-hash (edge)
-  (sxhash (sort edge (cond
-                       ((symbolp (car edge)) #'symbol<)
-                       ((stringp (car edge)) #'string<)
-                       ((numberp (car edge)) #'<)
-                       (t        (lambda (a b) (string< (format nil "~a" a)
-                                                   (format nil "~a" b))))))))
+  (sxhash (sort (copy-tree edge)
+                (cond
+                  ((symbolp (car edge)) #'symbol<)
+                  ((stringp (car edge)) #'string<)
+                  ((numberp (car edge)) #'<)
+                  (t        (lambda (a b) (string< (format nil "~a" a)
+                                              (format nil "~a" b))))))))
 
 (defun edge-equal (edge1 edge2) (set-equal edge1 edge2))
 #+sbcl
