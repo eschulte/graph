@@ -422,8 +422,33 @@ The Ford-Fulkerson algorithm is used."
 (defun combine-flows (flow1 val1 flow2 val2)
   (values (append flow1 flow2) (+ val1 val2)))
 
-(defmethod min-s-t-cut ((graph graph) from to)
-  "Return the minimum cut between FROM and TO in GRAPH.")
+
+;; "maximum adjacency search" or "maximum carnality search"
+(defmethod min-s-t-cut ((graph graph) &aux cuts-of-phase)
+  "Return two arbitrary nodes in G and the minimum cut between them.
+Use \"maximum carnality search\" aka \"maximum adjacency search\"."
+  (flet ((connection-weight (group node)
+           ;; return the weight between GROUP and NODE
+           ))
+    (loop :while (> (length (nodes graph)))
+       ;; A will be one half of the cut, which we will grow incrementally
+       (let ((a (list from)) (nodes-left (nodes graph)))
+         (loop :while nodes-left
+            ;; grow A by adding the node most tightly connected to A
+            (let ((new (car (sort (map 'list #'cons
+                                       (mapcar {connection-weight a} nodes-left)
+                                       nodes-left)
+                                  #'> :key #'cdr))))
+              (setf nodes-left (remove new nodes-left))
+              (push new a)))
+         ;; merge two last added nodes
+         
+         ;; store the cut-of-phase
+         
+         )))
+  
+  ;; return the minimum cut-of-phase
+  )
 
 ;; Stoer, M. and Wagner, Frank. 1997. A Simple Min-Cut Algorithm.
 ;; Journal of the ACM
