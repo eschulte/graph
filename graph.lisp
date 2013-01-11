@@ -202,8 +202,8 @@ Delete and return the old edges of NODE in GRAPH."
 Return the old value of EDGE."
   (prog1 (edge-value graph edge)
     (mapc (lambda (node) (setf (gethash node (node-h graph))
-                          (delete edge (gethash node (node-h graph))
-                                  :test #'equalp)))
+                          (remove edge (gethash node (node-h graph))
+                                  :test 'set-equal)))
           edge)
     (remhash edge (edge-h graph))))
 
