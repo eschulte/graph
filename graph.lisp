@@ -451,37 +451,22 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
                                                :test #'tree-equal))
            (merge-nodes g (first a) (second a))))
       ;; return the minimum cut-of-phase
-      (car (sort cuts-of-phase #'< :key #'car)))))
+      (let ((weight-and-cut (car (sort cuts-of-phase #'< :key #'car))))
+        (values (cdr weight-and-cut) (car weight-and-cut))))))
 
 ;; Theorem: Let s,t ∈ (nodes G), let G' be the result of merging s and
-;;          t in G.  Then (min-cut G) is equal to the minimum of
-;;          (min-s-t-cut G) and (min-cut G').
+;;          t in G.  Then (min-cut G) is equal to the minimum of the
+;;          min cut of s and t in G and (min-cut G').
 (defmethod min-cut ((graph graph))
-  (format t "start: ~S~%" (edges-w-values graph))
-  (flet ((flow-to-cut (graph flow from)
-           (let* ((residual (residual graph flow))
-                  (half (connected-component residual from)))
-             (list half (set-difference (nodes graph) half)))))
-    (if (= (length (nodes graph)) 2)
-        (progn
-          (format t "base: ~S~%" (edges-w-values graph))
-          (values (mapcar #'list (nodes graph))
-                  (reduce (lambda (acc edge) (+ (abs (edge-value graph edge)) acc))
-                          (remove-if-not {subsetp (nodes graph)} (edges graph))
-                          :initial-value 0)))
-        (let* ((from (random-elt (nodes graph)))
-               (to (random-elt (remove from (nodes graph)))))
-          (format t "between: ~S ~S~%" from to)
-          (multiple-value-bind (flow f-size)
-              (multiple-value-call #'combine-flows
-                (max-flow graph from to)
-                (max-flow graph to from))
-            (format t "flow: ~S~%" f-size)
-            (if (zerop f-size)
-                (values (flow-to-cut graph flow from) f-size)
-                (multiple-value-bind (cut c-size)
-                    (min-cut (merge-nodes (copy graph) from to from))
-                  (format t "flow=~S cut=~S~%" f-size c-size)
-                  (if (< f-size c-size)
-                      (values (flow-to-cut graph flow from) f-size)
-                      (values cut c-size)))))))))
+  "Return the global min-cut of GRAPH with the weight of the cut."
+  (if (<= (length (nodes graph)) 2)
+      (if (< (length (nodes graph)) 2)
+          (error 'uncuttable "Can't cut a graph with <2 nodes.")
+          (values (nodes graph)
+                  (reduce #'+ (mapcar {edge-value graph} (edges graph)))))
+      (multiple-value-bind (cut1 weight1) (min-s-t-cut graph)
+        (multiple-value-bind (cut2 weight2)
+            (min-cut (merge-nodes (copy graph) (first cut1) (second cut1)))
+          (if (< weight1 weight2)
+              (values cut1 weight1)
+              (values cut2 weight2))))))
