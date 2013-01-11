@@ -238,10 +238,9 @@ holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
                               edge)))
             (unless (subsetp edge (list node1 node2))
               (if (has-edge-p graph edge)
-                  (when (edge-comb graph)
+                  (when edge-comb
                     (setf (edge-value graph edge)
-                          (funcall (edge-comb graph)
-                                   (edge-value graph edge) val)))
+                          (funcall edge-comb (edge-value graph edge) val)))
                   (add-edge graph edge val)))))
         (prog1 (append (delete-node graph node1)
                        (delete-node graph node2))
@@ -250,7 +249,8 @@ holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
                      (remove-if-not {member new} (edges graph))
                      :test #'tree-equal)
           (new graph) "inconsistent edges for ~S in ~S with ~S ≠ ~S"
-          new graph (node-edges new) (remove-if-not {member new} (edges graph)))
+          new graph
+          (node-edges graph new) (remove-if-not {member new} (edges graph)))
   graph)
 
 (defmethod merge-edges ((graph graph) edge1 edge2)
