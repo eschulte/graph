@@ -512,7 +512,7 @@ The Ford-Fulkerson algorithm is used."
 ;;
 (defmethod min-s-t-cut ((graph graph))
   "Return two arbitrary nodes in G and the minimum cut between them.
-Use \"maximum carnality search\" aka \"maximum adjacency search\"."
+Use \"maximum cardinality search\" aka \"maximum adjacency search\"."
   (let ((g (copy graph)) cuts-of-phase)
     (flet ((connection-weight (group node)
              ;; return the weight of edges between GROUP and NODE
