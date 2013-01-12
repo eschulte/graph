@@ -195,6 +195,10 @@ e.g., from a graph into a digraph."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
     (declare (ignorable value)) included))
 
+(defmethod subgraph ((graph graph) nodes)
+  "Return the subgraph of GRAPH restricted to NODES."
+  (let ((g (copy graph))) (setf (nodes g) nodes) g))
+
 (defmethod add-node ((graph graph) node)
   "Add NODE to GRAPH."
   (unless (has-node-p graph node)

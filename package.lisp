@@ -15,6 +15,7 @@
    :nodes-w-values
    :has-node-p
    :has-edge-p
+   :subgraph
    :add-node
    :add-edge
    :node-edges
