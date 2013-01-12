@@ -16,11 +16,6 @@
 ;;  key -- node list
 ;;  val -- edge value
 
-;; What if we only used 1 hash to hold all nodes and edges..., and
-;; what if nodes could hold other nodes in their edge list, and edges
-;; could hold other edges in their node list, what sort of structure
-;; would this be?  A useful generalization of a graph?
-
 ;;; Code:
 (in-package :graph)
 
