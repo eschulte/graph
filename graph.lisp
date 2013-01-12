@@ -510,15 +510,30 @@ The Ford-Fulkerson algorithm is used."
 ;; Stoer, M. and Wagner, Frank. 1997. A Simple Min-Cut Algorithm.
 ;; Journal of the ACM
 ;;
-(defmethod min-s-t-cut ((graph graph))
-  "Return two arbitrary nodes in G and the minimum cut between them.
-Use \"maximum cardinality search\" aka \"maximum adjacency search\"."
-  (let ((g (copy graph)) cuts-of-phase)
+;; Theorem: Let s,t ∈ (nodes G), let G' be the result of merging s and
+;;          t in G.  Then (min-cut G) is equal to the minimum of the
+;;          min cut of s and t in G and (min-cut G').
+;;          
+(defmethod min-cut ((graph graph))
+  "Return the global min-cut of GRAPH with the weight of the cut."
+  (let ((g (copy graph))
+        (merged-nodes (mapcar (lambda (n) (list n n)) (nodes graph)))
+        cuts-of-phase)
     (flet ((connection-weight (group node)
              ;; return the weight of edges between GROUP and NODE
              (reduce #'+ (mapcar {edge-value g}
                                  (remove-if-not {intersection group}
-                                                (node-edges g node))))))
+                                                (node-edges g node)))))
+           (my-merge (a b)
+             ;; merge in the graph
+             (merge-nodes g a b :edge-comb #'+)
+             ;; update our merged nodes alist
+             (setf (cdr (assoc a merged-nodes :test (node-eq graph)))
+                   (append (cdr (assoc a merged-nodes :test (node-eq graph)))
+                           (cdr (assoc b merged-nodes :test (node-eq graph)))))
+             (setq merged-nodes
+                   (remove-if (lambda (it) (funcall (node-eq graph) (car it) b))
+                              merged-nodes))))
       (loop :while (> (length (nodes g)) 1) :do
          (let* ((a (list (random-elt (nodes g))))
                 (rest (remove (car a) (nodes g))))
@@ -528,33 +543,16 @@ Use \"maximum cardinality search\" aka \"maximum adjacency search\"."
                 (setf rest (remove new rest))
                 (push new a)))
            ;; store the cut-of-phase
-           (push (cons (connection-weight (cdr a) (car a)) (subseq a 0 2))
+           (push (cons (connection-weight (cdr a) (car a))
+                       (cdr (assoc (car a) merged-nodes)))
                  cuts-of-phase)
            ;; merge two last added nodes
-           (mapc {delete-edge g} (intersection (node-edges g (first a))
-                                               (node-edges g (second a))
-                                               :test (edge-eq g)))
-           (merge-nodes g (first a) (second a) :edge-comb #'+)))
+           (my-merge (first a) (second a))))
       ;; return the minimum cut-of-phase
       (let ((weight-and-cut (car (sort cuts-of-phase #'< :key #'car))))
-        (values (cdr weight-and-cut) (car weight-and-cut))))))
-
-;; Theorem: Let s,t ∈ (nodes G), let G' be the result of merging s and
-;;          t in G.  Then (min-cut G) is equal to the minimum of the
-;;          min cut of s and t in G and (min-cut G').
-(defmethod min-cut ((graph graph))
-  "Return the global min-cut of GRAPH with the weight of the cut."
-  (if (<= (length (nodes graph)) 2)
-      (progn
-        (assert (= (length (nodes graph)) 2) (graph) "%S has <2 nodes" graph)
-        (values (nodes graph)
-                (reduce #'+ (mapcar {edge-value graph} (edges graph)))))
-      (multiple-value-bind (cut1 weight1) (min-s-t-cut graph)
-        (multiple-value-bind (cut2 weight2)
-            (min-cut (merge-nodes (copy graph) (first cut1) (second cut1)))
-          (if (< weight1 weight2)
-              (values cut1 weight1)
-              (values cut2 weight2))))))
+        (values (list (cdr weight-and-cut)
+                      (set-difference (nodes graph) (cdr weight-and-cut)))
+                (car weight-and-cut))))))
 
 
 ;;; Visualization

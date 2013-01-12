@@ -20,6 +20,9 @@
 (defvar *cycle* nil
   "Variable for use in graph tests.")
 
+(defvar *halfs* nil
+  "Variable for use in graph tests.")
+
 (defixture small-graph
   (:setup (setf *graph*
                 (populate (make-instance 'graph)
@@ -79,6 +82,21 @@
                     ((:b :t) . 2)
                     ((:t :s) . 2)))))
   (:teardown (setf *cycle* nil)))
+
+(defixture halfs
+  (:setup (setf *halfs*
+                (populate (make-instance 'graph :edge-comb #'+)
+                  :edges-w-values
+                  '(((:a :b) . 10)
+                    ((:b :c) . 10)
+                    ((:c :a) . 10)
+
+                    ((:q :r) . 20)
+                    ((:r :s) . 20)
+                    ((:s :q) . 20)
+
+                    ((:c :s) . 2)))))
+  (:teardown (setf *halfs* nil)))
 
 
 ;;; Tests
@@ -263,19 +281,14 @@
                      :test #'tree-equal))
       (is (= value 4)))))
 
-(deftest min-s-t-cut-on-small-networks ()
-  (with-fixture small-network
-    (multiple-value-bind (cut weight) (min-s-t-cut *network*)
-      (is (member :s cut))
-      (is (= 3 weight))))
-  (with-fixture small-network
-    (setf (edge-value *network* '(:s :a)) 5)
-    (multiple-value-bind (cut weight) (min-s-t-cut *network*)
-      (is (member :b cut))
-      (is (= 4 weight)))))
-
-(deftest min-cut-on-a-network ()
+(deftest min-cut-on-a-small-network ()
   (with-fixture small-network
     (multiple-value-bind (cut weight) (min-cut *network*)
-      (is (member :s cut))
+      (is (set-equal cut '((:S) (:T :B :A)) :test 'set-equal))
       (is (= 3 weight)))))
+
+(deftest min-cut-on-a-graph-of-two-halfs ()
+  (with-fixture halfs
+    (multiple-value-bind (cut weight) (min-cut *halfs*)
+      (is (set-equal cut '((:a :b :c) (:q :r :s)) :test 'set-equal))
+      (is (= 2 weight)))))
