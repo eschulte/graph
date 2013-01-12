@@ -69,7 +69,7 @@
 
 (defixture cycle
   (:setup (setf *cycle*
-                (populate (make-instance 'graph :edge-comb #'+)
+                (populate (make-instance 'digraph :edge-comb #'+)
                   :nodes '(:a :b :s :t)
                   :edges-w-values
                   '(((:s :a) . 1)
@@ -139,9 +139,6 @@
       (is (set-equal (edges-w-values *network*)
                      '(((:S :AB) . 3) ((:AB :T) . 6))
                      :test #'tree-equal))))
-
-(with-fixture small-network
-  (nodes *network*))
 
 (deftest merge-edges-in-small-graph ()
   (with-fixture small-graph
@@ -230,28 +227,25 @@
     (is (tree-equal (shortest-path *graph* :foo :baz)
                     '((:FOO :BAR) (:BAR :BAZ))))))
 
+(deftest shortest-path-through-a-residual ()
+  (with-fixture cycle
+    (let* ((flow '(((:A :T) . 1) ((:S :A) . 1) ((:B :T) . 2) ((:S :B) . 2)))
+           (residual (residual *cycle* flow)))
+      (is (shortest-path residual :s :t)))))
+
 (deftest residual-of-a-small-network ()
   (with-fixture small-network
-    (let ((orig-edges (copy-tree (edges-w-values *network*))))
-      (is (set-equal
-           (edges-w-values (residual (digraph-of *network*)
-                                     '(((:s :a) . 2)
-                                       ((:s :b) . 1)
-                                       ((:a :b) . 1)
-                                       ((:a :t) . 1)
-                                       ((:b :t) . 2))))
-           '(((:T :B) . 2)
-             ((:T :A) . 1)
-             ((:A :T) . 3)
-             ((:B :S) . 1)
-             ((:A :S) . 2)
-             ((:B :A) . 1))
-           :test #'tree-equal))
+    (let ((orig-edges (copy-tree (edges-w-values *network*)))
+          (resi-edges (edges-w-values
+                       (residual (digraph-of *network*)
+                                 '(((:s :a) . 2) ((:a :t) . 2))))))
+      (is (= (cdr (assoc '(:a :s) resi-edges :test 'tree-equal))) 2)
+      (is (= (cdr (assoc '(:a :t) resi-edges :test 'tree-equal))) 2)
       (is (tree-equal orig-edges (edges-w-values *network*))))))
 
 (deftest max-flow-on-a-small-network ()
   (with-fixture small-network
-    (multiple-value-bind (path flow) (max-flow *network* :s :t)
+    (multiple-value-bind (path flow) (max-flow (digraph-of *network*) :s :t)
       (is (set-equal path
                      '(((:A :T) . 2) ((:S :A) . 2) ((:B :T) . 1) ((:S :B) . 1))
                      :test #'tree-equal))

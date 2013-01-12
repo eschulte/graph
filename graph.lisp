@@ -89,6 +89,7 @@
 
 (defclass digraph (graph)
   ((edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table))
+   (edge-eq :initarg :edge-eq :accessor edge-eq :initform #'equalp)
    (edge-r-comb :initarg :edge-r-comb :accessor edge-r-comb :initform nil)))
 
 (defun copy-hash (hash &optional test comb)
@@ -400,7 +401,7 @@ Uses Tarjan's algorithm."
 (defmethod shortest-path ((graph graph) a b &aux seen)
   "Return the shortest path in GRAPH from A to B.
 GRAPH must be a directed graph.  Dijkstra's algorithm is used."
-  (block nil
+  (block nil ;; (car next) is leading node, (cdr next) is edge path
     (let ((next (list (list a))))
       (loop :until (null next) :do
          (setf next
@@ -412,9 +413,11 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
                          (return (reverse (cons edge rest)))
                          (unless (member edge seen :test (edge-eq graph))
                            (push edge seen)
-                           (mapcar (lambda (n) (cons n (cons edge rest)))
-                                   ;; nodes after from in edge
-                                   (cdr (member from edge))))))
+                           (mapcar
+                            (lambda (n) (cons n (cons edge rest)))
+                            (case (type-of graph)
+                              (graph (remove from edge :test (node-eq graph)))
+                              (digraph (cdr (member from edge))))))))
                    (node-edges graph from)))
                 next))))))
 
@@ -427,7 +430,7 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
 Each edge in the residual has a value equal to the original capacity
 minus the current flow, or equal to the negative of the current flow."
   (flet ((flow-value (edge) (or (cdr (assoc edge flow :test (edge-eq graph))) 0)))
-    (let ((residual (make-instance 'graph
+    (let ((residual (make-instance (type-of graph)
                       :edge-eq   (edge-eq graph)
                       :node-eq   (node-eq graph)
                       :edge-comb (edge-comb graph))))
@@ -475,7 +478,7 @@ will have their values combined with (EDGE-R-COMB DIGRAPH)."
           path2)
     comb))
 
-(defmethod max-flow ((graph graph) from to)
+(defmethod max-flow ((digraph digraph) from to)
   "Return the maximum flow from FROM and TO in GRAPH.
 GRAPHS must be a network with numeric values of all edges.
 The Ford-Fulkerson algorithm is used."
@@ -489,7 +492,7 @@ The Ford-Fulkerson algorithm is used."
                    :key #'cdr)))
     (let ((from from) (to to) augment residual flow)
       (loop :do
-         (setf residual (residual graph flow))
+         (setf residual (residual digraph flow))
          ;; "augmenting path" is path through residual network in which each
          ;; edge has positive capacity
          (setf augment (trim-path
@@ -498,7 +501,7 @@ The Ford-Fulkerson algorithm is used."
                                 (shortest-path residual from to))))
          :while augment :do
          ;; if ∃ an augmenting path, add it to the flow and repeat
-         (setf flow (add-paths graph flow augment)))
+         (setf flow (add-paths digraph flow augment)))
       (values flow (flow-value-into flow to)))))
 
 
