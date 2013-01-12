@@ -273,3 +273,9 @@
     (multiple-value-bind (cut weight) (min-s-t-cut *network*)
       (is (member :b cut))
       (is (= 4 weight)))))
+
+(deftest min-cut-on-a-network ()
+  (with-fixture small-network
+    (multiple-value-bind (cut weight) (min-cut *network*)
+      (is (member :s cut))
+      (is (= 3 weight)))))

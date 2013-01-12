@@ -527,12 +527,7 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
               (let ((new (car (sort rest #'> :key {connection-weight a}))))
                 (setf rest (remove new rest))
                 (push new a)))
-           (assert (set-equal (nodes g) a) ((nodes g) a)
-                   "at this point all nodes of g~S should be in a~S"
-                   (nodes g) a)
            ;; store the cut-of-phase
-           (format t "g~S a~S w~S~%"
-                   (edges-w-values g) a (connection-weight (cdr a) (car a)))
            (push (cons (connection-weight (cdr a) (car a)) (subseq a 0 2))
                  cuts-of-phase)
            ;; merge two last added nodes
@@ -549,14 +544,12 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
 ;;          min cut of s and t in G and (min-cut G').
 (defmethod min-cut ((graph graph))
   "Return the global min-cut of GRAPH with the weight of the cut."
-  (format t "min-cut ~S~%" (edges-w-values graph))
   (if (<= (length (nodes graph)) 2)
       (progn
         (assert (= (length (nodes graph)) 2) (graph) "%S has <2 nodes" graph)
         (values (nodes graph)
                 (reduce #'+ (mapcar {edge-value graph} (edges graph)))))
       (multiple-value-bind (cut1 weight1) (min-s-t-cut graph)
-        (format t "cut1 ~S -> weight1 ~S ~%" cut1 weight1)
         (multiple-value-bind (cut2 weight2)
             (min-cut (merge-nodes (copy graph) (first cut1) (second cut1)))
           (if (< weight1 weight2)
