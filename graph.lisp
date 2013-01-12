@@ -101,6 +101,11 @@ to a new equality test specified with TEST."
              hash)
     copy))
 
+(defun hash-equal (hash1 hash2)
+  "Test HASH1 and HASH2 for equality."
+  (tree-equal (hash-table-plist hash1)
+              (hash-table-plist hash2) :test 'equalp))
+
 (defmethod copy ((graph graph))
   "Return a copy of GRAPH.
 Optional argument CLASS may be used to copy into a new type of graph,
@@ -134,6 +139,17 @@ e.g., from a graph into a digraph."
   (mapc {add-edge graph} edges)
   (mapc (lambda-bind ((edge . value)) (add-edge graph edge value)) edges-w-values)
   graph)
+
+(defmethod graph-equal ((graph1 graph) (graph2 graph))
+  "Compare GRAPH1 and GRAPH2 for equality."
+  (every (lambda-bind ((test key))
+           (apply test (append (mapcar key (list graph1 graph2)))))
+         '((eq         type-of)
+           (equal      node-eq)
+           (equal      edge-eq)
+           (equal      edge-comb)
+           (hash-equal edge-h)
+           (hash-equal node-h))))
 
 
 ;;; Simple graph methods
@@ -578,3 +594,25 @@ The Ford-Fulkerson algorithm is used."
   "Write a dot representation of GRAPH to PATH."
   (with-open-file (out path :direction :output :if-exists :supersede)
     (to-dot graph out)))
+
+
+;;; Serialize graphs to/from plists
+(defmethod to-plist ((graph graph))
+  "Serialize GRAPH as a plist."
+  (let ((counts (make-hash-table)) (counter -1))
+    (list :nodes (mapcar {list :name}
+                         (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
+                               (nodes graph)))
+          :edges (map 'list (lambda (edge value) (list :edge edge :value value))
+                      (mapcar {mapcar {position _ (nodes graph)}} (edges graph))
+                      (mapcar {edge-value graph} (edges graph))))))
+
+(defmethod from-plist ((graph graph) plist)
+  "Populate GRAPH with the contents of PLIST."
+  (let ((nodes (map 'vector {getf _ :name} (getf plist :nodes))))
+    (populate graph
+      :nodes (coerce nodes 'list)
+      :edges-w-values (mapcar (lambda (el)
+                                (cons (mapcar {aref nodes} (getf el :edge))
+                                      (getf el :value)))
+                              (getf plist :edges)))))

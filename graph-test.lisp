@@ -143,6 +143,10 @@
       (is (not (set-equal (nodes *graph*) (nodes c))))
       (is (not (tree-equal (edges *graph*) (edges c) :test #'tree-equal))))))
 
+(deftest copy-of-a-graph-w-graph-equal ()
+  (with-fixture less-small-graph
+    (is (graph-equal *graph* (copy *graph*)))))
+
 (deftest merge-nodes-in-small-graph ()
   (with-fixture small-graph
     (setf *graph* (merge-nodes *graph* :bar :baz :new :zap))
@@ -292,3 +296,23 @@
     (multiple-value-bind (cut weight) (min-cut *halfs*)
       (is (set-equal cut '((:a :b :c) (:q :r :s)) :test 'set-equal))
       (is (= 2 weight)))))
+
+(deftest small-graph-to-plist ()
+  (with-fixture small-graph
+    (is (tree-equal
+         (to-plist *graph*)
+         '(:NODES ((:NAME :FOO) (:NAME :BAR) (:NAME :BAZ) (:NAME :QUX))
+           :EDGES ((:EDGE (0 1) :VALUE NIL)
+                   (:EDGE (0 2) :VALUE NIL)
+                   (:EDGE (1 2) :VALUE NIL)))))))
+
+(deftest two-way-plist-conversion-on-multiple-graphs ()
+  (with-fixture small-graph
+    (is (graph-equal *graph* (from-plist (make-instance 'graph)
+                                         (to-plist *graph*)))))
+  (with-fixture less-small-graph
+    (is (graph-equal *graph* (from-plist (make-instance 'graph)
+                                         (to-plist *graph*)))))
+  (with-fixture small-network
+    (is (graph-equal *network* (from-plist (make-instance 'graph :edge-comb #'+)
+                                           (to-plist *network*))))))
