@@ -223,6 +223,10 @@ e.g., from a graph into a digraph."
     (assert included (node graph) "~S doesn't include ~S" graph node)
     edges))
 
+(defmethod degree ((graph graph) node)
+  "Return the degree of NODE in GRAPH."
+  (length (node-edges graph node)))
+
 (defmethod (setf node-edges) (new (graph graph) node)
   "Set the edges of NODE in GRAPH to NEW.
 Delete and return the old edges of NODE in GRAPH."
@@ -328,7 +332,7 @@ is defined for GRAPH it will be used or no value will be assigned."
 
 (defmethod connected-components ((graph graph))
   "Return a list of the connected components of GRAPH."
-  (let ((nodes (nodes graph)) ccs)
+  (let ((nodes (sort (nodes graph) #'< :key {degree graph})) ccs)
     (loop :until (null nodes) :do
        (let ((cc (connected-component graph (car nodes))))
          (setf nodes (set-difference nodes cc))

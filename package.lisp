@@ -19,6 +19,7 @@
    :add-node
    :add-edge
    :node-edges
+   :degree
    :delete-node
    :edge-value
    :delete-edge
