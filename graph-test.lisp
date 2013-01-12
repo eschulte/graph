@@ -5,11 +5,10 @@
 ;; Licensed under the Gnu Public License Version 3 or later
 
 ;;; Code:
-(in-package :graph)
-(require :stefil)
-(use-package :stefil)
-(defsuite graph-test)
-(in-suite graph-test)
+(in-package :graph-test)
+
+(defsuite test)
+(in-suite test)
 
 (defvar *graph* nil
   "Variable for use in graph tests.")
