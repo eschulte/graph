@@ -584,3 +584,8 @@ Use \"maximum carnality search\" aka \"maximum adjacency search\"."
   (mapc {format stream "  \"~a\";~%"} (nodes digraph))
   (mapc [{format stream "~a"} {edge-to-dot digraph}] (edges digraph))
   (format stream "}~%"))
+
+(defmethod dot-to-file ((graph graph) path)
+  "Write a dot representation of GRAPH to PATH."
+  (with-open-file (out path :direction :output :if-exists :supersede)
+    (to-dot graph out)))
