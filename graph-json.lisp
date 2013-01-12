@@ -24,17 +24,14 @@
     (yason:parse input)))
 
 ;;; JSON import and export
-(defmethod yason:encode ((graph graph) &optional (stream *standard-output*))
+(defmethod to-json ((graph graph) &optional (stream *standard-output*))
+  "Write a JSON encoding of GRAPH to STREAM."
   (let ((plist (to-plist graph)))
     (yason:encode
      (plist-hash-table
       (list :nodes (mapcar #'plist-hash-table (getf plist :nodes))
             :edges (mapcar #'plist-hash-table (getf plist :edges))))
      stream)))
-
-(defmethod to-json ((graph graph) &optional (stream *standard-output*))
-  "Write a JSON encoding of GRAPH to STREAM."
-  (yason:encode graph stream))
 
 (defmethod from-json ((graph graph) input)
   "Parse string or stream INPUT into GRAPH."
