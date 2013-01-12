@@ -24,6 +24,9 @@
     (yason:parse input)))
 
 ;;; JSON import and export
+(defmethod yason:encode ((symbol symbol) &optional (stream *standard-output*))
+  (yason:encode (string-downcase (symbol-name symbol)) stream))
+
 (defmethod to-json ((graph graph) &optional (stream *standard-output*))
   "Write a JSON encoding of GRAPH to STREAM."
   (let ((plist (to-plist graph)))
