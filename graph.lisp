@@ -86,12 +86,14 @@
    (edge-h :initarg :edge-h :accessor edge-h :initform (make-edge-hash))
    (edge-eq :initarg :edge-eq :accessor edge-eq :initform #'edge-equal)
    (node-eq :initarg :node-eq :accessor node-eq :initform #'eql)
-   (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil)))
+   (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil))
+  (:documentation "A graph consisting of `nodes' connected by `edges'."))
 
 (defclass digraph (graph)
   ((edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table))
    (edge-eq :initarg :edge-eq :accessor edge-eq :initform #'equalp)
-   (edge-r-comb :initarg :edge-r-comb :accessor edge-r-comb :initform nil)))
+   (edge-r-comb :initarg :edge-r-comb :accessor edge-r-comb :initform nil))
+  (:documentation "A `graph' with directed edges."))
 
 (defun copy-hash (hash &optional test comb)
   "Return a copy of HASH.
@@ -112,16 +114,19 @@ to a new equality test specified with TEST."
   (tree-equal (hash-table-plist hash1)
               (hash-table-plist hash2) :test 'equalp))
 
+(defgeneric copy (graph)
+  (:documentation "Return a copy of GRAPH."))
+
 (defmethod copy ((graph graph))
-  "Return a copy of GRAPH.
-Optional argument CLASS may be used to copy into a new type of graph,
-e.g., from a graph into a digraph."
   (make-instance (type-of graph)
     :node-h    (copy-hash (node-h graph))
     :edge-h    (copy-hash (edge-h graph))
     :edge-eq   (edge-eq graph)
     :node-eq   (node-eq graph)
     :edge-comb (edge-comb graph)))
+
+(defgeneric digraph-of (graph)
+  (:documentation "Copy GRAPH into a `digraph' and return."))
 
 (defmethod digraph-of ((graph graph))
   (make-instance 'digraph
@@ -131,6 +136,9 @@ e.g., from a graph into a digraph."
     :node-eq   (node-eq graph)
     :edge-comb (edge-comb graph)))
 
+(defgeneric graph-of (digraph)
+  (:documentation "Copy DIGRAPH into a `graph' and return."))
+
 (defmethod graph-of ((digraph digraph))
   (make-instance 'graph
     :node-h    (copy-hash (node-h digraph))
@@ -139,15 +147,20 @@ e.g., from a graph into a digraph."
     :node-eq   (node-eq digraph)
     :edge-comb (edge-comb digraph)))
 
+(defgeneric populate (graph &key nodes edges edges-w-values)
+  (:documentation
+   "Populate the nodes and edges of GRAPH based on keyword arguments."))
+
 (defmethod populate ((graph graph) &key nodes edges edges-w-values)
-  "Populate the nodes and edges of GRAPH based on keyword arguments."
   (mapc {add-node graph} nodes)
   (mapc {add-edge graph} edges)
   (mapc (lambda-bind ((edge . value)) (add-edge graph edge value)) edges-w-values)
   graph)
 
+(defgeneric graph-equal (graph1 graph2)
+  (:documentation "Compare GRAPH1 and GRAPH2 for equality."))
+
 (defmethod graph-equal ((graph1 graph) (graph2 graph))
-  "Compare GRAPH1 and GRAPH2 for equality."
   (every (lambda-bind ((test key))
            (apply test (append (mapcar key (list graph1 graph2)))))
          '((eq         type-of)
@@ -159,60 +172,82 @@ e.g., from a graph into a digraph."
 
 
 ;;; Simple graph methods
+(defgeneric edges (graph)
+  (:documentation "Return a list of the edges in GRAPH."))
+
 (defmethod edges ((graph graph))
-  "Return a list of the edges in GRAPH."
   (loop :for key :being :each :hash-key :of (edge-h graph) :collect key))
 
+(defgeneric (setf edges) (new graph)
+  (:documentation "Set the edges in GRAPH to NEW."))
+
 (defmethod (setf edges) (new (graph graph))
-  "Set the edges in GRAPH to NEW."
   (mapc {delete-edge graph} (set-difference (edges graph) new
                                             :test (edge-eq graph)))
   (mapc {add-edge graph} (set-difference new (edges graph)
                                          :test (edge-eq graph)))
   (edges graph))
 
+(defgeneric edges-w-values (graph)
+  (:documentation "Return an alist of edges of GRAPH with their values."))
+
 (defmethod edges-w-values ((graph graph) &aux alist)
-  "Return an alist of edges of GRAPH with their values."
   (maphash (lambda (edge value) (push (cons edge value) alist)) (edge-h graph))
   alist)
 
+(defgeneric nodes (graph)
+  (:documentation "Return a list of the nodes in GRAPH."))
+
 (defmethod nodes ((graph graph))
-  "Return a list of the nodes in GRAPH."
   (loop :for key :being :each :hash-key :of (node-h graph) :collect key))
 
+(defgeneric (setf nodes) (new graph)
+  (:documentation "Set the nodes in GRAPH to NEW."))
+
 (defmethod (setf nodes) (new (graph graph))
-  "Set the nodes in GRAPH to NEW."
   (mapc {delete-node graph} (set-difference (nodes graph) new))
   (mapc {add-node graph} (set-difference new (nodes graph)))
   (nodes graph))
 
+(defgeneric nodes-w-values (graph)
+  (:documentation "Return an alist of nodes of GRAPH with their values."))
+
 (defmethod nodes-w-values ((graph graph) &aux alist)
-  "Return an alist of nodes of GRAPH with their values."
   (maphash (lambda (node value) (push (cons node value) alist)) (node-h graph))
   alist)
 
+(defgeneric has-node-p (graph node)
+  (:documentation "Return `true' if GRAPH has node NODE."))
+
 (defmethod has-node-p ((graph graph) node)
-  "Return `true' if GRAPH has node NODE."
   (multiple-value-bind (value included) (gethash node (node-h graph))
     (declare (ignorable value)) included))
 
+(defgeneric has-edge-p (graph edge)
+  (:documentation "Return `true' if GRAPH has edge EDGE."))
+
 (defmethod has-edge-p ((graph graph) edge)
-  "Return `true' if GRAPH has edge EDGE."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
     (declare (ignorable value)) included))
 
+(defgeneric subgraph (graph nodes)
+  (:documentation "Return the subgraph of GRAPH restricted to NODES."))
+
 (defmethod subgraph ((graph graph) nodes)
-  "Return the subgraph of GRAPH restricted to NODES."
   (let ((g (copy graph))) (setf (nodes g) nodes) g))
 
+(defgeneric add-node (graph node)
+  (:documentation "Add NODE to GRAPH."))
+
 (defmethod add-node ((graph graph) node)
-  "Add NODE to GRAPH."
   (unless (has-node-p graph node)
     (setf (gethash node (node-h graph)) nil)
     node))
 
+(defgeneric add-edge (graph edge &optional value)
+  (:documentation "Add EDGE to GRAPH with optional VALUE."))
+
 (defmethod add-edge ((graph graph) edge &optional value)
-  "Add EDGE to GRAPH with optional VALUE."
   (mapc (lambda (node)
           (add-node graph node)
           (pushnew (case (type-of graph)
@@ -223,42 +258,56 @@ e.g., from a graph into a digraph."
   (setf (gethash edge (edge-h graph)) value)
   edge)
 
+(defgeneric node-edges (graph node)
+  (:documentation "Return the value of NODE in GRAPH."))
+
 (defmethod node-edges ((graph graph) node)
-  "Return the value of NODE in GRAPH."
   (multiple-value-bind (edges included) (gethash node (node-h graph))
     (assert included (node graph) "~S doesn't include ~S" graph node)
     edges))
 
+(defgeneric degree (graph node)
+  (:documentation "Return the degree of NODE in GRAPH."))
+
 (defmethod degree ((graph graph) node)
-  "Return the degree of NODE in GRAPH."
   (length (node-edges graph node)))
 
+(defgeneric (setf node-edges) (new graph node)
+  (:documentation "Set the edges of NODE in GRAPH to NEW.
+Delete and return the old edges of NODE in GRAPH."))
+
 (defmethod (setf node-edges) (new (graph graph) node)
-  "Set the edges of NODE in GRAPH to NEW.
-Delete and return the old edges of NODE in GRAPH."
   (prog1 (mapc {delete-edge graph} (gethash node (node-h graph)))
     (mapc {add-edge graph} new)))
 
+(defgeneric delete-node (graph node)
+  (:documentation "Delete NODE from GRAPH.
+Delete and return the old edges of NODE in GRAPH."))
+
 (defmethod delete-node ((graph graph) node)
-  "Delete NODE from GRAPH.
-Delete and return the old edges of NODE in GRAPH."
   (prog1 (mapcar (lambda (edge) (cons edge (delete-edge graph edge)))
                  (node-edges graph node))
     (remhash node (node-h graph))))
 
+(defgeneric edge-value (graph edge)
+  (:documentation "Return the value of EDGE in GRAPH."))
+
 (defmethod edge-value ((graph graph) edge)
-  "Return the value of EDGE in GRAPH."
   (multiple-value-bind (value included) (gethash edge (edge-h graph))
     (assert included (edge graph) "~S doesn't include ~S" graph edge)
     value))
 
+(defgeneric (setf edge-value) (new graph edge)
+  (:documentation "Set the value of EDGE in GRAPH to NEW."))
+
 (defmethod (setf edge-value) (new (graph graph) edge)
-  "Set the value of EDGE in GRAPH to NEW."
   (setf (gethash edge (edge-h graph)) new))
 
+(defgeneric delete-edge (graph edge)
+  (:documentation "Delete EDGE from GRAPH.
+Return the old value of EDGE."))
+
 (defmethod delete-edge ((graph graph) edge)
-  "Delete EDGE from GRAPH.
-Return the old value of EDGE."
   (prog1 (edge-value graph edge)
     (mapc (lambda (node) (setf (gethash node (node-h graph))
                           (remove edge (gethash node (node-h graph))
@@ -268,11 +317,13 @@ Return the old value of EDGE."
 
 
 ;;; Complex graph methods
+(defgeneric merge-nodes (graph node1 node2 &key edge-comb new)
+  (:documentation "Combine NODE1 and NODE2 in GRAPH into the node NEW.
+All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
+holding VALUE.  Edges between only NODE1 and NODE2 will be removed."))
+
 (defmethod merge-nodes ((graph graph) node1 node2
                         &key (edge-comb (edge-comb graph)) (new node1))
-  "Combine NODE1 and NODE2 in GRAPH into the node NEW.
-All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
-holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
   ;; replace all removed edges with NEW instead of NODE1 or NODE2
   (mapcar
    (lambda-bind ((edge . value))
@@ -291,11 +342,13 @@ holding VALUE.  Edges between only NODE1 and NODE2 will be removed."
                     (add-node graph new))))
   graph)
 
+(defgeneric merge-edges (graph edge1 edge2 &key value edge-comb)
+  (:documentation "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
+Optionally provide a value for the new edge, otherwise if `edge-comb'
+is defined for GRAPH it will be used or no value will be assigned."))
+
 (defmethod merge-edges ((graph graph) edge1 edge2
                         &key value (edge-comb (edge-comb graph)))
-  "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
-Optionally provide a value for the new edge, otherwise if `edge-comb'
-is defined for GRAPH it will be used or no value will be assigned."
   (add-edge graph (remove-duplicates (append edge1 edge2))
             (or value
                 (when edge-comb
@@ -305,25 +358,32 @@ is defined for GRAPH it will be used or no value will be assigned."
   (append (delete-edge graph edge1)
           (delete-edge graph edge2)))
 
+(defgeneric edge-neighbors (graph edge)
+  (:documentation "Return all edges which share a node with EDGE in GRAPH."))
+
 (defmethod edge-neighbors ((graph graph) edge)
-  "Return all edges which share a node with EDGE in GRAPH."
   (mapcan [#'copy-tree {node-edges graph}] edge))
 
+(defgeneric neighbors (graph node)
+  (:documentation "Return all nodes which share an edge with NODE in GRAPH."))
+
 (defmethod neighbors ((graph graph) node)
-  "Return all nodes which share an edge with NODE in GRAPH."
   (apply {concatenate 'list} (node-edges graph node)))
 
 (defmethod neighbors ((digraph digraph) node)
-  "Return all nodes following NODE in an edge in DIGRAPH."
   (mapcan [#'cdr {member node}] (node-edges digraph node)))
 
+(defgeneric precedents (digraph node)
+  (:documentation "Return all nodes preceding NODE in an edge of DIGRAPH."))
+
 (defmethod precedents ((digraph digraph) node)
-  "Return all nodes preceding NODE in an edge of DIGRAPH."
   (mapcan [#'cdr {member node} #'reverse]
           (copy-tree (node-edges digraph node))))
 
+(defgeneric connected-component (graph node)
+  (:documentation "Return the connected component of NODE in GRAPH."))
+
 (defmethod connected-component ((graph graph) node)
-  "Return the connected component of NODE in GRAPH."
   (let ((from (list node)) (seen))
     (loop :until (null from) :do
        (let ((next (remove-duplicates (mapcan {neighbors graph} from))))
@@ -331,13 +391,17 @@ is defined for GRAPH it will be used or no value will be assigned."
          (setf seen (union next seen))))
     (reverse seen)))
 
+(defgeneric connectedp (graph)
+  (:documentation "Return true if the graph is connected."))
+
 (defmethod connectedp ((graph graph))
-  "Return true if the graph is connected."
   (let ((nodes (nodes graph)))
     (subsetp (nodes graph) (connected-component graph (car nodes)))))
 
+(defgeneric connected-components (graph)
+  (:documentation "Return a list of the connected components of GRAPH."))
+
 (defmethod connected-components ((graph graph))
-  "Return a list of the connected components of GRAPH."
   (let ((nodes (sort (nodes graph) #'< :key {degree graph})) ccs)
     (loop :until (null nodes) :do
        (let ((cc (connected-component graph (car nodes))))
@@ -347,9 +411,12 @@ is defined for GRAPH it will be used or no value will be assigned."
 
 
 ;;; Cycles and strongly connected components
+(defgeneric strongly-connected-components (graph)
+  (:documentation
+   "Return the nodes of GRAPH partitioned into strongly connected components.
+Uses Tarjan's algorithm."))
+
 (defmethod strongly-connected-components ((graph graph))
-  "Return the nodes of GRAPH partitioned into strongly connected components.
-Uses Tarjan's algorithm."
   (let ((index (make-hash-table))
         (lowlink (make-hash-table))
         (counter 0) stack sccs)
@@ -380,8 +447,10 @@ Uses Tarjan's algorithm."
             (nodes graph)))
     sccs))
 
+(defgeneric basic-cycles (graph)
+  (:documentation "Return all basic cycles in the GRAPH."))
+
 (defmethod basic-cycles ((graph graph))
-  "Return all basic cycles in the GRAPH."
   (let (cycles seen)
     (labels ((follow (node path used-edges)
                (push node seen)
@@ -399,6 +468,9 @@ Uses Tarjan's algorithm."
         (unless (member node seen)
           (follow node (list node) nil))))
     cycles))
+
+(defgeneric cycles (graph)
+  (:documentation "Return all cycles of GRAPH (both basic and compound)."))
 
 (defmethod cycles ((graph graph))
   (flet ((combine (c1 c2)
@@ -423,9 +495,11 @@ Uses Tarjan's algorithm."
 
 
 ;;; Shortest Path
+(defgeneric shortest-path (graph a b)
+  (:documentation "Return the shortest path in GRAPH from A to B.
+GRAPH must be a directed graph.  Dijkstra's algorithm is used."))
+
 (defmethod shortest-path ((graph graph) a b &aux seen)
-  "Return the shortest path in GRAPH from A to B.
-GRAPH must be a directed graph.  Dijkstra's algorithm is used."
   (block nil ;; (car next) is leading node, (cdr next) is edge path
     (let ((next (list (list a))))
       (loop :until (null next) :do
@@ -450,10 +524,12 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."
 ;;; Max Flow
 ;; - Must be a "network" (digraph in which each edge has a positive weight)
 ;; - Ford-Fulkerson is used
-(defmethod residual ((graph graph) flow)
-  "Return the residual graph of GRAPH with FLOW.
+(defgeneric residual (graph flow)
+  (:documentation "Return the residual graph of GRAPH with FLOW.
 Each edge in the residual has a value equal to the original capacity
-minus the current flow, or equal to the negative of the current flow."
+minus the current flow, or equal to the negative of the current flow."))
+
+(defmethod residual ((graph graph) flow)
   (flet ((flow-value (edge) (or (cdr (assoc edge flow :test (edge-eq graph))) 0)))
     (let ((residual (make-instance (type-of graph)
                       :edge-eq   (edge-eq graph)
@@ -468,9 +544,12 @@ minus the current flow, or equal to the negative of the current flow."
             (edges graph))
       residual)))
 
+(defgeneric add-paths (graph path1 path2)
+  (:documentation
+   "Return the combination of paths PATH1 and PATH2 through GRAPH.
+Each element of PATH has the form (cons edge value)."))
+
 (defmethod add-paths ((graph graph) path1 path2)
-  "Return the combination of paths PATH1 and PATH2 through GRAPH.
-Each element of PATH has the form (cons edge value)."
   (let ((comb (copy-tree path1)))
     (mapc (lambda-bind ((edge . value))
             (if (assoc edge comb :test (edge-eq graph))
@@ -503,10 +582,12 @@ will have their values combined with (EDGE-R-COMB DIGRAPH)."
           path2)
     comb))
 
-(defmethod max-flow ((digraph digraph) from to)
-  "Return the maximum flow from FROM and TO in GRAPH.
+(defgeneric max-flow (graph from to)
+  (:documentation "Return the maximum flow from FROM and TO in GRAPH.
 GRAPHS must be a network with numeric values of all edges.
-The Ford-Fulkerson algorithm is used."
+The Ford-Fulkerson algorithm is used."))
+
+(defmethod max-flow ((digraph digraph) from to)
   (flet ((trim-path (path)
            (when path
              (let ((flow (apply #'min (mapcar #'cdr path))))
@@ -539,8 +620,11 @@ The Ford-Fulkerson algorithm is used."
 ;;          t in G.  Then (min-cut G) is equal to the minimum of the
 ;;          min cut of s and t in G and (min-cut G').
 ;;          
+(defgeneric min-cut (graph)
+  (:documentation
+   "Return both the global min-cut of GRAPH and the weight of the cut."))
+
 (defmethod min-cut ((graph graph))
-  "Return the global min-cut of GRAPH with the weight of the cut."
   (let ((g (copy graph))
         (merged-nodes (mapcar (lambda (n) (list n n)) (nodes graph)))
         cuts-of-phase)
@@ -590,29 +674,34 @@ The Ford-Fulkerson algorithm is used."
         (format nil "[label=\"~a\"];~%" (edge-value graph edge))
         ";")))
 
+(defgeneric to-dot (graph &optional stream)
+  (:documentation "Print the dot code representing GRAPH."))
+
 (defmethod to-dot ((graph graph) &optional (stream t))
-  "Print the dot code representing GRAPH."
   (format stream "graph to_dot {~%")
   (mapc {format stream "  \"~a\";~%"} (nodes graph))
   (mapc [{format stream "~a"} {edge-to-dot graph}] (edges graph))
   (format stream "}~%"))
 
 (defmethod to-dot ((digraph digraph) &optional (stream t))
-  "Print the dot code representing DIGRAPH."
   (format stream "digraph to_dot {~%")
   (mapc {format stream "  \"~a\";~%"} (nodes digraph))
   (mapc [{format stream "~a"} {edge-to-dot digraph}] (edges digraph))
   (format stream "}~%"))
 
+(defgeneric dot-to-file (graph path)
+  (:documentation "Write a dot representation of GRAPH to PATH."))
+
 (defmethod dot-to-file ((graph graph) path)
-  "Write a dot representation of GRAPH to PATH."
   (with-open-file (out path :direction :output :if-exists :supersede)
     (to-dot graph out)))
 
 
 ;;; Serialize graphs to/from plists
+(defgeneric to-plist (graph)
+  (:documentation "Serialize GRAPH as a plist."))
+
 (defmethod to-plist ((graph graph))
-  "Serialize GRAPH as a plist."
   (let ((counts (make-hash-table)) (counter -1))
     (list :nodes (mapcar {list :name}
                          (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
@@ -621,8 +710,10 @@ The Ford-Fulkerson algorithm is used."
                       (mapcar {mapcar {position _ (nodes graph)}} (edges graph))
                       (mapcar {edge-value graph} (edges graph))))))
 
+(defgeneric from-plist (graph plist)
+  (:documentation "Populate GRAPH with the contents of PLIST."))
+
 (defmethod from-plist ((graph graph) plist)
-  "Populate GRAPH with the contents of PLIST."
   (let ((nodes (map 'vector {getf _ :name} (getf plist :nodes))))
     (populate graph
       :nodes (coerce nodes 'list)
