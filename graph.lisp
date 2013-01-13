@@ -78,6 +78,10 @@
 
 ;;; Graph objects and basic methods
 (defclass graph ()
+  ;; TODO: define initialization forms s.t.
+  ;;       1. edge-eq can use the value of node-eq
+  ;;       2. edge-h can use the value of edge-eq
+  ;;       3. node-h can use the value of node-eq
   ((node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
    (edge-h :initarg :edge-h :accessor edge-h :initform (make-edge-hash))
    (edge-eq :initarg :edge-eq :accessor edge-eq :initform #'edge-equal)
