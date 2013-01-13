@@ -61,7 +61,9 @@
                   (t        (lambda (a b) (string< (format nil "~a" a)
                                               (format nil "~a" b))))))))
 
-(defun edge-equal (edge1 edge2) (set-equal edge1 edge2))
+(defun edge-equal (edge1 edge2 &key (test #'eql))
+  (set-equal edge1 edge2 :test test))
+
 #+sbcl
 (sb-ext:define-hash-table-test edge-equal edge-hash)
 
