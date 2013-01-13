@@ -381,7 +381,7 @@ Uses Tarjan's algorithm."
     sccs))
 
 (defmethod basic-cycles ((graph graph))
-  "Return all basic in GRAPH."
+  "Return all basic cycles in the GRAPH."
   (let (cycles seen)
     (labels ((follow (node path used-edges)
                (push node seen)
