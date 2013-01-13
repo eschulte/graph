@@ -8,6 +8,8 @@
    :graph-of
    :populate
    :graph-equal
+   :node-h
+   :edge-h
    ;; Simple Graph Methods
    :edges
    :edges-w-values
