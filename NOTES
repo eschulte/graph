@@ -8,3 +8,12 @@ if nodes could hold other nodes in their edge list, and edges could
 hold other edges in their node list, what sort of structure would this
 be?  A useful generalization of a graph?
 
+* publishing HTML documentation
+Should read abstract from a file.
+
+#+begin_src lisp
+  (let ((*maybe-skip-methods-p* t))
+    (create-template :graph :target "/tmp/graph.html"
+                     :subtitle "simple graph data structure and algorithms"
+                     :abstract "<p>Foo</p>"))
+#+end_src
