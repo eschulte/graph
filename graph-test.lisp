@@ -59,7 +59,7 @@
 
 (defixture small-network
   (:setup (setf *network*
-                (populate (make-instance 'graph :edge-comb #'+)
+                (populate (make-instance 'graph)
                   :nodes '(:a :b :s :t)
                   :edges-w-values
                   '(((:a :b) . 1)
@@ -71,7 +71,7 @@
 
 (defixture cycle
   (:setup (setf *cycle*
-                (populate (make-instance 'digraph :edge-comb #'+)
+                (populate (make-instance 'digraph)
                   :nodes '(:a :b :s :t)
                   :edges-w-values
                   '(((:s :a) . 1)
@@ -84,7 +84,7 @@
 
 (defixture halfs
   (:setup (setf *halfs*
-                (populate (make-instance 'graph :edge-comb #'+)
+                (populate (make-instance 'graph)
                   :edges-w-values
                   '(((:a :b) . 10)
                     ((:b :c) . 10)
@@ -313,5 +313,5 @@
     (is (graph-equal *graph* (from-plist (make-instance 'graph)
                                          (to-plist *graph*)))))
   (with-fixture small-network
-    (is (graph-equal *network* (from-plist (make-instance 'graph :edge-comb #'+)
+    (is (graph-equal *network* (from-plist (make-instance 'graph)
                                            (to-plist *network*))))))

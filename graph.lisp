@@ -48,51 +48,46 @@
   (set-macro-character #\] (get-macro-character #\) )))
 
 
-;;; Hashes keyed on equality for edges (sets)
-(defun symbol< (symbol1 symbol2)
-  (string< (symbol-name symbol1) (symbol-name symbol2)))
+;;; Special hashes keyed for edges
+(defun edge-equalp (edge1 edge2)
+  (set-equal edge1 edge2))
 
-(defun edge-hash (edge)
-  (sxhash (sort (copy-tree edge)
-                (cond
-                  ((symbolp (car edge)) #'symbol<)
-                  ((stringp (car edge)) #'string<)
-                  ((numberp (car edge)) #'<)
-                  (t        (lambda (a b) (string< (format nil "~a" a)
-                                              (format nil "~a" b))))))))
+(defun sxhash-edge (edge)
+  (sxhash (sort (copy-tree edge) (if (numberp edge) #'< #'string<))))
 
-(defun edge-equal (edge1 edge2 &key (test #'eql))
-  (set-equal edge1 edge2 :test test))
+(sb-ext:define-hash-table-test edge-equalp sxhash-edge)
 
-#+sbcl
-(sb-ext:define-hash-table-test edge-equal edge-hash)
+(defun dir-edge-equalp (edge1 edge2)
+  (tree-equal edge1 edge2))
 
-(defun make-edge-hash ()
+(sb-ext:define-hash-table-test dir-edge-equalp sxhash)
+
+(defun make-edge-hash-table ()
   #+sbcl
-  (make-hash-table :test 'edge-equal)
-  #+ecl
-  (make-custom-hash-table :test 'edge-equal :hash-function 'edge-hash)
-  #-(or sbcl ecl)
-  (error "unsupported lisp distribution"))
+  (make-hash-table :test 'edge-equalp)
+  #-(or sbcl)
+  (error "unsupport lisp distribution"))
+
+(defun make-diedge-hash-table ()
+  #+sbcl
+  (make-hash-table :test 'dir-edge-equalp)
+  #-(or sbcl)
+  (error "unsupport lisp distribution"))
 
 
 ;;; Graph objects and basic methods
 (defclass graph ()
-  ;; TODO: define initialization forms s.t.
-  ;;       1. edge-eq can use the value of node-eq
-  ;;       2. edge-h can use the value of edge-eq
-  ;;       3. node-h can use the value of node-eq
   ((node-h :initarg :node-h :accessor node-h :initform (make-hash-table))
-   (edge-h :initarg :edge-h :accessor edge-h :initform (make-edge-hash))
-   (edge-eq :initarg :edge-eq :accessor edge-eq :initform #'edge-equal)
-   (node-eq :initarg :node-eq :accessor node-eq :initform #'eql)
-   (edge-comb :initarg :edge-comb :accessor edge-comb :initform nil))
-  (:documentation "A graph consisting of `nodes' connected by `edges'."))
+   (edge-h :initarg :edge-h :accessor edge-h :initform (make-edge-hash-table))
+   (edge-eq :initarg :edge-eq :accessor edge-eq :initform 'edge-equalp))
+  (:documentation "A graph consisting of `nodes' connected by `edges'.
+Nodes must be numbers symbols or keywords.  Edges may be assigned
+arbitrary values, although some functions assume numeric values (e.g.,
+`merge-nodes', `merge-edges', `max-flow' and `min-cut')."))
 
 (defclass digraph (graph)
-  ((edge-h :initarg :edge-h :accessor edge-h :initform (make-hash-table))
-   (edge-eq :initarg :edge-eq :accessor edge-eq :initform #'equalp)
-   (edge-r-comb :initarg :edge-r-comb :accessor edge-r-comb :initform nil))
+  ((edge-h :initarg :edge-h :accessor edge-h :initform (make-diedge-hash-table))
+   (edge-eq :initarg :edge-eq :accessor edge-eq :initform 'dir-edge-equalp))
   (:documentation "A `graph' with directed edges."))
 
 (defun copy-hash (hash &optional test comb)
@@ -121,9 +116,7 @@ to a new equality test specified with TEST."
   (make-instance (type-of graph)
     :node-h    (copy-hash (node-h graph))
     :edge-h    (copy-hash (edge-h graph))
-    :edge-eq   (edge-eq graph)
-    :node-eq   (node-eq graph)
-    :edge-comb (edge-comb graph)))
+    :edge-eq   (edge-eq graph)))
 
 (defgeneric digraph-of (graph)
   (:documentation "Copy GRAPH into a `digraph' and return."))
@@ -131,10 +124,8 @@ to a new equality test specified with TEST."
 (defmethod digraph-of ((graph graph))
   (make-instance 'digraph
     :node-h    (copy-hash (node-h graph))
-    :edge-h    (copy-hash (edge-h graph) 'edge-equal (edge-comb graph))
-    :edge-eq   (edge-eq graph)
-    :node-eq   (node-eq graph)
-    :edge-comb (edge-comb graph)))
+    :edge-h    (copy-hash (edge-h graph))
+    :edge-eq   (edge-eq graph)))
 
 (defgeneric graph-of (digraph)
   (:documentation "Copy DIGRAPH into a `graph' and return."))
@@ -143,9 +134,7 @@ to a new equality test specified with TEST."
   (make-instance 'graph
     :node-h    (copy-hash (node-h digraph))
     :edge-h    (copy-hash (edge-h digraph) 'equalp)
-    :edge-eq   (edge-eq digraph)
-    :node-eq   (node-eq digraph)
-    :edge-comb (edge-comb digraph)))
+    :edge-eq   (edge-eq digraph)))
 
 (defgeneric populate (graph &key nodes edges edges-w-values)
   (:documentation
@@ -164,9 +153,7 @@ to a new equality test specified with TEST."
   (every (lambda-bind ((test key))
            (apply test (append (mapcar key (list graph1 graph2)))))
          '((eq         type-of)
-           (equal      node-eq)
            (equal      edge-eq)
-           (equal      edge-comb)
            (hash-equal edge-h)
            (hash-equal node-h))))
 
@@ -240,6 +227,9 @@ to a new equality test specified with TEST."
   (:documentation "Add NODE to GRAPH."))
 
 (defmethod add-node ((graph graph) node)
+  (assert (or (numberp node) (symbolp node)) (node)
+          "Nodes must be numbers, symbols or keywords, not ~S.~%Invalid node:~S"
+   (type-of node) node)
   (unless (has-node-p graph node)
     (setf (gethash node (node-h graph)) nil)
     node))
@@ -317,21 +307,19 @@ Return the old value of EDGE."))
 
 
 ;;; Complex graph methods
-(defgeneric merge-nodes (graph node1 node2 &key edge-comb new)
+(defgeneric merge-nodes (graph node1 node2 &key new)
   (:documentation "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
 holding VALUE.  Edges between only NODE1 and NODE2 will be removed."))
 
-(defmethod merge-nodes ((graph graph) node1 node2
-                        &key (edge-comb (edge-comb graph)) (new node1))
+(defmethod merge-nodes ((graph graph) node1 node2 &key (new node1))
   ;; replace all removed edges with NEW instead of NODE1 or NODE2
   (mapcar
    (lambda-bind ((edge . value))
      (let ((e (mapcar (lambda (n) (if (member n (list node1 node2)) new n)) edge)))
        (if (has-edge-p graph e)
-           (when edge-comb
-             (setf (edge-value graph e)
-                   (funcall edge-comb (edge-value graph e) value)))
+           (when (and (edge-value graph e) value)
+             (setf (edge-value graph e) (+ (edge-value graph e) value)))
            (add-edge graph e value))))
    ;; drop edges between only node1 and node2
    (remove-if-not [{set-difference _ (list node1 node2)} #'car]
@@ -342,19 +330,16 @@ holding VALUE.  Edges between only NODE1 and NODE2 will be removed."))
                     (add-node graph new))))
   graph)
 
-(defgeneric merge-edges (graph edge1 edge2 &key value edge-comb)
+(defgeneric merge-edges (graph edge1 edge2 &key value)
   (:documentation "Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
-Optionally provide a value for the new edge, otherwise if `edge-comb'
-is defined for GRAPH it will be used or no value will be assigned."))
+Optionally provide a value for the new edge, the values of EDGE1 and
+EDGE2 will be combined."))
 
-(defmethod merge-edges ((graph graph) edge1 edge2
-                        &key value (edge-comb (edge-comb graph)))
+(defmethod merge-edges ((graph graph) edge1 edge2 &key value)
   (add-edge graph (remove-duplicates (append edge1 edge2))
             (or value
-                (when edge-comb
-                  (funcall edge-comb
-                           (edge-value graph edge1)
-                           (edge-value graph edge2)))))
+                (when (and (edge-value graph edge1) (edge-value graph edge2))
+                  (+ (edge-value graph edge1) (edge-value graph edge2)))))
   (append (delete-edge graph edge1)
           (delete-edge graph edge2)))
 
@@ -515,7 +500,7 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."))
                            (mapcar
                             (lambda (n) (cons n (cons edge rest)))
                             (case (type-of graph)
-                              (graph (remove from edge :test (node-eq graph)))
+                              (graph (remove from edge))
                               (digraph (cdr (member from edge))))))))
                    (node-edges graph from)))
                 next))))))
@@ -531,10 +516,7 @@ minus the current flow, or equal to the negative of the current flow."))
 
 (defmethod residual ((graph graph) flow)
   (flet ((flow-value (edge) (or (cdr (assoc edge flow :test (edge-eq graph))) 0)))
-    (let ((residual (make-instance (type-of graph)
-                      :edge-eq   (edge-eq graph)
-                      :node-eq   (node-eq graph)
-                      :edge-comb (edge-comb graph))))
+    (let ((residual (make-instance (type-of graph))))
       (mapc (lambda (edge)
               (let ((left (- (edge-value graph edge) (flow-value edge))))
                 (when (not (zerop left))
@@ -554,30 +536,23 @@ Each element of PATH has the form (cons edge value)."))
     (mapc (lambda-bind ((edge . value))
             (if (assoc edge comb :test (edge-eq graph))
                 (setf (cdr (assoc edge comb :test (edge-eq graph)))
-                      (funcall (edge-comb graph)
-                               (cdr (assoc edge comb :test (edge-eq graph)))
-                               value))
+                      (+ (cdr (assoc edge comb :test (edge-eq graph))) value))
                 (push (cons edge value) comb)))
           path2)
     comb))
 
 (defmethod add-paths ((digraph digraph) path1 path2)
   "Return the combination of paths PATH1 and PATH2 through DIGRAPH.
-Each element of path has the form (cons edge value).  Reverse edges
-will have their values combined with (EDGE-R-COMB DIGRAPH)."
+Each element of path has the form (cons edge value)."
   (let ((comb (copy-tree path1)))
     (mapc (lambda-bind ((edge . value))
             (cond
               ((assoc edge comb :test (edge-eq digraph))
                (setf (cdr (assoc edge comb :test (edge-eq digraph)))
-                     (funcall (edge-comb digraph)
-                              (cdr (assoc edge comb :test (edge-eq digraph)))
-                              value)))
+                     (+ (cdr (assoc edge comb :test (edge-eq digraph))) value)))
               ((assoc (reverse edge) comb :test (edge-eq digraph))
                (setf (cdr (assoc (reverse edge) comb :test (edge-eq digraph)))
-                     (funcall (edge-r-comb digraph)
-                              (cdr (assoc edge comb :test (edge-eq digraph)))
-                              value)))
+                     (- (cdr (assoc edge comb :test (edge-eq digraph))) value)))
               (t (push (cons edge value) comb))))
           path2)
     comb))
@@ -635,14 +610,13 @@ The Ford-Fulkerson algorithm is used."))
                                                 (node-edges g node)))))
            (my-merge (a b)
              ;; merge in the graph
-             (merge-nodes g a b :edge-comb #'+)
+             (merge-nodes g a b)
              ;; update our merged nodes alist
-             (setf (cdr (assoc a merged-nodes :test (node-eq graph)))
-                   (append (cdr (assoc a merged-nodes :test (node-eq graph)))
-                           (cdr (assoc b merged-nodes :test (node-eq graph)))))
+             (setf (cdr (assoc a merged-nodes))
+                   (append (cdr (assoc a merged-nodes))
+                           (cdr (assoc b merged-nodes))))
              (setq merged-nodes
-                   (remove-if (lambda (it) (funcall (node-eq graph) (car it) b))
-                              merged-nodes))))
+                   (remove-if (lambda (it) (eql (car it) b)) merged-nodes))))
       (loop :while (> (length (nodes g)) 1) :do
          (let* ((a (list (random-elt (nodes g))))
                 (rest (remove (car a) (nodes g))))
