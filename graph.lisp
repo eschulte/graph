@@ -301,7 +301,7 @@ is defined for GRAPH it will be used or no value will be assigned."
 
 (defmethod edge-neighbors ((graph graph) edge)
   "Return all edges which share a node with EDGE in GRAPH."
-  (mapcan {node-edges graph} edge))
+  (mapcan [#'copy-tree {node-edges graph}] edge))
 
 (defmethod neighbors ((graph graph) node)
   "Return all nodes which share an edge with NODE in GRAPH."
@@ -336,7 +336,7 @@ is defined for GRAPH it will be used or no value will be assigned."
     (loop :until (null nodes) :do
        (let ((cc (connected-component graph (car nodes))))
          (setf nodes (set-difference nodes cc))
-         (setf ccs (cons cc ccs))))
+         (push cc ccs)))
     ccs))
 
 
