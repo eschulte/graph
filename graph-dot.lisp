@@ -39,3 +39,37 @@
 (defmethod to-dot-file ((graph graph) path)
   (with-open-file (out path :direction :output :if-exists :supersede)
     (to-dot graph out)))
+
+(defun from-dot (dot-string)
+  "Parse the DOT format string DOT-STRING into a graph.
+More robust behavior may be achieved through parsing the output of the
+dot executable."
+  (flet ((string->symbol (string) (intern (string-upcase string))))
+    (let* ((graph-type-re "^ *((di)?graph)")
+           (spec-re       "[\\s]*(\\[([^]]+)\\])?;")
+           (node-name-re  "[\\s]*\"?([a-zA-Z0-9_]+)\"?")
+           (node-spec-re  (concatenate 'string node-name-re spec-re))
+           (edge-spec-re  (concatenate 'string
+                            node-name-re "[\\s]+([->]+)" node-name-re spec-re))
+           (label-name-re "label=(\"([^\"]+)\"|([^, ]+))[,\\]]")
+           (number-re     "[0-9.\/e]+")
+           (graph (multiple-value-bind (string matches)
+                      (scan-to-strings graph-type-re dot-string)
+                      (declare (ignorable string))
+                    (make-instance (string->symbol (aref matches 0))))))
+      ;; add nodes
+      (do-register-groups (node spec) (node-spec-re dot-string)
+        (declare (ignorable spec))
+        (unless (member node '("node" "graph") :test 'string=)
+          (add-node graph (string->symbol node))))
+      ;; add edges
+      (do-register-groups (left arrow right spec) (edge-spec-re dot-string)
+        (declare (ignorable arrow))
+        (multiple-value-bind (matchp regs) (scan-to-strings label-name-re spec)
+          (add-edge graph
+                    (mapcar #'string->symbol (list left right))
+                    (when matchp
+                      (if (scan number-re (aref regs 1))
+                          (read-from-string (aref regs 1))
+                          (aref regs 1))))))
+      graph)))

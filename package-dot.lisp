@@ -1,3 +1,3 @@
 (defpackage #:graph-dot
-  (:use :common-lisp :alexandria :metabang-bind :graph)
-  (:export :to-dot :to-dot-file))
+  (:use :common-lisp :alexandria :metabang-bind :cl-ppcre :graph)
+  (:export :to-dot :to-dot-file :from-dot))
