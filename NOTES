@@ -13,9 +13,20 @@ Should read abstract from a file.
 
 #+begin_src lisp
   (schulte-documentation-template:create-template
-   :graph
-   :maybe-skip-methods-p t
-   :target "/tmp/graph.html"
-   :subtitle "simple graph data structure and algorithms"
-   :abstract "<p>Foo</p>")
+          :graph
+          :maybe-skip-methods-p t
+          :target "/tmp/graph.html"
+          :subtitle "simple graph data structure and algorithms"
+          :abstract "The GRAPH library strives for simplicity both in
+  backing data structures and in usage.  Graphs and Digraphs are
+  represented as CLOS objects with methods and algorithms provided for
+  graph manipulation and analysis.")
+#+end_src
+
+#+begin_src sh
+  (
+      cat /tmp/graph.html|sed -n '/<html/,/INTRODUCTION_PASTE/p'|head -n -1
+      cat graph.lisp|sed -n '/Commentary/,/Code/p'|cut -c4-|head -n -2|tail -n +3|markdown
+      cat /tmp/graph.html|sed -n '/INTRODUCTION_PASTE/,$p'|tail -n +2
+  ) > index.html
 #+end_src
