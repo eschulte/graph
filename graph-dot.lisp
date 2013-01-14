@@ -33,9 +33,9 @@
   (mapc [{format stream "~a"} {edge-to-dot digraph}] (edges digraph))
   (format stream "}~%"))
 
-(defgeneric dot-to-file (graph path)
+(defgeneric to-dot-file (graph path)
   (:documentation "Write a dot representation of GRAPH to PATH."))
 
-(defmethod dot-to-file ((graph graph) path)
+(defmethod to-dot-file ((graph graph) path)
   (with-open-file (out path :direction :output :if-exists :supersede)
     (to-dot graph out)))
