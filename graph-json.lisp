@@ -36,9 +36,16 @@
             :edges (mapcar #'plist-hash-table (getf plist :edges))))
      stream)))
 
+(defun intern-string-nodes (plist)
+  (list :nodes (mapcar (compose (curry #'list :name)
+                                #'intern #'string-upcase
+                                (rcurry #'getf :name))
+                (getf plist :nodes))
+        :edges (getf plist :edges)))
+
 (defmethod from-json ((graph graph) input)
   "Parse string or stream INPUT into GRAPH."
-  (from-plist graph (json-to-plist input)))
+  (from-plist graph (intern-string-nodes (json-to-plist input))))
 
 ;;; plist and D3 conversion
 (defun plist-to-d3 (plist)
