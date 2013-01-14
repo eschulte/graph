@@ -44,9 +44,6 @@
    :max-flow
    ;; Min Cut
    :min-cut
-   ;; Visualization
-   :to-dot
-   :dot-to-file
    ;; Serialization
    :to-plist
    :from-plist
