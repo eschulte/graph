@@ -254,7 +254,7 @@ to a new equality test specified with TEST."
 (defmethod node-edges ((graph graph) node)
   (multiple-value-bind (edges included) (gethash node (node-h graph))
     (assert included (node graph) "~S doesn't include ~S" graph node)
-    edges))
+    (copy-tree edges)))
 
 (defgeneric degree (graph node)
   (:documentation "Return the degree of NODE in GRAPH."))
@@ -347,7 +347,7 @@ EDGE2 will be combined."))
   (:documentation "Return all edges which share a node with EDGE in GRAPH."))
 
 (defmethod edge-neighbors ((graph graph) edge)
-  (mapcan [#'copy-tree {node-edges graph}] edge))
+  (mapcan {node-edges graph} edge))
 
 (defgeneric neighbors (graph node)
   (:documentation "Return all nodes which share an edge with NODE in GRAPH."))
@@ -362,8 +362,7 @@ EDGE2 will be combined."))
   (:documentation "Return all nodes preceding NODE in an edge of DIGRAPH."))
 
 (defmethod precedents ((digraph digraph) node)
-  (mapcan [#'cdr {member node} #'reverse]
-          (copy-tree (node-edges digraph node))))
+  (mapcan [#'cdr {member node} #'reverse] (node-edges digraph node)))
 
 (defgeneric connected-component (graph node)
   (:documentation "Return the connected component of NODE in GRAPH."))

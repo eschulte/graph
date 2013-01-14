@@ -202,6 +202,10 @@
     (is (set-equal (connected-component (digraph-of *graph*) :foo)
                    '(:bar :baz)))))
 
+(deftest connected-component-of-a-cycle ()
+  (with-fixture cycle
+    (is (set-equal (connected-component *cycle* :s) (nodes *cycle*)))))
+
 (deftest connectedp-of-multiple-graphs ()
   (with-fixture small-graph (is (not (connectedp *graph*))))
   (with-fixture less-small-graph (is (not (connectedp *graph*))))
