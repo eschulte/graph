@@ -6,15 +6,100 @@
 
 ;;; Commentary
 
-;; Graphs are composed of two hash tables, nodes and edges.
+;; Graphs are composed of two hash tables, nodes and edges.  The node
+;; hash is keyed by node and holds the edges containing that node,
+;; while the edge hash is keyed by edge containing any optional edge
+;; value.
+;; 
+;;                              Nodes                  Edges
+;;                             -------                -------
+;;     +----Graph G-----+     key |  value             key | value
+;;     |   3   2        |    -----+---------        -------+----------
+;;     | a---b---c   g  |       a |  (a b)           (a b) |  3
+;;     |    1|   |1     |       b |  (b d) (b c)     (b d) |  1
+;;     |     d---e---f  |       c |  (b c) (c e)     (b c) |  2
+;;     |       2   3    |       d |  (b d) (d e)     (c e) |  1
+;;     +----------------+       e |  (d e) (c e)     (d e) |  2
+;;                              f |  (e f)           (e f) |  3
+;;                              g |
 ;;
-;; node hash
-;;  key -- node value
-;;  val -- edge list
+;; Graphs are CLOS objects which are constructed with the usual `make
+;; instance` and are populated with the `populate` function.
 ;;
-;; edge hash
-;;  key -- node list
-;;  val -- edge value
+;;     (defvar *graph* (populate (make-instance 'graph)
+;;                       :nodes '(a b c d e f g)
+;;                       :edges-w-values '(((a b) . 3)
+;;                                         ((b d) . 1)
+;;                                         ((b c) . 2)
+;;                                         ((c e) . 1)
+;;                                         ((d e) . 2)
+;;                                         ((e f) . 3))))
+;;
+;; Standard accessors are provided.
+;;
+;;     * (nodes *graph*)
+;;     (A B C D E F G)
+;;
+;;     * (edges *graph*)
+;;     ((A B) (B D) (B C) (C E) (D E) (E F))
+;;
+;;     * (node-edges *graph* 'b)
+;;     ((B C) (B D) (A B))
+;;
+;;     * (edge-value *graph* '(d e))
+;;     2
+;;
+;; Nodes and edges may be removed using `delete-node` and
+;; `delete-edge`, or using setf methods on any of the accessors above.
+;;
+;;     * (delete-edge *graph* '(e f))
+;;     3
+;;
+;;     * (edges *graph*)
+;;     ((A B) (B D) (B C) (C E) (D E))
+;;
+;;     * (setf (nodes *graph*) (remove 'a (nodes *graph*)))
+;;     (B C D E F G)
+;;
+;;     * (edges *graph*)
+;;     ((B D) (B C) (C E) (D E))
+;;
+;; Some more sophisticated graph algorithms are implemented.  A couple
+;; are shown below, see the dictionary for a complete list.
+;;
+;;     * (shortest-path *graph* 'b 'e)
+;;     ((B C) (C E))
+;;
+;;     * (connected-components *graph*)
+;;     ((G) (B D C E) (F))
+;;
+;;     * (setf (nodes *graph*) '(B D C E))
+;;     (B C D E)
+;;
+;;     * (min-cut *graph*)
+;;     ((B C) (E D))
+;;     2
+;;
+;; Additionally digraphs represent graphs with directed edges.
+;; Starting with the original graph above we get the following.
+;;
+;;     * (strongly-connected-components *graph*)
+;;     ((G) (D F E C B A))
+;;
+;;     * (strongly-connected-components (digraph-of *graph*))
+;;     ((G) (A) (B) (D) (C) (E) (F))
+;;
+;;     * (delete-edge *graph* '(d e))
+;;     2
+;;
+;;     * (push '(e d) (edges *graph*))
+;;     ((A B) (B D) (B C) (C E) (E D) (E F))
+;;
+;;     * (push '(d c) (edges *graph*))
+;;     ((A B) (B D) (B C) (C E) (E D) (E F) (D C))
+;;
+;;     * (strongly-connected-components (digraph-of *graph*))
+;;     ((G) (A) (B) (D E C) (F))
 
 ;;; Code:
 (in-package :graph)
@@ -598,7 +683,7 @@ The Ford-Fulkerson algorithm is used."))
 ;; Theorem: Let s,t ∈ (nodes G), let G' be the result of merging s and
 ;;          t in G.  Then (min-cut G) is equal to the minimum of the
 ;;          min cut of s and t in G and (min-cut G').
-;;          
+;;
 (defun weigh-cut (graph cut)
   (reduce #'+ (mapcar {edge-value graph}
                       (remove-if-not (lambda (edge)
