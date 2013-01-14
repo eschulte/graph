@@ -1,6 +1,6 @@
 ;;; graph.lisp --- because its easier to write than to learn such a library
 
-;; Copyright (C) Eric Schulte 2012
+;; Copyright (C) Eric Schulte 2012-2013
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
