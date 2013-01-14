@@ -8,28 +8,3 @@ if nodes could hold other nodes in their edge list, and edges could
 hold other edges in their node list, what sort of structure would this
 be?  A useful generalization of a graph?
 
-* publishing HTML documentation
-Should read abstract from a file.
-
-#+begin_src lisp
-  (schulte-documentation-template:create-template
-          :graph
-          :maybe-skip-methods-p t
-          :target "/tmp/graph.html"
-          :subtitle "simple graph data structure and algorithms"
-          :abstract "The GRAPH library strives for simplicity both in
-  backing data structures and in usage.  Graphs and Digraphs are
-  represented as CLOS objects with methods and algorithms provided for
-  graph manipulation and analysis.  <b>Note</b> currently this library
-  is only supported on SBCL because of the need to create hashes with
-  custom equality tests, however <em>many</em> other lisps support this
-  so extending should be simple.  Patches welcome.")
-#+end_src
-
-#+begin_src sh
-  (
-      cat /tmp/graph.html|sed -n '/<html/,/INTRODUCTION_PASTE/p'|head -n -1
-      cat graph.lisp|sed -n '/Commentary/,/Code/p'|cut -c4-|head -n -2|tail -n +3|markdown
-      cat /tmp/graph.html|sed -n '/INTRODUCTION_PASTE/,$p'|tail -n +2
-  ) > index.html
-#+end_src
