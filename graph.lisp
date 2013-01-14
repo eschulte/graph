@@ -599,6 +599,13 @@ The Ford-Fulkerson algorithm is used."))
 ;;          t in G.  Then (min-cut G) is equal to the minimum of the
 ;;          min cut of s and t in G and (min-cut G').
 ;;          
+(defun weigh-cut (graph cut)
+  (reduce #'+ (mapcar {edge-value graph}
+                      (remove-if-not (lambda (edge)
+                                       (and (intersection edge (first cut))
+                                            (intersection edge (second cut))))
+                                     (edges graph)))))
+
 (defgeneric min-cut (graph)
   (:documentation
    "Return both the global min-cut of GRAPH and the weight of the cut."))
@@ -636,10 +643,9 @@ The Ford-Fulkerson algorithm is used."))
            ;; merge two last added nodes
            (my-merge (first a) (second a))))
       ;; return the minimum cut-of-phase
-      (let ((weight-and-cut (car (sort cuts-of-phase #'< :key #'car))))
-        (values (list (cdr weight-and-cut)
-                      (set-difference (nodes graph) (cdr weight-and-cut)))
-                (car weight-and-cut))))))
+      (let* ((half (cdar (sort cuts-of-phase #'< :key #'car)))
+             (cut  (list half (set-difference (nodes graph) half))))
+        (values (sort cut #'< :key #'length) (weigh-cut graph cut))))))
 
 
 ;;; Serialize graphs to/from plists
