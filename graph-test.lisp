@@ -127,6 +127,12 @@
     (is (= 2 (length (edges *graph*))))
     (is (= 1 (length (node-edges *graph* :foo))))))
 
+(deftest add-duplicate-edge-to-small-graph ()
+  (with-fixture small-graph
+    (add-edge *graph* '(:bar :foo))
+    (is (not (member '(:bar :foo) (edges *graph*) :test #'tree-equal)))
+    (is (not (member '(:bar :foo) (node-edges *graph* :bar))))))
+
 (deftest edge-value-for-foo-bar ()
   (with-fixture small-graph
     (is (null (edge-value *graph* '(:foo :bar))))
