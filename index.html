@@ -1,0 +1,698 @@
+<html> 
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>GRAPH - simple graph data structure and algorithms</title>
+  <style type="text/css">
+  pre { padding:5px; background-color:#e0e0e0 }
+  h3, h4 { text-decoration: underline; }
+  a { text-decoration: none; padding: 1px 2px 1px 2px; }
+  a:visited { text-decoration: none; padding: 1px 2px 1px 2px; }
+  a:hover { text-decoration: none; padding: 1px 1px 1px 1px; border: 1px solid #000000; } 
+  a:focus { text-decoration: none; padding: 1px 2px 1px 2px; border: none; }
+  a.none { text-decoration: none; padding: 0; }
+  a.none:visited { text-decoration: none; padding: 0; } 
+  a.none:hover { text-decoration: none; border: none; padding: 0; } 
+  a.none:focus { text-decoration: none; border: none; padding: 0; } 
+  a.noborder { text-decoration: none; padding: 0; } 
+  a.noborder:visited { text-decoration: none; padding: 0; } 
+  a.noborder:hover { text-decoration: none; border: none; padding: 0; } 
+  a.noborder:focus { text-decoration: none; border: none; padding: 0; }  
+  pre.none { padding:5px; background-color:#ffffff }
+  </style>
+</head>
+
+<body bgcolor=white>
+
+<h2> GRAPH - simple graph data structure and algorithms</h2>
+
+<br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
+
+<p>The GRAPH library strives for simplicity both in
+backing data structures and in usage.  Graphs and Digraphs are
+represented as CLOS objects with methods and algorithms provided for
+graph manipulation and analysis.</p>
+
+The code is available under the <a
+href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
+
+<p>
+<font color=red>Source:</font>
+<a href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
+
+<br>&nbsp;<br><h3><a class=none name="contents">Contents</a></h3>
+<ol>
+  <li><a href="#source">Source</a></li>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#dictionary">The GRAPH dictionary</a></li>
+    <ol>
+      <li><a href="#add-edge"><code>add-edge</code></a></li>
+      <li><a href="#add-node"><code>add-node</code></a></li>
+      <li><a href="#add-paths"><code>add-paths</code></a></li>
+      <li><a href="#basic-cycles"><code>basic-cycles</code></a></li>
+      <li><a href="#connected-component"><code>connected-component</code></a></li>
+      <li><a href="#connected-components"><code>connected-components</code></a></li>
+      <li><a href="#connectedp"><code>connectedp</code></a></li>
+      <li><a href="#copy"><code>copy</code></a></li>
+      <li><a href="#cycles"><code>cycles</code></a></li>
+      <li><a href="#degree"><code>degree</code></a></li>
+      <li><a href="#delete-edge"><code>delete-edge</code></a></li>
+      <li><a href="#delete-node"><code>delete-node</code></a></li>
+      <li><a href="#digraph"><code>digraph</code></a></li>
+      <li><a href="#digraph-of"><code>digraph-of</code></a></li>
+      <li><a href="#edge-neighbors"><code>edge-neighbors</code></a></li>
+      <li><a href="#edge-value"><code>edge-value</code></a></li>
+      <li><a href="#edges"><code>edges</code></a></li>
+      <li><a href="#edges-w-values"><code>edges-w-values</code></a></li>
+      <li><a href="#from-plist"><code>from-plist</code></a></li>
+      <li><a href="#graph"><code>graph</code></a></li>
+      <li><a href="#graph-equal"><code>graph-equal</code></a></li>
+      <li><a href="#graph-of"><code>graph-of</code></a></li>
+      <li><a href="#has-edge-p"><code>has-edge-p</code></a></li>
+      <li><a href="#has-node-p"><code>has-node-p</code></a></li>
+      <li><a href="#max-flow"><code>max-flow</code></a></li>
+      <li><a href="#merge-edges"><code>merge-edges</code></a></li>
+      <li><a href="#merge-nodes"><code>merge-nodes</code></a></li>
+      <li><a href="#min-cut"><code>min-cut</code></a></li>
+      <li><a href="#neighbors"><code>neighbors</code></a></li>
+      <li><a href="#node-edges"><code>node-edges</code></a></li>
+      <li><a href="#nodes"><code>nodes</code></a></li>
+      <li><a href="#nodes-w-values"><code>nodes-w-values</code></a></li>
+      <li><a href="#populate"><code>populate</code></a></li>
+      <li><a href="#precedents"><code>precedents</code></a></li>
+      <li><a href="#residual"><code>residual</code></a></li>
+      <li><a href="#shortest-path"><code>shortest-path</code></a></li>
+      <li><a href="#strongly-connected-components"><code>strongly-connected-components</code></a></li>
+      <li><a href="#subgraph"><code>subgraph</code></a></li>
+      <li><a href="#to-plist"><code>to-plist</code></a></li>
+    </ol>
+  <li><a href="#ack">Acknowledgements</a></li>
+</ol>
+
+<br>&nbsp;<br><h3><a class=none name="source">Source</a></h3>
+
+GRAPH together with this documentation can be found at <a
+href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
+
+<br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
+
+<p>Graphs are composed of two hash tables, nodes and edges.  The node
+hash is keyed by node and holds the edges containing that node,
+while the edge hash is keyed by edge containing any optional edge
+value.</p>
+
+<pre><code>                         Nodes                  Edges
+                        -------                -------
++----Graph G-----+     key |  value             key | value
+|   3   2        |    -----+---------        -------+----------
+| a---b---c   g  |       a |  (a b)           (a b) |  3
+|    1|   |1     |       b |  (b d) (b c)     (b d) |  1
+|     d---e---f  |       c |  (b c) (c e)     (b c) |  2
+|       2   3    |       d |  (b d) (d e)     (c e) |  1
++----------------+       e |  (d e) (c e)     (d e) |  2
+                         f |  (e f)           (e f) |  3
+                         g |
+</code></pre>
+
+<p>Graphs are CLOS objects which are constructed with the usual <code>make
+instance</code> and are populated with the <code>populate</code> function.</p>
+
+<pre><code>(defvar *graph* (populate (make-instance 'graph)
+                  :nodes '(a b c d e f g)
+                  :edges-w-values '(((a b) . 3)
+                                    ((b d) . 1)
+                                    ((b c) . 2)
+                                    ((c e) . 1)
+                                    ((d e) . 2)
+                                    ((e f) . 3))))
+</code></pre>
+
+<p>Standard accessors are provided.</p>
+
+<pre><code>* (nodes *graph*)
+(A B C D E F G)
+
+* (edges *graph*)
+((A B) (B D) (B C) (C E) (D E) (E F))
+
+* (node-edges *graph* 'b)
+((B C) (B D) (A B))
+
+* (edge-value *graph* '(d e))
+2
+</code></pre>
+
+<p>Nodes and edges may be removed using <code>delete-node</code> and
+<code>delete-edge</code>, or using setf methods on any of the accessors above.</p>
+
+<pre><code>* (delete-edge *graph* '(e f))
+3
+
+* (edges *graph*)
+((A B) (B D) (B C) (C E) (D E))
+
+* (setf (nodes *graph*) (remove 'a (nodes *graph*)))
+(B C D E F G)
+
+* (edges *graph*)
+((B D) (B C) (C E) (D E))
+</code></pre>
+
+<p>Some more sophisticated graph algorithms are implemented.  A couple
+are shown below, see the dictionary for a complete list.</p>
+
+<pre><code>* (shortest-path *graph* 'b 'e)
+((B C) (C E))
+
+* (connected-components *graph*)
+((G) (B D C E) (F))
+
+* (setf (nodes *graph*) '(B D C E))
+(B C D E)
+
+* (min-cut *graph*)
+((B C) (E D))
+2
+</code></pre>
+
+<p>Additionally digraphs represent graphs with directed edges.
+Starting with the original graph above we get the following.</p>
+
+<pre><code>* (strongly-connected-components *graph*)
+((G) (D F E C B A))
+
+* (strongly-connected-components (digraph-of *graph*))
+((G) (A) (B) (D) (C) (E) (F))
+
+* (delete-edge *graph* '(d e))
+2
+
+* (push '(e d) (edges *graph*))
+((A B) (B D) (B C) (C E) (E D) (E F))
+
+* (push '(d c) (edges *graph*))
+((A B) (B D) (B C) (C E) (E D) (E F) (D C))
+
+* (strongly-connected-components (digraph-of *graph*))
+((G) (A) (B) (D E C) (F))
+</code></pre>
+
+<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH dictionary</a></h3>
+
+
+<!-- Entry for ADD-EDGE -->
+
+<p><br>[Generic function]<br><a class=none name='add-edge'><b>add-edge</b> <i>graph edge <tt>&amp;optional</tt> value</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Add EDGE to GRAPH with optional VALUE.
+
+</blockquote>
+
+<!-- End of entry for ADD-EDGE -->
+
+
+<!-- Entry for ADD-NODE -->
+
+<p><br>[Generic function]<br><a class=none name='add-node'><b>add-node</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Add NODE to GRAPH.
+
+</blockquote>
+
+<!-- End of entry for ADD-NODE -->
+
+
+<!-- Entry for ADD-PATHS -->
+
+<p><br>[Generic function]<br><a class=none name='add-paths'><b>add-paths</b> <i>graph path1 path2</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the combination of paths PATH1 and PATH2 through GRAPH.
+Each element of PATH has the form (cons edge value).
+
+</blockquote>
+
+<!-- End of entry for ADD-PATHS -->
+
+
+<!-- Entry for BASIC-CYCLES -->
+
+<p><br>[Generic function]<br><a class=none name='basic-cycles'><b>basic-cycles</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return all basic cycles in the GRAPH.
+
+</blockquote>
+
+<!-- End of entry for BASIC-CYCLES -->
+
+
+<!-- Entry for CONNECTED-COMPONENT -->
+
+<p><br>[Generic function]<br><a class=none name='connected-component'><b>connected-component</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the connected component of NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for CONNECTED-COMPONENT -->
+
+
+<!-- Entry for CONNECTED-COMPONENTS -->
+
+<p><br>[Generic function]<br><a class=none name='connected-components'><b>connected-components</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return a list of the connected components of GRAPH.
+
+</blockquote>
+
+<!-- End of entry for CONNECTED-COMPONENTS -->
+
+
+<!-- Entry for CONNECTEDP -->
+
+<p><br>[Generic function]<br><a class=none name='connectedp'><b>connectedp</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return true if the graph is connected.
+
+</blockquote>
+
+<!-- End of entry for CONNECTEDP -->
+
+
+<!-- Entry for COPY -->
+
+<p><br>[Generic function]<br><a class=none name='copy'><b>copy</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return a copy of GRAPH.
+
+</blockquote>
+
+<!-- End of entry for COPY -->
+
+
+<!-- Entry for CYCLES -->
+
+<p><br>[Generic function]<br><a class=none name='cycles'><b>cycles</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return all cycles of GRAPH (both basic and compound).
+
+</blockquote>
+
+<!-- End of entry for CYCLES -->
+
+
+<!-- Entry for DEGREE -->
+
+<p><br>[Generic function]<br><a class=none name='degree'><b>degree</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the degree of NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for DEGREE -->
+
+
+<!-- Entry for DELETE-EDGE -->
+
+<p><br>[Generic function]<br><a class=none name='delete-edge'><b>delete-edge</b> <i>graph edge</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Delete EDGE from GRAPH.
+Return the old value of EDGE.
+
+</blockquote>
+
+<!-- End of entry for DELETE-EDGE -->
+
+
+<!-- Entry for DELETE-NODE -->
+
+<p><br>[Generic function]<br><a class=none name='delete-node'><b>delete-node</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Delete NODE from GRAPH.
+Delete and return the old edges of NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for DELETE-NODE -->
+
+
+<!-- Entry for DIGRAPH -->
+
+<p><br>[Standard class]<br><a class=none name='digraph'><b>digraph</b></a>
+<blockquote><br>
+
+A <a href="#graph"><code>graph</code></a> with directed edges.
+
+</blockquote>
+
+<!-- End of entry for DIGRAPH -->
+
+
+<!-- Entry for DIGRAPH-OF -->
+
+<p><br>[Generic function]<br><a class=none name='digraph-of'><b>digraph-of</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Copy GRAPH into a <a href="#digraph"><code>digraph</code></a> and return.
+
+</blockquote>
+
+<!-- End of entry for DIGRAPH-OF -->
+
+
+<!-- Entry for EDGE-NEIGHBORS -->
+
+<p><br>[Generic function]<br><a class=none name='edge-neighbors'><b>edge-neighbors</b> <i>graph edge</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return all edges which share a node with EDGE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for EDGE-NEIGHBORS -->
+
+
+<!-- Entry for EDGE-VALUE -->
+
+<p><br>[Generic accessor]<br><a class=none name='edge-value'><b>edge-value</b> <i>graph edge</i> =&gt; <i>result</i></a>
+<br><a class=none><tt>(setf (</tt><b>edge-value</b> <i>graph edge</i><tt>)</tt> <i>new</i><tt>)</tt></a>
+<blockquote><br>
+
+Return the value of EDGE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for EDGE-VALUE -->
+
+
+<!-- Entry for EDGES -->
+
+<p><br>[Generic accessor]<br><a class=none name='edges'><b>edges</b> <i>graph</i> =&gt; <i>result</i></a>
+<br><a class=none><tt>(setf (</tt><b>edges</b> <i>graph</i><tt>)</tt> <i>new</i><tt>)</tt></a>
+<blockquote><br>
+
+Return a list of the edges in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for EDGES -->
+
+
+<!-- Entry for EDGES-W-VALUES -->
+
+<p><br>[Generic function]<br><a class=none name='edges-w-values'><b>edges-w-values</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return an alist of edges of GRAPH with their values.
+
+</blockquote>
+
+<!-- End of entry for EDGES-W-VALUES -->
+
+
+<!-- Entry for FROM-PLIST -->
+
+<p><br>[Generic function]<br><a class=none name='from-plist'><b>from-plist</b> <i>graph plist</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Populate GRAPH with the contents of PLIST.
+
+</blockquote>
+
+<!-- End of entry for FROM-PLIST -->
+
+
+<!-- Entry for GRAPH -->
+
+<p><br>[Standard class]<br><a class=none name='graph'><b>graph</b></a>
+<blockquote><br>
+
+A graph consisting of <a href="#nodes"><code>nodes</code></a> connected by <a href="#edges"><code>edges</code></a>.
+Nodes must be numbers symbols or keywords.  Edges may be assigned
+arbitrary values, although some functions assume numeric values (e.g.,
+<a href="#merge-nodes"><code>merge-nodes</code></a>, <a href="#merge-edges"><code>merge-edges</code></a>, <a href="#max-flow"><code>max-flow</code></a> and <a href="#min-cut"><code>min-cut</code></a>).
+
+</blockquote>
+
+<!-- End of entry for GRAPH -->
+
+
+<!-- Entry for GRAPH-EQUAL -->
+
+<p><br>[Generic function]<br><a class=none name='graph-equal'><b>graph-equal</b> <i>graph1 graph2</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Compare GRAPH1 and GRAPH2 for equality.
+
+</blockquote>
+
+<!-- End of entry for GRAPH-EQUAL -->
+
+
+<!-- Entry for GRAPH-OF -->
+
+<p><br>[Generic function]<br><a class=none name='graph-of'><b>graph-of</b> <i>digraph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Copy DIGRAPH into a <a href="#graph"><code>graph</code></a> and return.
+
+</blockquote>
+
+<!-- End of entry for GRAPH-OF -->
+
+
+<!-- Entry for HAS-EDGE-P -->
+
+<p><br>[Generic function]<br><a class=none name='has-edge-p'><b>has-edge-p</b> <i>graph edge</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return <a href="#true"><code>true</code></a> if GRAPH has edge EDGE.
+
+</blockquote>
+
+<!-- End of entry for HAS-EDGE-P -->
+
+
+<!-- Entry for HAS-NODE-P -->
+
+<p><br>[Generic function]<br><a class=none name='has-node-p'><b>has-node-p</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return <a href="#true"><code>true</code></a> if GRAPH has node NODE.
+
+</blockquote>
+
+<!-- End of entry for HAS-NODE-P -->
+
+
+<!-- Entry for MAX-FLOW -->
+
+<p><br>[Generic function]<br><a class=none name='max-flow'><b>max-flow</b> <i>graph from to</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the maximum flow from FROM and TO in GRAPH.
+GRAPHS must be a network with numeric values of all edges.
+The Ford-Fulkerson algorithm is used.
+
+</blockquote>
+
+<!-- End of entry for MAX-FLOW -->
+
+
+<!-- Entry for MERGE-EDGES -->
+
+<p><br>[Generic function]<br><a class=none name='merge-edges'><b>merge-edges</b> <i>graph edge1 edge2 <tt>&amp;key</tt> value</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Combine EDGE1 and EDGE2 in GRAPH into a new EDGE.
+Optionally provide a value for the new edge, the values of EDGE1 and
+EDGE2 will be combined.
+
+</blockquote>
+
+<!-- End of entry for MERGE-EDGES -->
+
+
+<!-- Entry for MERGE-NODES -->
+
+<p><br>[Generic function]<br><a class=none name='merge-nodes'><b>merge-nodes</b> <i>graph node1 node2 <tt>&amp;key</tt> new new</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Combine NODE1 and NODE2 in GRAPH into the node NEW.
+All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
+holding VALUE.  Edges between only NODE1 and NODE2 will be removed.
+
+</blockquote>
+
+<!-- End of entry for MERGE-NODES -->
+
+
+<!-- Entry for MIN-CUT -->
+
+<p><br>[Generic function]<br><a class=none name='min-cut'><b>min-cut</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return both the global min-cut of GRAPH and the weight of the cut.
+
+</blockquote>
+
+<!-- End of entry for MIN-CUT -->
+
+
+<!-- Entry for NEIGHBORS -->
+
+<p><br>[Generic function]<br><a class=none name='neighbors'><b>neighbors</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return all nodes which share an edge with NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for NEIGHBORS -->
+
+
+<!-- Entry for NODE-EDGES -->
+
+<p><br>[Generic accessor]<br><a class=none name='node-edges'><b>node-edges</b> <i>graph node</i> =&gt; <i>result</i></a>
+<br><a class=none><tt>(setf (</tt><b>node-edges</b> <i>graph node</i><tt>)</tt> <i>new</i><tt>)</tt></a>
+<blockquote><br>
+
+Return the value of NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for NODE-EDGES -->
+
+
+<!-- Entry for NODES -->
+
+<p><br>[Generic accessor]<br><a class=none name='nodes'><b>nodes</b> <i>graph</i> =&gt; <i>result</i></a>
+<br><a class=none><tt>(setf (</tt><b>nodes</b> <i>graph</i><tt>)</tt> <i>new</i><tt>)</tt></a>
+<blockquote><br>
+
+Return a list of the nodes in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for NODES -->
+
+
+<!-- Entry for NODES-W-VALUES -->
+
+<p><br>[Generic function]<br><a class=none name='nodes-w-values'><b>nodes-w-values</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return an alist of nodes of GRAPH with their values.
+
+</blockquote>
+
+<!-- End of entry for NODES-W-VALUES -->
+
+
+<!-- Entry for POPULATE -->
+
+<p><br>[Generic function]<br><a class=none name='populate'><b>populate</b> <i>graph <tt>&amp;key</tt> nodes edges edges-w-values</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Populate the nodes and edges of GRAPH based on keyword arguments.
+
+</blockquote>
+
+<!-- End of entry for POPULATE -->
+
+
+<!-- Entry for PRECEDENTS -->
+
+<p><br>[Generic function]<br><a class=none name='precedents'><b>precedents</b> <i>digraph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return all nodes preceding NODE in an edge of DIGRAPH.
+
+</blockquote>
+
+<!-- End of entry for PRECEDENTS -->
+
+
+<!-- Entry for RESIDUAL -->
+
+<p><br>[Generic function]<br><a class=none name='residual'><b>residual</b> <i>graph flow</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the residual graph of GRAPH with FLOW.
+Each edge in the residual has a value equal to the original capacity
+minus the current flow, or equal to the negative of the current flow.
+
+</blockquote>
+
+<!-- End of entry for RESIDUAL -->
+
+
+<!-- Entry for SHORTEST-PATH -->
+
+<p><br>[Generic function]<br><a class=none name='shortest-path'><b>shortest-path</b> <i>graph a b</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the shortest path in GRAPH from A to B.
+GRAPH must be a directed graph.  Dijkstra's algorithm is used.
+
+</blockquote>
+
+<!-- End of entry for SHORTEST-PATH -->
+
+
+<!-- Entry for STRONGLY-CONNECTED-COMPONENTS -->
+
+<p><br>[Generic function]<br><a class=none name='strongly-connected-components'><b>strongly-connected-components</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the nodes of GRAPH partitioned into strongly connected components.
+Uses Tarjan's algorithm.
+
+</blockquote>
+
+<!-- End of entry for STRONGLY-CONNECTED-COMPONENTS -->
+
+
+<!-- Entry for SUBGRAPH -->
+
+<p><br>[Generic function]<br><a class=none name='subgraph'><b>subgraph</b> <i>graph nodes</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the subgraph of GRAPH restricted to NODES.
+
+</blockquote>
+
+<!-- End of entry for SUBGRAPH -->
+
+
+<!-- Entry for TO-PLIST -->
+
+<p><br>[Generic function]<br><a class=none name='to-plist'><b>to-plist</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Serialize GRAPH as a plist.
+
+</blockquote>
+
+<!-- End of entry for TO-PLIST -->
+
+
+<br>&nbsp;<br><h3><a class=none name="ack">Acknowledgements</a></h3>
+
+<p>
+This documentation was prepared with a hacked up version of <a href="http://weitz.de/documentation-template/">DOCUMENTATION-TEMPLATE</a>.
+</p>
+
+</body>
+</html>
