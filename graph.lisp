@@ -368,10 +368,10 @@ EDGE2 will be combined."))
   (:documentation "Return the connected component of NODE in GRAPH."))
 
 (defmethod connected-component ((graph graph) node)
-  (let ((from (list node)) (seen))
+  (let ((from (list node)) (seen (list node)))
     (loop :until (null from) :do
        (let ((next (remove-duplicates (mapcan {neighbors graph} from))))
-         (setf from (remove node (set-difference next seen)))
+         (setf from (set-difference next seen))
          (setf seen (union next seen))))
     (reverse seen)))
 
@@ -381,6 +381,10 @@ EDGE2 will be combined."))
 (defmethod connectedp ((graph graph))
   (let ((nodes (nodes graph)))
     (subsetp (nodes graph) (connected-component graph (car nodes)))))
+
+(defmethod connectedp ((digraph digraph))
+  (every [{subsetp (nodes digraph)} {connected-component digraph}]
+         (nodes digraph)))
 
 (defgeneric connected-components (graph)
   (:documentation "Return a list of the connected components of GRAPH."))

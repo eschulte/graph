@@ -200,6 +200,8 @@
 (deftest connected-component-of-foo-in-small-digraph ()
   (with-fixture small-graph
     (is (set-equal (connected-component (digraph-of *graph*) :foo)
+                   '(:foo :bar :baz)))
+    (is (set-equal (connected-component (digraph-of *graph*) :bar)
                    '(:bar :baz)))))
 
 (deftest connected-component-of-a-cycle ()
@@ -215,7 +217,7 @@
   (with-fixture less-small-graph
     (is (set-equal (connected-components *graph*)
                    '((:ZAP :ZAF :QUX) (:FIZ) (:BAZ :FOO :BAR))
-                   :test #'tree-equal))))
+                   :test #'set-equal))))
 
 (deftest strongly-connected-components-of-small-graph ()
   (with-fixture small-graph
