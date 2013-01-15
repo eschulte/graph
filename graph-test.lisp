@@ -327,3 +327,11 @@
   (with-fixture small-network
     (is (graph-equal *network* (from-plist (make-instance 'graph)
                                            (to-plist *network*))))))
+
+(deftest test-preferential-attachment-population ()
+  (let ((graph (make-instance 'graph))
+        (many 1000))
+    (preferential-attachment-populate
+     graph (loop :for i :below many :collect i))
+    (is (= many (length (nodes graph))))
+    (is (= (1- many) (length (edges graph))))))

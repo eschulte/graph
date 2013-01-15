@@ -47,4 +47,6 @@
    :max-flow
    ;; Min Cut
    :min-cut
+   ;; Random Graph generation
+   :preferential-attachment-populate
    ))

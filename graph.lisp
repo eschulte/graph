@@ -138,7 +138,7 @@
   (set-equal edge1 edge2))
 
 (defun sxhash-edge (edge)
-  (sxhash (sort (copy-tree edge) (if (numberp edge) #'< #'string<))))
+  (sxhash (sort (copy-tree edge) (if (numberp (car edge)) #'< #'string<))))
 
 (sb-ext:define-hash-table-test edge-equalp sxhash-edge)
 
@@ -757,3 +757,21 @@ The Ford-Fulkerson algorithm is used."))
       (let* ((half (cdar (sort cuts-of-phase #'< :key #'car)))
              (cut  (list half (set-difference (nodes graph) half))))
         (values (sort cut #'< :key #'length) (weigh-cut graph cut))))))
+
+
+;;; Random graphs generation
+(defgeneric preferential-attachment-populate (graph nodes &key edge-vals)
+  (:documentation ;; TODO: add optional argument for desired average degree
+   "Add NODES to GRAPH using preferential attachment, return the new edges."))
+
+(defmethod preferential-attachment-populate ((graph graph) nodes &key edge-vals)
+  (assert (not (= 1 (length nodes))) (nodes)
+          "Can't preferentially attach a single node.")
+  (when (null (nodes graph))
+    (add-edge graph (list (pop nodes) (pop nodes))
+              (when edge-vals (pop edge-vals))))
+  (mapcar (lambda (node)
+            (add-edge graph
+                      (list node (random-elt (apply #'append (edges graph))))
+                      (when edge-vals (pop edge-vals))))
+          nodes))
