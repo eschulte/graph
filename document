@@ -1,0 +1,17 @@
+#!/usr/bin/sbcl --script
+(load "~/.sbclrc" :if-does-not-exist nil)
+(require :graph)
+(require :schulte-documentation-template)
+
+(schulte-documentation-template:create-template
+ :graph
+ :maybe-skip-methods-p t
+ :target "graph.html"
+ :subtitle "simple graph data structure and algorithms"
+ :abstract "The GRAPH library strives for simplicity both in
+ backing data structures and in usage.  Graphs and Digraphs are
+ represented as CLOS objects with methods and algorithms provided for
+ graph manipulation and analysis.</p><p><em>Note</em>: currently this library
+ is only supported on SBCL because of the need to create hashes with
+ custom equality tests, however <em>many</em> other lisps support this
+ so extending should be simple.  Patches welcome.")
