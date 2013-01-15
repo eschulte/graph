@@ -768,7 +768,8 @@ The Ford-Fulkerson algorithm is used."))
 ;;; Random graphs generation
 (defgeneric preferential-attachment-populate (graph nodes &key edge-vals)
   (:documentation ;; TODO: add optional argument for desired average degree
-   "Add NODES to GRAPH using preferential attachment, return the new edges."))
+   "Add NODES to GRAPH using preferential attachment, return the new edges.
+Optionally assign edge values from those listed in EDGE-VALS."))
 
 (defmethod preferential-attachment-populate ((graph graph) nodes &key edge-vals)
   (let ((degree-sum 0) (connections (make-array (* 2 (length nodes)))) edges)
