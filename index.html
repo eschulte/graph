@@ -29,12 +29,12 @@
 <br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
 
 <p>The GRAPH library strives for simplicity both in
-backing data structures and in usage.  Graphs and Digraphs are
-represented as CLOS objects with methods and algorithms provided for
-graph manipulation and analysis.  <b>Note</b> currently this library
-is only supported on SBCL because of the need to create hashes with
-custom equality tests, however <em>many</em> other lisps support this
-so extending should be simple.  Patches welcome.</p>
+ backing data structures and in usage.  Graphs and Digraphs are
+ represented as CLOS objects with methods and algorithms provided for
+ graph manipulation and analysis.</p><p><em>Note</em>: currently this library
+ is only supported on SBCL because of the need to create hashes with
+ custom equality tests, however <em>many</em> other lisps support this
+ so extending should be simple.  Patches welcome.</p>
 
 The code is available under the <a
 href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
@@ -83,6 +83,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#nodes-w-values"><code>nodes-w-values</code></a></li>
       <li><a href="#populate"><code>populate</code></a></li>
       <li><a href="#precedents"><code>precedents</code></a></li>
+      <li><a href="#preferential-attachment-populate"><code>preferential-attachment-populate</code></a></li>
       <li><a href="#residual"><code>residual</code></a></li>
       <li><a href="#shortest-path"><code>shortest-path</code></a></li>
       <li><a href="#strongly-connected-components"><code>strongly-connected-components</code></a></li>
@@ -414,7 +415,8 @@ Return a list of the edges in GRAPH.
 
 <!-- Entry for EDGES-W-VALUES -->
 
-<p><br>[Generic function]<br><a class=none name='edges-w-values'><b>edges-w-values</b> <i>graph</i> =&gt; <i>result</i></a>
+<p><br>[Generic accessor]<br><a class=none name='edges-w-values'><b>edges-w-values</b> <i>graph</i> =&gt; <i>result</i></a>
+<br><a class=none><tt>(setf (</tt><b>edges-w-values</b> <i>graph</i><tt>)</tt> <i>new</i><tt>)</tt></a>
 <blockquote><br>
 
 Return an alist of edges of GRAPH with their values.
@@ -625,6 +627,18 @@ Return all nodes preceding NODE in an edge of DIGRAPH.
 </blockquote>
 
 <!-- End of entry for PRECEDENTS -->
+
+
+<!-- Entry for PREFERENTIAL-ATTACHMENT-POPULATE -->
+
+<p><br>[Generic function]<br><a class=none name='preferential-attachment-populate'><b>preferential-attachment-populate</b> <i>graph nodes <tt>&amp;key</tt> edge-vals</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Add NODES to GRAPH using preferential attachment, return the new edges.
+
+</blockquote>
+
+<!-- End of entry for PREFERENTIAL-ATTACHMENT-POPULATE -->
 
 
 <!-- Entry for RESIDUAL -->
