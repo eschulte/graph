@@ -243,6 +243,32 @@ to a new equality test specified with TEST."
            (hash-equal node-h))))
 
 
+;;; Serialize graphs to/from plists
+(defgeneric to-plist (graph)
+  (:documentation "Serialize GRAPH as a plist."))
+
+(defmethod to-plist ((graph graph))
+  (let ((counts (make-hash-table)) (counter -1))
+    (list :nodes (mapcar {list :name}
+                         (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
+                               (nodes graph)))
+          :edges (map 'list (lambda (edge value) (list :edge edge :value value))
+                      (mapcar {mapcar {position _ (nodes graph)}} (edges graph))
+                      (mapcar {edge-value graph} (edges graph))))))
+
+(defgeneric from-plist (graph plist)
+  (:documentation "Populate GRAPH with the contents of PLIST."))
+
+(defmethod from-plist ((graph graph) plist)
+  (let ((nodes (map 'vector {getf _ :name} (getf plist :nodes))))
+    (populate graph
+      :nodes (coerce nodes 'list)
+      :edges-w-values (mapcar (lambda (el)
+                                (cons (mapcar {aref nodes} (getf el :edge))
+                                      (getf el :value)))
+                              (getf plist :edges)))))
+
+
 ;;; Simple graph methods
 (defgeneric edges (graph)
   (:documentation "Return a list of the edges in GRAPH."))
@@ -731,29 +757,3 @@ The Ford-Fulkerson algorithm is used."))
       (let* ((half (cdar (sort cuts-of-phase #'< :key #'car)))
              (cut  (list half (set-difference (nodes graph) half))))
         (values (sort cut #'< :key #'length) (weigh-cut graph cut))))))
-
-
-;;; Serialize graphs to/from plists
-(defgeneric to-plist (graph)
-  (:documentation "Serialize GRAPH as a plist."))
-
-(defmethod to-plist ((graph graph))
-  (let ((counts (make-hash-table)) (counter -1))
-    (list :nodes (mapcar {list :name}
-                         (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
-                               (nodes graph)))
-          :edges (map 'list (lambda (edge value) (list :edge edge :value value))
-                      (mapcar {mapcar {position _ (nodes graph)}} (edges graph))
-                      (mapcar {edge-value graph} (edges graph))))))
-
-(defgeneric from-plist (graph plist)
-  (:documentation "Populate GRAPH with the contents of PLIST."))
-
-(defmethod from-plist ((graph graph) plist)
-  (let ((nodes (map 'vector {getf _ :name} (getf plist :nodes))))
-    (populate graph
-      :nodes (coerce nodes 'list)
-      :edges-w-values (mapcar (lambda (el)
-                                (cons (mapcar {aref nodes} (getf el :edge))
-                                      (getf el :value)))
-                              (getf plist :edges)))))

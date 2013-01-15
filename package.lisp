@@ -8,6 +8,9 @@
    :graph-of
    :populate
    :graph-equal
+   ;; Serialization
+   :to-plist
+   :from-plist
    ;; Simple Graph Methods
    :edges
    :edges-w-values
@@ -44,7 +47,4 @@
    :max-flow
    ;; Min Cut
    :min-cut
-   ;; Serialization
-   :to-plist
-   :from-plist
    ))
