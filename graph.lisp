@@ -1,6 +1,6 @@
 ;;; graph.lisp --- because its easier to write than to learn such a library
 
-;; Copyright (C) Eric Schulte 2012
+;; Copyright (C) Eric Schulte 2012-2013
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
@@ -138,7 +138,7 @@
   (set-equal edge1 edge2))
 
 (defun sxhash-edge (edge)
-  (sxhash (sort (copy-tree edge) (if (numberp edge) #'< #'string<))))
+  (sxhash (sort (copy-tree edge) (if (numberp (car edge)) #'< #'string<))))
 
 (sb-ext:define-hash-table-test edge-equalp sxhash-edge)
 
@@ -228,7 +228,7 @@ to a new equality test specified with TEST."
 (defmethod populate ((graph graph) &key nodes edges edges-w-values)
   (mapc {add-node graph} nodes)
   (mapc {add-edge graph} edges)
-  (mapc (lambda-bind ((edge . value)) (add-edge graph edge value)) edges-w-values)
+  (setf (edges-w-values graph) edges-w-values)
   graph)
 
 (defgeneric graph-equal (graph1 graph2)
@@ -241,6 +241,32 @@ to a new equality test specified with TEST."
            (equal      edge-eq)
            (hash-equal edge-h)
            (hash-equal node-h))))
+
+
+;;; Serialize graphs to/from plists
+(defgeneric to-plist (graph)
+  (:documentation "Serialize GRAPH as a plist."))
+
+(defmethod to-plist ((graph graph))
+  (let ((counts (make-hash-table)) (counter -1))
+    (list :nodes (mapcar {list :name}
+                         (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
+                               (nodes graph)))
+          :edges (map 'list (lambda (edge value) (list :edge edge :value value))
+                      (mapcar {mapcar {position _ (nodes graph)}} (edges graph))
+                      (mapcar {edge-value graph} (edges graph))))))
+
+(defgeneric from-plist (graph plist)
+  (:documentation "Populate GRAPH with the contents of PLIST."))
+
+(defmethod from-plist ((graph graph) plist)
+  (let ((nodes (map 'vector {getf _ :name} (getf plist :nodes))))
+    (populate graph
+      :nodes (coerce nodes 'list)
+      :edges-w-values (mapcar (lambda (el)
+                                (cons (mapcar {aref nodes} (getf el :edge))
+                                      (getf el :value)))
+                              (getf plist :edges)))))
 
 
 ;;; Simple graph methods
@@ -266,6 +292,12 @@ to a new equality test specified with TEST."
 (defmethod edges-w-values ((graph graph) &aux alist)
   (maphash (lambda (edge value) (push (cons edge value) alist)) (edge-h graph))
   alist)
+
+(defgeneric (setf edges-w-values) (new graph)
+    (:documentation "Set the edges of graph to edges and values in NEW."))
+
+(defmethod (setf edges-w-values) (new (graph graph))
+  (mapc (lambda-bind ((edge . value)) (add-edge graph edge value)) new))
 
 (defgeneric nodes (graph)
   (:documentation "Return a list of the nodes in GRAPH."))
@@ -733,27 +765,22 @@ The Ford-Fulkerson algorithm is used."))
         (values (sort cut #'< :key #'length) (weigh-cut graph cut))))))
 
 
-;;; Serialize graphs to/from plists
-(defgeneric to-plist (graph)
-  (:documentation "Serialize GRAPH as a plist."))
+;;; Random graphs generation
+(defgeneric preferential-attachment-populate (graph nodes &key edge-vals)
+  (:documentation ;; TODO: add optional argument for desired average degree
+   "Add NODES to GRAPH using preferential attachment, return the new edges."))
 
-(defmethod to-plist ((graph graph))
-  (let ((counts (make-hash-table)) (counter -1))
-    (list :nodes (mapcar {list :name}
-                         (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
-                               (nodes graph)))
-          :edges (map 'list (lambda (edge value) (list :edge edge :value value))
-                      (mapcar {mapcar {position _ (nodes graph)}} (edges graph))
-                      (mapcar {edge-value graph} (edges graph))))))
-
-(defgeneric from-plist (graph plist)
-  (:documentation "Populate GRAPH with the contents of PLIST."))
-
-(defmethod from-plist ((graph graph) plist)
-  (let ((nodes (map 'vector {getf _ :name} (getf plist :nodes))))
-    (populate graph
-      :nodes (coerce nodes 'list)
-      :edges-w-values (mapcar (lambda (el)
-                                (cons (mapcar {aref nodes} (getf el :edge))
-                                      (getf el :value)))
-                              (getf plist :edges)))))
+(defmethod preferential-attachment-populate ((graph graph) nodes &key edge-vals)
+  (let ((degree-sum 0) (connections (make-array (* 2 (length nodes)))) edges)
+    (flet ((save-edge (from to)
+             (incf degree-sum 2)
+             (setf (aref connections (1- degree-sum)) from)
+             (setf (aref connections degree-sum) to)
+             (push (cons (list from to) (when edge-vals (pop edge-vals)))
+                   edges)))
+      (assert (not (= 1 (length nodes))) (nodes)
+              "Can't preferentially attach a single node.")
+      (when (null (nodes graph))
+        (save-edge (pop nodes) (pop nodes)))
+      (mapc {save-edge (aref connections (random degree-sum))} nodes)
+      (setf (edges-w-values graph) edges))))
