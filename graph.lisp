@@ -276,7 +276,8 @@ to a new equality test specified with TEST."
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
-    (let ((matrix (make-array (list (1+ counter) (1+ counter)))))
+    (let ((matrix (make-array (list (1+ counter) (1+ counter))
+                              :initial-element nil)))
       (mapc (lambda-bind (((a b) . value))
               (setf (aref matrix
                           (gethash a node-index-hash)
@@ -287,6 +288,16 @@ to a new equality test specified with TEST."
 
 (defgeneric from-adjacency-matrix (graph matrix)
   (:documentation "Populate GRAPH from the adjacency matrix MATRIX."))
+
+(defmethod from-adjacency-matrix ((graph graph) matrix)
+  (bind (((as bs) (array-dimensions matrix)))
+    (assert (= as bs) (matrix) "Adjacency matrix ~S must be square." matrix)
+    (loop :for a :below as :do
+       (loop :for b :below bs :do
+          (when (aref matrix a b)
+            (add-edge graph (list a b)
+                      (if (eq t (aref matrix a b)) nil (aref matrix a b)))))))
+  graph)
 
 
 ;;; Simple graph methods
