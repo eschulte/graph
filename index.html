@@ -53,6 +53,8 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#add-node"><code>add-node</code></a></li>
       <li><a href="#add-paths"><code>add-paths</code></a></li>
       <li><a href="#basic-cycles"><code>basic-cycles</code></a></li>
+      <li><a href="#betweenness"><code>betweenness</code></a></li>
+      <li><a href="#closeness"><code>closeness</code></a></li>
       <li><a href="#connected-component"><code>connected-component</code></a></li>
       <li><a href="#connected-components"><code>connected-components</code></a></li>
       <li><a href="#connectedp"><code>connectedp</code></a></li>
@@ -67,12 +69,14 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#edge-value"><code>edge-value</code></a></li>
       <li><a href="#edges"><code>edges</code></a></li>
       <li><a href="#edges-w-values"><code>edges-w-values</code></a></li>
+      <li><a href="#farness"><code>farness</code></a></li>
       <li><a href="#from-plist"><code>from-plist</code></a></li>
       <li><a href="#graph"><code>graph</code></a></li>
       <li><a href="#graph-equal"><code>graph-equal</code></a></li>
       <li><a href="#graph-of"><code>graph-of</code></a></li>
       <li><a href="#has-edge-p"><code>has-edge-p</code></a></li>
       <li><a href="#has-node-p"><code>has-node-p</code></a></li>
+      <li><a href="#indegree"><code>indegree</code></a></li>
       <li><a href="#max-flow"><code>max-flow</code></a></li>
       <li><a href="#merge-edges"><code>merge-edges</code></a></li>
       <li><a href="#merge-nodes"><code>merge-nodes</code></a></li>
@@ -81,6 +85,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#node-edges"><code>node-edges</code></a></li>
       <li><a href="#nodes"><code>nodes</code></a></li>
       <li><a href="#nodes-w-values"><code>nodes-w-values</code></a></li>
+      <li><a href="#outdegree"><code>outdegree</code></a></li>
       <li><a href="#populate"><code>populate</code></a></li>
       <li><a href="#precedents"><code>precedents</code></a></li>
       <li><a href="#preferential-attachment-populate"><code>preferential-attachment-populate</code></a></li>
@@ -251,6 +256,32 @@ Return all basic cycles in the GRAPH.
 </blockquote>
 
 <!-- End of entry for BASIC-CYCLES -->
+
+
+<!-- Entry for BETWEENNESS -->
+
+<p><br>[Generic function]<br><a class=none name='betweenness'><b>betweenness</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Fraction of shortest paths through GRAPH which pass through NODE.
+Fraction of node pairs (s,t) s.t. s and t ≠ NODE and the shortest path
+between s and t in GRAPH passes through NODE.
+
+</blockquote>
+
+<!-- End of entry for BETWEENNESS -->
+
+
+<!-- Entry for CLOSENESS -->
+
+<p><br>[Generic function]<br><a class=none name='closeness'><b>closeness</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Inverse of the <a href="#farness"><code>farness</code></a> for NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for CLOSENESS -->
 
 
 <!-- Entry for CONNECTED-COMPONENT -->
@@ -426,6 +457,18 @@ Return an alist of edges of GRAPH with their values.
 <!-- End of entry for EDGES-W-VALUES -->
 
 
+<!-- Entry for FARNESS -->
+
+<p><br>[Generic function]<br><a class=none name='farness'><b>farness</b> <i>graph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Sum of the distance from NODE to every other node in connected GRAPH.
+
+</blockquote>
+
+<!-- End of entry for FARNESS -->
+
+
 <!-- Entry for FROM-PLIST -->
 
 <p><br>[Generic function]<br><a class=none name='from-plist'><b>from-plist</b> <i>graph plist</i> =&gt; <i>result</i></a>
@@ -499,6 +542,18 @@ Return <a href="#true"><code>true</code></a> if GRAPH has node NODE.
 </blockquote>
 
 <!-- End of entry for HAS-NODE-P -->
+
+
+<!-- Entry for INDEGREE -->
+
+<p><br>[Generic function]<br><a class=none name='indegree'><b>indegree</b> <i>digraph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+The number of edges directed to NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for INDEGREE -->
 
 
 <!-- Entry for MAX-FLOW -->
@@ -603,6 +658,18 @@ Return an alist of nodes of GRAPH with their values.
 </blockquote>
 
 <!-- End of entry for NODES-W-VALUES -->
+
+
+<!-- Entry for OUTDEGREE -->
+
+<p><br>[Generic function]<br><a class=none name='outdegree'><b>outdegree</b> <i>digraph node</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+The number of edges directed from NODE in GRAPH.
+
+</blockquote>
+
+<!-- End of entry for OUTDEGREE -->
 
 
 <!-- Entry for POPULATE -->
