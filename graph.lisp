@@ -617,6 +617,7 @@ Uses Tarjan's algorithm."))
   (:documentation "Return the shortest path in GRAPH from A to B.
 GRAPH must be a directed graph.  Dijkstra's algorithm is used."))
 
+;; TODO: needs to work for un-directed edges
 (defmethod shortest-path ((graph graph) a b &aux seen)
   (block nil ;; (car next) is leading node, (cdr next) is edge path
     (let ((next (list (list a))))

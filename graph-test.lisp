@@ -22,6 +22,9 @@
 (defvar *halfs* nil
   "Variable for use in graph tests.")
 
+(defvar *star* nil
+  "Variable for use in graph tests.")
+
 (defixture small-graph
   (:setup (setf *graph*
                 (populate (make-instance 'graph)
@@ -96,6 +99,19 @@
 
                     ((:c :s) . 2)))))
   (:teardown (setf *halfs* nil)))
+
+(defixture star
+  (:setup (setf *star*
+                (populate (make-instance 'graph)
+                  :edges '((:a :s)
+                           (:b :s)
+                           (:c :s)
+                           (:d :s)
+                           (:e :s)
+                           (:f :s)
+                           (:g :s)
+                           (:h :s)))))
+  (:teardown (setf *star* nil)))
 
 
 ;;; Tests
@@ -265,6 +281,11 @@
     (let* ((flow '(((:A :T) . 1) ((:S :A) . 1) ((:B :T) . 2) ((:S :B) . 2)))
            (residual (residual *cycle* flow)))
       (is (shortest-path residual :s :t)))))
+
+(deftest shortest-path-against-undirected-edge ()
+  (with-fixture star
+    (is (tree-equal (shortest-path *star* :a :g)
+                    '(:a :s :g)))))
 
 (deftest residual-of-a-small-network ()
   (with-fixture small-network
