@@ -356,3 +356,12 @@
      graph (loop :for i :below many :collect i))
     (is (= many (length (nodes graph))))
     (is (= (1- many) (length (edges graph))))))
+
+(deftest farness-of-s-in-network ()
+  (with-fixture small-network
+    (is (= 4 (farness *network* :s)))))
+
+(deftest betweenness-of-center-of-a-star ()
+  (with-fixture star
+    (is (= 1 (betweenness *star* :s)))
+    (is (= 0 (betweenness *star* :a)))))

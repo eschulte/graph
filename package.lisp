@@ -51,4 +51,8 @@
    :min-cut
    ;; Random Graph generation
    :preferential-attachment-populate
+   ;; Centrality
+   :farness
+   :closeness
+   :betweenness
    ))

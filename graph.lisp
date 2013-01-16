@@ -799,3 +799,40 @@ Optionally assign edge values from those listed in EDGE-VALS."))
         (save-edge (pop nodes) (pop nodes)))
       (mapc (lambda (n) (save-edge n (aref connections (random degree-sum)))) nodes)
       (edges-w-values graph))))
+
+
+;;; Centrality
+(defgeneric farness (graph node)
+  (:documentation
+   "Sum of the distance from NODE to every other node in connected GRAPH."))
+
+(defmethod farness ((graph graph) node)
+  (assert (connectedp graph) (graph)
+          "~S must be connected to calculate farness." graph)
+  (reduce #'+ (mapcar [#'length {shortest-path graph node}]
+                      (remove node (nodes graph)))))
+
+(defgeneric closeness (graph node)
+  (:documentation "Inverse of the `farness' for NODE in GRAPH."))
+
+(defmethod closeness ((graph graph) node)
+  (/ 1 ) (farness graph node))
+
+(defgeneric betweenness (graph node)
+  (:documentation
+   "Fraction of shortest paths through GRAPH which pass through NODE.
+Fraction of node pairs (s,t) s.t. s and t ≠ NODE and the shortest path
+between s and t in GRAPH passes through NODE."))
+
+(defmethod betweenness ((graph graph) node)
+  (flet ((all-pairs (lst)
+           (case (type-of graph)
+             (graph (mapcan (lambda (n) (mapcar {list n} (cdr (member n lst)))) lst))
+             (digraph (mapcan (lambda (n) (mapcar {list n} (remove n lst))) lst)))))
+    (let ((num 0) (denom 0))
+      (mapc (lambda-bind ((a b))
+              (when (member node (apply #'append (shortest-path graph a b)))
+                (incf num))
+              (incf denom))
+            (all-pairs (remove node (nodes graph))))
+      (/ num denom))))
