@@ -57,4 +57,5 @@
    :farness
    :closeness
    :betweenness
+   :katz-centrality
    ))

@@ -867,3 +867,11 @@ between s and t in GRAPH passes through NODE."))
               (incf denom))
             (all-pairs (remove node (nodes graph))))
       (/ num denom))))
+
+(defgeneric katz-centrality (graph node &key attenuation)
+  (:documentation "Combined measure of number and nearness of nodes to NODE."))
+
+(defmethod katz-centrality ((graph graph) node &key (attenuation 0.8))
+  (let ((cc (connected-component graph node)))
+    (reduce #'+ (mapcar [{expt 0.8} #'length {shortest-path graph node}]
+                        (remove node cc)))))
