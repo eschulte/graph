@@ -11,6 +11,8 @@
    ;; Serialization
    :to-plist
    :from-plist
+   :to-adjacency-matrix
+   :from-adjacency-matrix
    ;; Simple Graph Methods
    :edges
    :edges-w-values
@@ -55,4 +57,5 @@
    :farness
    :closeness
    :betweenness
+   :katz-centrality
    ))

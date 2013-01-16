@@ -243,7 +243,7 @@ to a new equality test specified with TEST."
            (hash-equal node-h))))
 
 
-;;; Serialize graphs to/from plists
+;;; Serialize graphs
 (defgeneric to-plist (graph)
   (:documentation "Serialize GRAPH as a plist."))
 
@@ -267,6 +267,37 @@ to a new equality test specified with TEST."
                                 (cons (mapcar {aref nodes} (getf el :edge))
                                       (getf el :value)))
                               (getf plist :edges)))))
+
+(defgeneric to-adjacency-matrix (graph)
+  (:documentation "Return the adjacency matrix of GRAPH."))
+
+(defmethod to-adjacency-matrix ((graph graph))
+  (let ((node-index-hash (make-hash-table))
+        (counter -1))
+    (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
+          (nodes graph))
+    (let ((matrix (make-array (list (1+ counter) (1+ counter))
+                              :initial-element nil)))
+      (mapc (lambda-bind (((a b) . value))
+              (setf (aref matrix
+                          (gethash a node-index-hash)
+                          (gethash b node-index-hash))
+                    (or value t)))
+            (edges-w-values graph))
+      matrix)))
+
+(defgeneric from-adjacency-matrix (graph matrix)
+  (:documentation "Populate GRAPH from the adjacency matrix MATRIX."))
+
+(defmethod from-adjacency-matrix ((graph graph) matrix)
+  (bind (((as bs) (array-dimensions matrix)))
+    (assert (= as bs) (matrix) "Adjacency matrix ~S must be square." matrix)
+    (loop :for a :below as :do
+       (loop :for b :below bs :do
+          (when (aref matrix a b)
+            (add-edge graph (list a b)
+                      (if (eq t (aref matrix a b)) nil (aref matrix a b)))))))
+  graph)
 
 
 ;;; Simple graph methods
@@ -836,3 +867,11 @@ between s and t in GRAPH passes through NODE."))
               (incf denom))
             (all-pairs (remove node (nodes graph))))
       (/ num denom))))
+
+(defgeneric katz-centrality (graph node &key attenuation)
+  (:documentation "Combined measure of number and nearness of nodes to NODE."))
+
+(defmethod katz-centrality ((graph graph) node &key (attenuation 0.8))
+  (let ((cc (connected-component graph node)))
+    (reduce #'+ (mapcar [{expt 0.8} #'length {shortest-path graph node}]
+                        (remove node cc)))))

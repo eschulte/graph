@@ -365,3 +365,26 @@
   (with-fixture star
     (is (= 1 (betweenness *star* :s)))
     (is (= 0 (betweenness *star* :a)))))
+
+(deftest conversion-to-adjacency-matrix ()
+  (with-fixture normal-graph
+    (is (equalp (to-adjacency-matrix *graph*)
+                #2A((nil T   nil nil nil nil)
+                    (nil nil T   nil nil nil)
+                    (nil nil nil T   nil nil)
+                    (nil nil nil nil T   nil)
+                    (nil nil T   nil nil T)
+                    (nil T   nil nil nil nil)))))
+  (with-fixture small-network
+    (is (equalp (to-adjacency-matrix *network*)
+                #2A((nil 1   nil 4)
+                    (nil nil nil 2)
+                    (2   1   nil nil)
+                    (nil nil nil nil))))))
+
+(deftest conversion-from-adjacency-matrix ()
+  (is (tree-equal (edges-w-values (from-adjacency-matrix (make-instance 'graph)
+                                                         #2A((nil 1 nil)
+                                                             (nil nil 2)
+                                                             (nil nil nil))))
+                  '(((1 2) . 2) ((0 1) . 1)))))
