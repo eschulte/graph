@@ -273,7 +273,7 @@
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
-    (is (tree-equal (shortest-path *graph* :foo :baz)
+    (is (tree-equal (shortest-path (digraph-of *graph*) :foo :baz)
                     '((:FOO :BAR) (:BAR :BAZ))))))
 
 (deftest shortest-path-through-a-residual ()
@@ -285,7 +285,7 @@
 (deftest shortest-path-against-undirected-edge ()
   (with-fixture star
     (is (tree-equal (shortest-path *star* :a :g)
-                    '(:a :s :g)))))
+                    '((:a :s) (:g :s))))))
 
 (deftest residual-of-a-small-network ()
   (with-fixture small-network
