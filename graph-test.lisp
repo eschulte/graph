@@ -22,6 +22,9 @@
 (defvar *halfs* nil
   "Variable for use in graph tests.")
 
+(defvar *star* nil
+  "Variable for use in graph tests.")
+
 (defixture small-graph
   (:setup (setf *graph*
                 (populate (make-instance 'graph)
@@ -96,6 +99,19 @@
 
                     ((:c :s) . 2)))))
   (:teardown (setf *halfs* nil)))
+
+(defixture star
+  (:setup (setf *star*
+                (populate (make-instance 'graph)
+                  :edges '((:a :s)
+                           (:b :s)
+                           (:c :s)
+                           (:d :s)
+                           (:e :s)
+                           (:f :s)
+                           (:g :s)
+                           (:h :s)))))
+  (:teardown (setf *star* nil)))
 
 
 ;;; Tests
@@ -257,7 +273,7 @@
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
-    (is (tree-equal (shortest-path *graph* :foo :baz)
+    (is (tree-equal (shortest-path (digraph-of *graph*) :foo :baz)
                     '((:FOO :BAR) (:BAR :BAZ))))))
 
 (deftest shortest-path-through-a-residual ()
@@ -265,6 +281,11 @@
     (let* ((flow '(((:A :T) . 1) ((:S :A) . 1) ((:B :T) . 2) ((:S :B) . 2)))
            (residual (residual *cycle* flow)))
       (is (shortest-path residual :s :t)))))
+
+(deftest shortest-path-against-undirected-edge ()
+  (with-fixture star
+    (is (tree-equal (shortest-path *star* :a :g)
+                    '((:a :s) (:g :s))))))
 
 (deftest residual-of-a-small-network ()
   (with-fixture small-network
@@ -335,3 +356,12 @@
      graph (loop :for i :below many :collect i))
     (is (= many (length (nodes graph))))
     (is (= (1- many) (length (edges graph))))))
+
+(deftest farness-of-s-in-network ()
+  (with-fixture small-network
+    (is (= 4 (farness *network* :s)))))
+
+(deftest betweenness-of-center-of-a-star ()
+  (with-fixture star
+    (is (= 1 (betweenness *star* :s)))
+    (is (= 0 (betweenness *star* :a)))))

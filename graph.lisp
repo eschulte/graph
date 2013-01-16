@@ -380,6 +380,18 @@ to a new equality test specified with TEST."
 (defmethod degree ((graph graph) node)
   (length (node-edges graph node)))
 
+(defgeneric indegree (digraph node)
+  (:documentation "The number of edges directed to NODE in GRAPH."))
+
+(defmethod indegree ((digraph digraph) node)
+  (length (remove-if-not [{member node} #'cdr] (node-edges digraph node))))
+
+(defgeneric outdegree (digraph node)
+  (:documentation "The number of edges directed from NODE in GRAPH."))
+
+(defmethod outdegree ((digraph digraph) node)
+  (length (remove-if-not [{equal node} #'car] (node-edges digraph node))))
+
 (defgeneric (setf node-edges) (new graph node)
   (:documentation "Set the edges of NODE in GRAPH to NEW.
 Delete and return the old edges of NODE in GRAPH."))
@@ -605,6 +617,7 @@ Uses Tarjan's algorithm."))
   (:documentation "Return the shortest path in GRAPH from A to B.
 GRAPH must be a directed graph.  Dijkstra's algorithm is used."))
 
+;; TODO: needs to work for un-directed edges
 (defmethod shortest-path ((graph graph) a b &aux seen)
   (block nil ;; (car next) is leading node, (cdr next) is edge path
     (let ((next (list (list a))))
@@ -614,7 +627,9 @@ GRAPH must be a directed graph.  Dijkstra's algorithm is used."))
                 (lambda-bind ((from . rest))
                   (mapcan
                    (lambda (edge)
-                     (if (member b (cdr (member from edge)))
+                     (if (case (type-of graph)
+                           (graph   (member b edge))
+                           (digraph (member b (cdr (member from edge)))))
                          (return (reverse (cons edge rest)))
                          (unless (member edge seen :test (edge-eq graph))
                            (push edge seen)
@@ -784,3 +799,40 @@ Optionally assign edge values from those listed in EDGE-VALS."))
         (save-edge (pop nodes) (pop nodes)))
       (mapc (lambda (n) (save-edge n (aref connections (random degree-sum)))) nodes)
       (edges-w-values graph))))
+
+
+;;; Centrality
+(defgeneric farness (graph node)
+  (:documentation
+   "Sum of the distance from NODE to every other node in connected GRAPH."))
+
+(defmethod farness ((graph graph) node)
+  (assert (connectedp graph) (graph)
+          "~S must be connected to calculate farness." graph)
+  (reduce #'+ (mapcar [#'length {shortest-path graph node}]
+                      (remove node (nodes graph)))))
+
+(defgeneric closeness (graph node)
+  (:documentation "Inverse of the `farness' for NODE in GRAPH."))
+
+(defmethod closeness ((graph graph) node)
+  (/ 1 ) (farness graph node))
+
+(defgeneric betweenness (graph node)
+  (:documentation
+   "Fraction of shortest paths through GRAPH which pass through NODE.
+Fraction of node pairs (s,t) s.t. s and t ≠ NODE and the shortest path
+between s and t in GRAPH passes through NODE."))
+
+(defmethod betweenness ((graph graph) node)
+  (flet ((all-pairs (lst)
+           (case (type-of graph)
+             (graph (mapcan (lambda (n) (mapcar {list n} (cdr (member n lst)))) lst))
+             (digraph (mapcan (lambda (n) (mapcar {list n} (remove n lst))) lst)))))
+    (let ((num 0) (denom 0))
+      (mapc (lambda-bind ((a b))
+              (when (member node (apply #'append (shortest-path graph a b)))
+                (incf num))
+              (incf denom))
+            (all-pairs (remove node (nodes graph))))
+      (/ num denom))))

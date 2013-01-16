@@ -23,6 +23,8 @@
    :add-edge
    :node-edges
    :degree
+   :indegree
+   :outdegree
    :delete-node
    :edge-value
    :delete-edge
@@ -49,4 +51,8 @@
    :min-cut
    ;; Random Graph generation
    :preferential-attachment-populate
+   ;; Centrality
+   :farness
+   :closeness
+   :betweenness
    ))
