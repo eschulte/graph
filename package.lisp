@@ -23,6 +23,8 @@
    :add-edge
    :node-edges
    :degree
+   :indegree
+   :outdegree
    :delete-node
    :edge-value
    :delete-edge
