@@ -9,36 +9,42 @@
 
 
 ;;; Visualization
-(defun edge-to-dot (graph edge)
+(defun edge-to-dot (graph edge &optional edge-label)
   (concatenate 'string
     (if (eq 'digraph (type-of graph))
         (apply #'format nil "  \"~a\" -> \"~a\"" edge)
         (apply #'format nil "  \"~a\" -- \"~a\"" edge))
-    (if (edge-value graph edge)
-        (format nil "[label=\"~a\"];~%" (edge-value graph edge))
+    (if (or edge-label (edge-value graph edge))
+        (format nil " [label=\"~a\"];~%" (if edge-label
+                                             (funcall edge-label edge)
+                                             (edge-value graph edge)))
         ";")))
 
-(defgeneric to-dot (graph &optional stream)
-  (:documentation "Print the dot code representing GRAPH."))
+(defun node-to-dot (node &optional node-label)
+  (if node-label
+      (format nil "  \"~a\" [label=\"~a\"];~%" node (funcall node-label node))
+      (format nil "  \"~a\";" node)))
 
-(defmethod to-dot ((graph graph) &optional (stream t))
-  (format stream "graph to_dot {~%")
-  (mapc {format stream "  \"~a\";~%"} (nodes graph))
-  (mapc [{format stream "~a"} {edge-to-dot graph}] (edges graph))
+(defgeneric to-dot (graph &key stream node-label edge-label)
+  (:documentation "Print the dot code representing GRAPH.
+Keyword arguments NODE-LABEL and EDGE-LABEL may provide functions
+which when called on a node or edge return a label for that element of
+the dot graph."))
+
+(defmethod to-dot ((graph graph) &key (stream t) node-label edge-label)
+  (format stream "~a to_dot {~%" (intern (string-downcase (type-of graph))))
+  (mapc [{format stream "~a"} (lambda (n) (node-to-dot n node-label))]
+        (nodes graph))
+  (mapc [{format stream "~a"} (lambda (e) (edge-to-dot graph e edge-label))]
+        (edges graph))
   (format stream "}~%"))
 
-(defmethod to-dot ((digraph digraph) &optional (stream t))
-  (format stream "digraph to_dot {~%")
-  (mapc {format stream "  \"~a\";~%"} (nodes digraph))
-  (mapc [{format stream "~a"} {edge-to-dot digraph}] (edges digraph))
-  (format stream "}~%"))
-
-(defgeneric to-dot-file (graph path)
+(defgeneric to-dot-file (graph path &key node-label edge-label)
   (:documentation "Write a dot representation of GRAPH to PATH."))
 
-(defmethod to-dot-file ((graph graph) path)
+(defmethod to-dot-file ((graph graph) path &key node-label edge-label)
   (with-open-file (out path :direction :output :if-exists :supersede)
-    (to-dot graph out)))
+    (to-dot graph :stream out :node-label node-label :edge-label edge-label)))
 
 (defun from-dot (dot-string)
   "Parse the DOT format string DOT-STRING into a graph.
