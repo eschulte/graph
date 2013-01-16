@@ -1,0 +1,12 @@
+GRAPH - simple graph data structure and algorithms
+
+The GRAPH library strives for simplicity both in backing data
+structures and in usage. Graphs and Digraphs are represented as CLOS
+objects with methods and algorithms provided for graph manipulation
+and analysis.
+
+Note: currently this library is only supported on SBCL because of the
+need to create hashes with custom equality tests, however many other
+lisps support this so extending should be simple. Patches welcome.
+
+For more information see http://eschulte.github.com/graph.
