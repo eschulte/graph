@@ -365,3 +365,16 @@
   (with-fixture star
     (is (= 1 (betweenness *star* :s)))
     (is (= 0 (betweenness *star* :a)))))
+
+(deftest conversion-to-adjacency-matrix ()
+  (with-fixture normal-graph
+    (is (equalp (to-adjacency-matrix *graph*)
+                #2A((0 T 0 0 0 0)
+                    (0 0 T 0 0 0)
+                    (0 0 0 T 0 0)
+                    (0 0 0 0 T 0)
+                    (0 0 T 0 0 T)
+                    (0 T 0 0 0 0)))))
+  (with-fixture small-network
+    (is (equalp (to-adjacency-matrix *network*)
+                #2A((0 1 0 4) (0 0 0 2) (2 1 0 0) (0 0 0 0))))))

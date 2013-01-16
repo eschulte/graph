@@ -243,7 +243,7 @@ to a new equality test specified with TEST."
            (hash-equal node-h))))
 
 
-;;; Serialize graphs to/from plists
+;;; Serialize graphs
 (defgeneric to-plist (graph)
   (:documentation "Serialize GRAPH as a plist."))
 
@@ -267,6 +267,26 @@ to a new equality test specified with TEST."
                                 (cons (mapcar {aref nodes} (getf el :edge))
                                       (getf el :value)))
                               (getf plist :edges)))))
+
+(defgeneric to-adjacency-matrix (graph)
+  (:documentation "Return the adjacency matrix of GRAPH."))
+
+(defmethod to-adjacency-matrix ((graph graph))
+  (let ((node-index-hash (make-hash-table))
+        (counter -1))
+    (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
+          (nodes graph))
+    (let ((matrix (make-array (list (1+ counter) (1+ counter)))))
+      (mapc (lambda-bind (((a b) . value))
+              (setf (aref matrix
+                          (gethash a node-index-hash)
+                          (gethash b node-index-hash))
+                    (or value t)))
+            (edges-w-values graph))
+      matrix)))
+
+(defgeneric from-adjacency-matrix (graph matrix)
+  (:documentation "Populate GRAPH from the adjacency matrix MATRIX."))
 
 
 ;;; Simple graph methods
