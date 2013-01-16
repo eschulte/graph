@@ -70,6 +70,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#edges"><code>edges</code></a></li>
       <li><a href="#edges-w-values"><code>edges-w-values</code></a></li>
       <li><a href="#farness"><code>farness</code></a></li>
+      <li><a href="#from-adjacency-matrix"><code>from-adjacency-matrix</code></a></li>
       <li><a href="#from-plist"><code>from-plist</code></a></li>
       <li><a href="#graph"><code>graph</code></a></li>
       <li><a href="#graph-equal"><code>graph-equal</code></a></li>
@@ -77,6 +78,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#has-edge-p"><code>has-edge-p</code></a></li>
       <li><a href="#has-node-p"><code>has-node-p</code></a></li>
       <li><a href="#indegree"><code>indegree</code></a></li>
+      <li><a href="#katz-centrality"><code>katz-centrality</code></a></li>
       <li><a href="#max-flow"><code>max-flow</code></a></li>
       <li><a href="#merge-edges"><code>merge-edges</code></a></li>
       <li><a href="#merge-nodes"><code>merge-nodes</code></a></li>
@@ -93,6 +95,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#shortest-path"><code>shortest-path</code></a></li>
       <li><a href="#strongly-connected-components"><code>strongly-connected-components</code></a></li>
       <li><a href="#subgraph"><code>subgraph</code></a></li>
+      <li><a href="#to-adjacency-matrix"><code>to-adjacency-matrix</code></a></li>
       <li><a href="#to-plist"><code>to-plist</code></a></li>
     </ol>
   <li><a href="#ack">Acknowledgements</a></li>
@@ -469,6 +472,18 @@ Sum of the distance from NODE to every other node in connected GRAPH.
 <!-- End of entry for FARNESS -->
 
 
+<!-- Entry for FROM-ADJACENCY-MATRIX -->
+
+<p><br>[Generic function]<br><a class=none name='from-adjacency-matrix'><b>from-adjacency-matrix</b> <i>graph matrix</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Populate GRAPH from the adjacency matrix MATRIX.
+
+</blockquote>
+
+<!-- End of entry for FROM-ADJACENCY-MATRIX -->
+
+
 <!-- Entry for FROM-PLIST -->
 
 <p><br>[Generic function]<br><a class=none name='from-plist'><b>from-plist</b> <i>graph plist</i> =&gt; <i>result</i></a>
@@ -554,6 +569,18 @@ The number of edges directed to NODE in GRAPH.
 </blockquote>
 
 <!-- End of entry for INDEGREE -->
+
+
+<!-- Entry for KATZ-CENTRALITY -->
+
+<p><br>[Generic function]<br><a class=none name='katz-centrality'><b>katz-centrality</b> <i>graph node <tt>&amp;key</tt> attenuation attenuation</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Combined measure of number and nearness of nodes to NODE.
+
+</blockquote>
+
+<!-- End of entry for KATZ-CENTRALITY -->
 
 
 <!-- Entry for MAX-FLOW -->
@@ -759,6 +786,18 @@ Return the subgraph of GRAPH restricted to NODES.
 </blockquote>
 
 <!-- End of entry for SUBGRAPH -->
+
+
+<!-- Entry for TO-ADJACENCY-MATRIX -->
+
+<p><br>[Generic function]<br><a class=none name='to-adjacency-matrix'><b>to-adjacency-matrix</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the adjacency matrix of GRAPH.
+
+</blockquote>
+
+<!-- End of entry for TO-ADJACENCY-MATRIX -->
 
 
 <!-- Entry for TO-PLIST -->
