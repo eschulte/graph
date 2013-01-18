@@ -873,5 +873,43 @@ between s and t in GRAPH passes through NODE."))
 
 (defmethod katz-centrality ((graph graph) node &key (attenuation 0.8))
   (let ((cc (connected-component graph node)))
-    (reduce #'+ (mapcar [{expt 0.8} #'length {shortest-path graph node}]
+    (reduce #'+ (mapcar [{expt attenuation} #'length {shortest-path graph node}]
                         (remove node cc)))))
+
+
+;;; Degeneracy
+;;
+;; From the Wikipedia article on "Degeneracy (graph theory)".
+;;
+(defgeneric degeneracy (graph)
+  (:documentation "Return the degeneracy of GRAPH.
+Also return thenode ordering with optimal coloring number as an alist.
+The `car' of each element of the alist identifies k-cores and the
+`cdr' holds the nodes in the ordering."))
+
+(defmethod degeneracy ((graph graph))
+  (let ((node-degree (make-hash-table))
+        (max-degree 0) (k 0) (i 0)
+        by-degree num-nodes output)
+    ;; initialize
+    (mapc (lambda (n)
+            (let ((degree (degree graph n)))
+              (incf num-nodes)
+              (setf (gethash n node-degree) degree)
+              (setf max-degree (max max-degree degree))))
+          (nodes graph))
+    (setf by-degree (make-array max-degree :initial-element nil))
+    (maphash (lambda (node degree) (push (aref by-degree degree) node))
+             node-degree)
+    ;; reduction
+    (dotimes (n num-nodes (values k output))
+      (loop :until (aref by-degree i) :do (incf i))
+      (when (< k (setf k (max k i)))
+        (push (list k) output))
+      (let ((node (pop (aref by-degree i))))
+        (push node (cdr (assoc k output)))
+        (mapc (lambda (node)
+                (let ((deg (gethash node node-degree)))
+                  (setf (aref by-degree deg) (remove node (aref by-degree deg)))
+                  (push node (aref by-degree (1- deg)))))
+              (neighbors graph i))))))
