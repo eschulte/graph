@@ -63,7 +63,10 @@ be silently dropped."
 
 (defun d3-to-plist (plist)
   "Convert D3 format PLIST to graph encoding."
-  (list :nodes (getf plist :nodes)
+  (list :nodes (mapcar (compose (curry #'list :name)
+                                #'intern #'string-upcase
+                                (rcurry #'getf :name))
+                       (getf plist :nodes))
         :edges (mapcar (lambda (edge)
                          (list :edge (list (getf edge :source)
                                            (getf edge :target))
