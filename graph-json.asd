@@ -6,4 +6,6 @@
   :components
   ((:static-file "COPYING")
    (:file "package-json")
-   (:file "graph-json" :depends-on ("package-json"))))
+   (:file "curry-compose-reader-macros")
+   (:file "graph-json"
+          :depends-on ("package-json" "curry-compose-reader-macros"))))

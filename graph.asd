@@ -6,4 +6,5 @@
   :components
   ((:static-file "COPYING")
    (:file "package")
-   (:file "graph" :depends-on ("package"))))
+   (:file "curry-compose-reader-macros")
+   (:file "graph" :depends-on ("package" "curry-compose-reader-macros"))))
