@@ -58,4 +58,6 @@
    :closeness
    :betweenness
    :katz-centrality
-   ))
+   ;; Degeneracy
+   :degeneracy
+   :k-cores))

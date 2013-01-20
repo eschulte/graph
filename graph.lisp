@@ -859,34 +859,46 @@ between s and t in GRAPH passes through NODE."))
 ;; From the Wikipedia article on "Degeneracy (graph theory)".
 ;;
 (defgeneric degeneracy (graph)
-  (:documentation "Return the degeneracy of GRAPH.
-Also return thenode ordering with optimal coloring number as an alist.
-The `car' of each element of the alist identifies k-cores and the
-`cdr' holds the nodes in the ordering."))
+  (:documentation "Return the degeneracy and k-cores of GRAPH.
+Also return the node ordering with optimal coloring number as an
+alist.  The `car' of each element of the alist identifies k-cores and
+the `cdr' holds the nodes in the ordering."))
 
 (defmethod degeneracy ((graph graph))
-  (let ((node-degree (make-hash-table))
-        (max-degree 0) (k 0) (i 0)
-        by-degree num-nodes output)
+  (let ((copy (copy graph))
+        (node-degree (make-hash-table))
+        (max-degree 0) (num-nodes 0) (k 0) (i 0)
+        by-degree output)
     ;; initialize
     (mapc (lambda (n)
-            (let ((degree (degree graph n)))
+            (let ((degree (degree copy n)))
               (incf num-nodes)
               (setf (gethash n node-degree) degree)
               (setf max-degree (max max-degree degree))))
-          (nodes graph))
-    (setf by-degree (make-array max-degree :initial-element nil))
-    (maphash (lambda (node degree) (push (aref by-degree degree) node))
+          (nodes copy))
+    (setf by-degree (make-array (1+ max-degree) :initial-element nil))
+    (maphash (lambda (node degree) (push node (aref by-degree degree)))
              node-degree)
     ;; reduction
     (dotimes (n num-nodes (values k output))
+      (setf i 0)
       (loop :until (aref by-degree i) :do (incf i))
-      (when (< k (setf k (max k i)))
-        (push (list k) output))
+      ;; create alist element for the new core
+      (when (< k (setf k (max k i))) (push (list k) output))
+      ;; drop a node and demote all neighbors
       (let ((node (pop (aref by-degree i))))
         (push node (cdr (assoc k output)))
         (mapc (lambda (node)
-                (let ((deg (gethash node node-degree)))
-                  (setf (aref by-degree deg) (remove node (aref by-degree deg)))
-                  (push node (aref by-degree (1- deg)))))
-              (neighbors graph i))))))
+                (setf (aref by-degree (gethash node node-degree))
+                      (remove node (aref by-degree (gethash node node-degree))))
+                (decf (gethash node node-degree))
+                (push node (aref by-degree (gethash node node-degree))))
+              (prog1 (remove-duplicates (remove node (neighbors copy node)))
+                (delete-node copy node)))))))
+
+(defgeneric k-cores (graph)
+  (:documentation "Return the k-cores of GRAPH."))
+
+(defmethod k-cores ((graph graph))
+  (multiple-value-bind (k cores) (degeneracy graph)
+    (declare (ignorable k)) cores))
