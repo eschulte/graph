@@ -104,7 +104,7 @@
 ;;; Code:
 (in-package :graph)
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (load "curry-compose-reader-macros.lisp"))
+  (enable-curry-compose-reader-macros))
 
 
 ;;; Special hashes keyed for edges

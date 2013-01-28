@@ -16,7 +16,7 @@
 ;;; Code:
 (in-package :graph-json)
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (load "curry-compose-reader-macros.lisp"))
+  (enable-curry-compose-reader-macros))
 
 (defun json-to-plist (input)
   "Parse string or stream INPUT into a plist."

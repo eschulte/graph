@@ -1,5 +1,11 @@
 (defpackage #:graph-json
-  (:use :common-lisp :alexandria :metabang-bind :graph :yason)
+  (:use
+   :common-lisp
+   :alexandria
+   :metabang-bind
+   :curry-compose-reader-macros
+   :graph
+   :yason)
   (:export
    :to-json
    :from-json

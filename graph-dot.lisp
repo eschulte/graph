@@ -7,7 +7,7 @@
 ;;; Code:
 (in-package :graph-dot)
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (load "curry-compose-reader-macros.lisp"))
+  (enable-curry-compose-reader-macros))
 
 
 ;;; Visualization
