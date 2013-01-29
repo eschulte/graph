@@ -1,5 +1,7 @@
 PACKAGE=graph
 
+all: index.html
+
 $(PACKAGE).html: $(PACKAGE).lisp $(PACKAGE).asd document
 	./document
 
