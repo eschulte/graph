@@ -334,14 +334,18 @@
 
 (deftest small-graph-to-plist ()
   (with-fixture small-graph
-    (let ((plist (to-plist *graph*)))
+    (let* ((plist (to-plist *graph*))
+           (edges (mapcar
+                  {mapcar {position _ (mapcar #'second (getf plist :nodes))}}
+                  (edges *graph*))))
       (is (set-equal (getf plist :nodes)
                      '((:NAME :FOO) (:NAME :BAR) (:NAME :BAZ) (:NAME :QUX))
                      :test 'tree-equal))
-      (let ((edges (getf plist :edges)))
-        (is (set-equal (mapcar {getf _ :edge}  edges) '((1 2) (0 2) (0 1))
-                       :test 'set-equal))
-        (is (set-equal (mapcar {getf _ :value} edges) '(NIL NIL NIL NIL)))))))
+      (is (set-equal (mapcar {getf _ :edge}  (getf plist :edges))
+                     edges
+                     :test 'set-equal))
+      (is (set-equal (mapcar {getf _ :value} (getf plist :edges))
+                     '(NIL NIL NIL NIL))))))
 
 (deftest two-way-plist-conversion-on-multiple-graphs ()
   (with-fixture small-graph
@@ -399,8 +403,9 @@
                       (nil nil nil nil))))))))
 
 (deftest conversion-from-adjacency-matrix ()
-  (is (tree-equal (edges-w-values (from-adjacency-matrix (make-instance 'graph)
-                                                         #2A((nil 1 nil)
-                                                             (nil nil 2)
-                                                             (nil nil nil))))
-                  '(((1 2) . 2) ((0 1) . 1)))))
+  (is (set-equal (edges-w-values (from-adjacency-matrix (make-instance 'graph)
+                                                        #2A((nil 1 nil)
+                                                            (nil nil 2)
+                                                            (nil nil nil))))
+                 '(((1 2) . 2) ((0 1) . 1))
+                 :test 'equalp)))
