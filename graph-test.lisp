@@ -6,6 +6,8 @@
 
 ;;; Code:
 (in-package :graph-test)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (enable-curry-compose-reader-macros))
 
 (defsuite test)
 (in-suite test)
