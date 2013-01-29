@@ -231,7 +231,7 @@ to a new equality test specified with TEST."
   (:documentation "Compare GRAPH1 and GRAPH2 for equality."))
 
 (defmethod graph-equal ((graph1 graph) (graph2 graph))
-  (every (lambda-bind ((test key))
+  (every (lambda-bind ((test key)) ;; TODO: digraph's need a stricter graph-equal
            (apply test (append (mapcar key (list graph1 graph2)))))
          '((eq         type-of)
            (equal      edge-eq)
