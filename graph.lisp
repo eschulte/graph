@@ -249,7 +249,7 @@ to a new equality test specified with TEST."
                          (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
                                (nodes graph)))
           :edges (map 'list (lambda (edge value) (list :edge edge :value value))
-                      (mapcar {mapcar {position _ (nodes graph)}} (edges graph))
+                      (mapcar {mapcar {gethash _ counts}} (edges graph))
                       (mapcar {edge-value graph} (edges graph))))))
 
 (defgeneric from-plist (graph plist)
