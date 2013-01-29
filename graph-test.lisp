@@ -372,20 +372,31 @@
     (is (= 0 (betweenness *star* :a)))))
 
 (deftest conversion-to-adjacency-matrix ()
-  (with-fixture normal-graph
-    (is (equalp (to-adjacency-matrix *graph*)
-                #2A((nil T   nil nil nil nil)
-                    (nil nil T   nil nil nil)
-                    (nil nil nil T   nil nil)
-                    (nil nil nil nil T   nil)
-                    (nil nil T   nil nil T)
-                    (nil T   nil nil nil nil)))))
-  (with-fixture small-network
-    (is (equalp (to-adjacency-matrix *network*)
-                #2A((nil 1   nil 4)
-                    (nil nil nil 2)
-                    (2   1   nil nil)
-                    (nil nil nil nil))))))
+  (flet ((sum (array)
+           (let ((dims (array-dimensions array)))
+             (reduce #'+
+                     (mapcar {reduce #'+}
+                             (loop :for x :below (first dims) :collect
+                                (loop :for y :below (second dims) :collect
+                                   (let ((val (aref array x y)))
+                                     (cond
+                                       ((numberp val) val)
+                                       ((null val)    0)
+                                       (t             1))))))))))
+    (with-fixture normal-graph
+      (is (= (sum (to-adjacency-matrix *graph*))
+             (sum #2A((nil T   nil nil nil nil)
+                      (nil nil T   nil nil nil)
+                      (nil nil nil T   nil nil)
+                      (nil nil nil nil T   nil)
+                      (nil nil T   nil nil T)
+                      (nil T   nil nil nil nil))))))
+    (with-fixture small-network
+      (is (= (sum (to-adjacency-matrix *network*))
+             (sum #2A((nil 1   nil 4)
+                      (nil nil nil 2)
+                      (2   1   nil nil)
+                      (nil nil nil nil))))))))
 
 (deftest conversion-from-adjacency-matrix ()
   (is (tree-equal (edges-w-values (from-adjacency-matrix (make-instance 'graph)
