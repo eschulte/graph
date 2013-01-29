@@ -114,23 +114,29 @@
 (defun sxhash-edge (edge)
   (sxhash (sort (copy-tree edge) (if (numberp (car edge)) #'< #'string<))))
 
+#+sbcl
 (sb-ext:define-hash-table-test edge-equalp sxhash-edge)
 
 (defun dir-edge-equalp (edge1 edge2)
   (tree-equal edge1 edge2))
 
+#+sbcl
 (sb-ext:define-hash-table-test dir-edge-equalp sxhash)
 
 (defun make-edge-hash-table ()
   #+sbcl
   (make-hash-table :test 'edge-equalp)
-  #-(or sbcl)
+  #+ccl
+  (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
+  #-(or ccl sbcl)
   (error "unsupport lisp distribution"))
 
 (defun make-diedge-hash-table ()
   #+sbcl
   (make-hash-table :test 'dir-edge-equalp)
-  #-(or sbcl)
+  #+ccl
+  (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
+  #-(or ccl sbcl)
   (error "unsupport lisp distribution"))
 
 
@@ -155,7 +161,14 @@ Optional argument TEST specifies a new equality test to use for the
 copy.  Second optional argument COMB specifies a function to use to
 combine the values of elements of HASH which collide in the copy due
 to a new equality test specified with TEST."
-  (let ((copy (make-hash-table :test (or test (hash-table-test hash)))))
+  (let ((copy
+         #+sbcl (make-hash-table :test (or test (hash-table-test hash)))
+         #+ccl (make-hash-table
+                :test (or test (hash-table-test hash))
+                :hash-function (case (or test (hash-table-test hash))
+                                 (edge-equalp 'sxhash-edge)
+                                 ((dir-edge-equalp equalp) 'sxhash)))
+         #-(or sbcl ccl) (error "unsupported lisp distribution")))
     (maphash (lambda (k v) (setf (gethash k copy)
                             (if (and (gethash k copy) comb)
                                 (funcall comb (gethash k copy) v)
@@ -163,10 +176,19 @@ to a new equality test specified with TEST."
              hash)
     copy))
 
-(defun hash-equal (hash1 hash2)
-  "Test HASH1 and HASH2 for equality."
-  (tree-equal (hash-table-plist hash1)
-              (hash-table-plist hash2) :test 'equalp))
+(defun node-hash-equal (hash1 hash2)
+  "Test node hashes HASH1 and HASH2 for equality."
+  (set-equal (hash-table-alist hash1)
+             (hash-table-alist hash2)
+             :test (lambda (a b)
+                     (and (equalp (car a) (car b))
+                          (set-equal (cdr a) (cdr b) :test 'tree-equal)))))
+
+(defun edge-hash-equal (hash1 hash2)
+  "Test edge hashes HASH1 and HASH2 for equality."
+  (set-equal (hash-table-alist hash1)
+             (hash-table-alist hash2)
+             :test 'equalp))
 
 (defgeneric copy (graph)
   (:documentation "Return a copy of GRAPH."))
@@ -213,8 +235,8 @@ to a new equality test specified with TEST."
            (apply test (append (mapcar key (list graph1 graph2)))))
          '((eq         type-of)
            (equal      edge-eq)
-           (hash-equal edge-h)
-           (hash-equal node-h))))
+           (edge-hash-equal edge-h)
+           (node-hash-equal node-h))))
 
 
 ;;; Serialize graphs

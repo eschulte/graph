@@ -117,13 +117,14 @@
 ;;; Tests
 (deftest make-graph-sets-nodes ()
   (with-fixture small-graph
-    (is (tree-equal (nodes *graph*)
-                    '(:FOO :BAR :BAZ :QUX)))))
+    (is (set-equal (nodes *graph*)
+                   '(:FOO :BAR :BAZ :QUX)))))
 
 (deftest make-graph-sets-edges ()
   (with-fixture small-graph
-    (is (tree-equal (edges *graph*)
-                    '((:FOO :BAR) (:FOO :BAZ) (:BAR :BAZ))))))
+    (is (set-equal (edges *graph*)
+                   '((:FOO :BAR) (:FOO :BAZ) (:BAR :BAZ))
+                   :test 'tree-equal))))
 
 (deftest node-edge-for-foo ()
   (with-fixture small-graph
@@ -331,12 +332,15 @@
 
 (deftest small-graph-to-plist ()
   (with-fixture small-graph
-    (is (tree-equal
-         (to-plist *graph*)
-         '(:NODES ((:NAME :FOO) (:NAME :BAR) (:NAME :BAZ) (:NAME :QUX))
-           :EDGES ((:EDGE (0 1) :VALUE NIL)
-                   (:EDGE (0 2) :VALUE NIL)
-                   (:EDGE (1 2) :VALUE NIL)))))))
+    (let ((plist (to-plist *graph*)))
+      (is (set-equal (getf plist :nodes)
+                     '((:NAME :FOO) (:NAME :BAR) (:NAME :BAZ) (:NAME :QUX))
+                     :test 'tree-equal))
+      (is (set-equal (getf plist :edges)
+                     '((:EDGE (0 1) :VALUE NIL)
+                       (:EDGE (0 2) :VALUE NIL)
+                       (:EDGE (1 2) :VALUE NIL))
+                     :test 'tree-equal)))))
 
 (deftest two-way-plist-conversion-on-multiple-graphs ()
   (with-fixture small-graph
