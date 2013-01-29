@@ -338,11 +338,10 @@
       (is (set-equal (getf plist :nodes)
                      '((:NAME :FOO) (:NAME :BAR) (:NAME :BAZ) (:NAME :QUX))
                      :test 'tree-equal))
-      (is (set-equal (getf plist :edges)
-                     '((:EDGE (0 1) :VALUE NIL)
-                       (:EDGE (0 2) :VALUE NIL)
-                       (:EDGE (1 2) :VALUE NIL))
-                     :test 'tree-equal)))))
+      (let ((edges (getf plist :edges)))
+        (is (set-equal (mapcar {getf _ :edge}  edges) '((1 2) (0 2) (0 1))
+                       :test 'set-equal))
+        (is (set-equal (mapcar {getf _ :value} edges) '(NIL NIL NIL NIL)))))))
 
 (deftest two-way-plist-conversion-on-multiple-graphs ()
   (with-fixture small-graph
