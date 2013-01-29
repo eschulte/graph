@@ -15,6 +15,8 @@
 
 ;;; Code:
 (in-package :graph-json)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (enable-curry-compose-reader-macros))
 
 (defun json-to-plist (input)
   "Parse string or stream INPUT into a plist."
@@ -37,10 +39,8 @@
      stream)))
 
 (defun intern-string-nodes (plist)
-  (list :nodes (mapcar (compose (curry #'list :name)
-                                #'intern #'string-upcase
-                                (rcurry #'getf :name))
-                (getf plist :nodes))
+  (list :nodes (mapcar [{list :name} #'intern #'string-upcase {getf _ :name}]
+                       (getf plist :nodes))
         :edges (getf plist :edges)))
 
 (defmethod from-json ((graph graph) input)
@@ -63,7 +63,8 @@ be silently dropped."
 
 (defun d3-to-plist (plist)
   "Convert D3 format PLIST to graph encoding."
-  (list :nodes (getf plist :nodes)
+  (list :nodes (mapcar [{list :name} #'intern #'string-upcase {getf _ :name}]
+                       (getf plist :nodes))
         :edges (mapcar (lambda (edge)
                          (list :edge (list (getf edge :source)
                                            (getf edge :target))

@@ -6,6 +6,8 @@
 
 ;;; Code:
 (in-package :graph-test)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (enable-curry-compose-reader-macros))
 
 (defsuite test)
 (in-suite test)
@@ -117,13 +119,14 @@
 ;;; Tests
 (deftest make-graph-sets-nodes ()
   (with-fixture small-graph
-    (is (tree-equal (nodes *graph*)
-                    '(:FOO :BAR :BAZ :QUX)))))
+    (is (set-equal (nodes *graph*)
+                   '(:FOO :BAR :BAZ :QUX)))))
 
 (deftest make-graph-sets-edges ()
   (with-fixture small-graph
-    (is (tree-equal (edges *graph*)
-                    '((:FOO :BAR) (:FOO :BAZ) (:BAR :BAZ))))))
+    (is (set-equal (edges *graph*)
+                   '((:FOO :BAR) (:FOO :BAZ) (:BAR :BAZ))
+                   :test 'tree-equal))))
 
 (deftest node-edge-for-foo ()
   (with-fixture small-graph
@@ -262,13 +265,13 @@
 (deftest basic-cycles-of-graph ()
   (with-fixture normal-graph
     (is (set-equal (basic-cycles *graph*)
-                   '((C E F B) (D C E))
+                   '((D C E) (D C B F E) (C B F E))
                    :test #'set-equal))))
 
 (deftest cycles-of-graph ()
   (with-fixture normal-graph
     (is (set-equal (cycles *graph*)
-                   '((D C E) (B F E C E D C) (C E F B))
+                   '((D C E) (D C B F E) (C B F E))
                    :test #'set-equal))))
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()
@@ -331,12 +334,14 @@
 
 (deftest small-graph-to-plist ()
   (with-fixture small-graph
-    (is (tree-equal
-         (to-plist *graph*)
-         '(:NODES ((:NAME :FOO) (:NAME :BAR) (:NAME :BAZ) (:NAME :QUX))
-           :EDGES ((:EDGE (0 1) :VALUE NIL)
-                   (:EDGE (0 2) :VALUE NIL)
-                   (:EDGE (1 2) :VALUE NIL)))))))
+    (let ((plist (to-plist *graph*)))
+      (is (set-equal (getf plist :nodes)
+                     '((:NAME :FOO) (:NAME :BAR) (:NAME :BAZ) (:NAME :QUX))
+                     :test 'tree-equal))
+      (let ((edges (getf plist :edges)))
+        (is (set-equal (mapcar {getf _ :edge}  edges) '((1 2) (0 2) (0 1))
+                       :test 'set-equal))
+        (is (set-equal (mapcar {getf _ :value} edges) '(NIL NIL NIL NIL)))))))
 
 (deftest two-way-plist-conversion-on-multiple-graphs ()
   (with-fixture small-graph
@@ -367,20 +372,31 @@
     (is (= 0 (betweenness *star* :a)))))
 
 (deftest conversion-to-adjacency-matrix ()
-  (with-fixture normal-graph
-    (is (equalp (to-adjacency-matrix *graph*)
-                #2A((nil T   nil nil nil nil)
-                    (nil nil T   nil nil nil)
-                    (nil nil nil T   nil nil)
-                    (nil nil nil nil T   nil)
-                    (nil nil T   nil nil T)
-                    (nil T   nil nil nil nil)))))
-  (with-fixture small-network
-    (is (equalp (to-adjacency-matrix *network*)
-                #2A((nil 1   nil 4)
-                    (nil nil nil 2)
-                    (2   1   nil nil)
-                    (nil nil nil nil))))))
+  (flet ((sum (array)
+           (let ((dims (array-dimensions array)))
+             (reduce #'+
+                     (mapcar {reduce #'+}
+                             (loop :for x :below (first dims) :collect
+                                (loop :for y :below (second dims) :collect
+                                   (let ((val (aref array x y)))
+                                     (cond
+                                       ((numberp val) val)
+                                       ((null val)    0)
+                                       (t             1))))))))))
+    (with-fixture normal-graph
+      (is (= (sum (to-adjacency-matrix *graph*))
+             (sum #2A((nil T   nil nil nil nil)
+                      (nil nil T   nil nil nil)
+                      (nil nil nil T   nil nil)
+                      (nil nil nil nil T   nil)
+                      (nil nil T   nil nil T)
+                      (nil T   nil nil nil nil))))))
+    (with-fixture small-network
+      (is (= (sum (to-adjacency-matrix *network*))
+             (sum #2A((nil 1   nil 4)
+                      (nil nil nil 2)
+                      (2   1   nil nil)
+                      (nil nil nil nil))))))))
 
 (deftest conversion-from-adjacency-matrix ()
   (is (tree-equal (edges-w-values (from-adjacency-matrix (make-instance 'graph)

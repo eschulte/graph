@@ -6,18 +6,18 @@
 
 ;;; Code:
 (in-package :graph-dot)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (enable-curry-compose-reader-macros))
 
 
 ;;; Visualization
-(defun edge-to-dot (graph edge &optional edge-label)
+(defun edge-to-dot (edge type &optional edge-label)
   (concatenate 'string
-    (if (eq 'digraph (type-of graph))
-        (apply #'format nil "  \"~a\" -> \"~a\"" edge)
-        (apply #'format nil "  \"~a\" -- \"~a\"" edge))
-    (if (or edge-label (edge-value graph edge))
-        (format nil " [label=\"~a\"];~%" (if edge-label
-                                             (funcall edge-label edge)
-                                             (edge-value graph edge)))
+    (case type
+      (graph   (apply #'format nil "  \"~a\" -- \"~a\"" edge))
+      (digraph (apply #'format nil "  \"~a\" -> \"~a\"" edge)))
+    (if edge-label
+        (format nil " [label=\"~a\"];~%" (funcall edge-label edge))
         ";")))
 
 (defun node-to-dot (node &optional node-label)
@@ -31,11 +31,11 @@ Keyword arguments NODE-LABEL and EDGE-LABEL may provide functions
 which when called on a node or edge return a label for that element of
 the dot graph."))
 
-(defmethod to-dot ((graph graph) &key (stream t) node-label edge-label)
+(defmethod to-dot ((graph graph)
+                   &key (stream t) node-label (edge-label {edge-value graph}))
   (format stream "~a to_dot {~%" (intern (string-downcase (type-of graph))))
-  (mapc [{format stream "~a"} (lambda (n) (node-to-dot n node-label))]
-        (nodes graph))
-  (mapc [{format stream "~a"} (lambda (e) (edge-to-dot graph e edge-label))]
+  (mapc [{format stream "~a"} {node-to-dot _ node-label}] (nodes graph))
+  (mapc [{format stream "~a"} {edge-to-dot _ (type-of graph) edge-label}]
         (edges graph))
   (format stream "}~%"))
 

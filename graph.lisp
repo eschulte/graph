@@ -103,34 +103,8 @@
 
 ;;; Code:
 (in-package :graph)
-
-
-;;; Reader macros
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  ;; partial application with {} using Alexandria's `curry' and `rcurry'
-  (set-syntax-from-char #\{ #\( )
-  (set-syntax-from-char #\} #\) )
-
-  (defun lcurly-brace-reader (stream inchar)
-    (declare (ignore inchar))
-    (let ((spec (read-delimited-list #\} stream t)))
-      (if (eq (cadr spec) '_)
-          `(rcurry (function ,(car spec)) ,@(cddr spec))
-          `(curry (function ,(car spec)) ,@(cdr spec)))))
-
-  (set-macro-character #\{ #'lcurly-brace-reader)
-  (set-macro-character #\} (get-macro-character #\) ))
-
-  ;; composition with [] using Alexandria's `compose'
-  (set-syntax-from-char #\[ #\( )
-  (set-syntax-from-char #\] #\) )
-
-  (defun lsquare-brace-reader (stream inchar)
-    (declare (ignore inchar))
-    (cons 'compose (read-delimited-list #\] stream t)))
-
-  (set-macro-character #\[ #'lsquare-brace-reader)
-  (set-macro-character #\] (get-macro-character #\) )))
+  (enable-curry-compose-reader-macros))
 
 
 ;;; Special hashes keyed for edges
@@ -140,23 +114,29 @@
 (defun sxhash-edge (edge)
   (sxhash (sort (copy-tree edge) (if (numberp (car edge)) #'< #'string<))))
 
+#+sbcl
 (sb-ext:define-hash-table-test edge-equalp sxhash-edge)
 
 (defun dir-edge-equalp (edge1 edge2)
   (tree-equal edge1 edge2))
 
+#+sbcl
 (sb-ext:define-hash-table-test dir-edge-equalp sxhash)
 
 (defun make-edge-hash-table ()
   #+sbcl
   (make-hash-table :test 'edge-equalp)
-  #-(or sbcl)
+  #+ccl
+  (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
+  #-(or ccl sbcl)
   (error "unsupport lisp distribution"))
 
 (defun make-diedge-hash-table ()
   #+sbcl
   (make-hash-table :test 'dir-edge-equalp)
-  #-(or sbcl)
+  #+ccl
+  (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
+  #-(or ccl sbcl)
   (error "unsupport lisp distribution"))
 
 
@@ -181,7 +161,14 @@ Optional argument TEST specifies a new equality test to use for the
 copy.  Second optional argument COMB specifies a function to use to
 combine the values of elements of HASH which collide in the copy due
 to a new equality test specified with TEST."
-  (let ((copy (make-hash-table :test (or test (hash-table-test hash)))))
+  (let ((copy
+         #+sbcl (make-hash-table :test (or test (hash-table-test hash)))
+         #+ccl (make-hash-table
+                :test (or test (hash-table-test hash))
+                :hash-function (case (or test (hash-table-test hash))
+                                 (edge-equalp 'sxhash-edge)
+                                 ((dir-edge-equalp equalp) 'sxhash)))
+         #-(or sbcl ccl) (error "unsupported lisp distribution")))
     (maphash (lambda (k v) (setf (gethash k copy)
                             (if (and (gethash k copy) comb)
                                 (funcall comb (gethash k copy) v)
@@ -189,10 +176,19 @@ to a new equality test specified with TEST."
              hash)
     copy))
 
-(defun hash-equal (hash1 hash2)
-  "Test HASH1 and HASH2 for equality."
-  (tree-equal (hash-table-plist hash1)
-              (hash-table-plist hash2) :test 'equalp))
+(defun node-hash-equal (hash1 hash2)
+  "Test node hashes HASH1 and HASH2 for equality."
+  (set-equal (hash-table-alist hash1)
+             (hash-table-alist hash2)
+             :test (lambda (a b)
+                     (and (equalp (car a) (car b))
+                          (set-equal (cdr a) (cdr b) :test 'tree-equal)))))
+
+(defun edge-hash-equal (hash1 hash2)
+  "Test edge hashes HASH1 and HASH2 for equality."
+  (set-equal (hash-table-alist hash1)
+             (hash-table-alist hash2)
+             :test 'equalp))
 
 (defgeneric copy (graph)
   (:documentation "Return a copy of GRAPH."))
@@ -235,12 +231,12 @@ to a new equality test specified with TEST."
   (:documentation "Compare GRAPH1 and GRAPH2 for equality."))
 
 (defmethod graph-equal ((graph1 graph) (graph2 graph))
-  (every (lambda-bind ((test key))
+  (every (lambda-bind ((test key)) ;; TODO: digraph's need a stricter graph-equal
            (apply test (append (mapcar key (list graph1 graph2)))))
          '((eq         type-of)
            (equal      edge-eq)
-           (hash-equal edge-h)
-           (hash-equal node-h))))
+           (edge-hash-equal edge-h)
+           (node-hash-equal node-h))))
 
 
 ;;; Serialize graphs
@@ -609,14 +605,13 @@ Uses Tarjan's algorithm."))
                      (cond ((member neighbor path)
                             (push (subseq path 0 (1+ (position neighbor path)))
                                   cycles))
-                           ((not (member neighbor seen))
-                            (follow neighbor
-                                    (cons neighbor path)
-                                    (cons edge used-edges)))))))))
+                           (t (follow neighbor
+                                      (cons neighbor path)
+                                      (cons edge used-edges)))))))))
       (dolist (node (nodes graph))
         (unless (member node seen)
           (follow node (list node) nil))))
-    cycles))
+    (remove-duplicates cycles :test 'set-equal)))
 
 (defgeneric cycles (graph)
   (:documentation "Return all cycles of GRAPH (both basic and compound)."))
@@ -840,7 +835,8 @@ Optionally assign edge values from those listed in EDGE-VALS."))
 (defmethod farness ((graph graph) node)
   (assert (connectedp graph) (graph)
           "~S must be connected to calculate farness." graph)
-  (reduce #'+ (mapcar [#'length {shortest-path graph node}]
+  ;; [#'length {shortest-path graph node}]
+  (reduce #'+ (mapcar (lambda (it) (length (shortest-path graph node it)))
                       (remove node (nodes graph)))))
 
 (defgeneric closeness (graph node)
@@ -873,5 +869,57 @@ between s and t in GRAPH passes through NODE."))
 
 (defmethod katz-centrality ((graph graph) node &key (attenuation 0.8))
   (let ((cc (connected-component graph node)))
-    (reduce #'+ (mapcar [{expt 0.8} #'length {shortest-path graph node}]
+    ;; [{expt attenuation} #'length {shortest-path graph node}]
+    (reduce #'+ (mapcar (lambda (el) (expt attenuation
+                                      (length (shortest-path graph node el))))
                         (remove node cc)))))
+
+
+;;; Degeneracy
+;;
+;; From the Wikipedia article on "Degeneracy (graph theory)".
+;;
+(defgeneric degeneracy (graph)
+  (:documentation "Return the degeneracy and k-cores of GRAPH.
+Also return the node ordering with optimal coloring number as an
+alist.  The `car' of each element of the alist identifies k-cores and
+the `cdr' holds the nodes in the ordering."))
+
+(defmethod degeneracy ((graph graph))
+  (let ((copy (copy graph))
+        (node-degree (make-hash-table))
+        (max-degree 0) (num-nodes 0) (k 0) (i 0)
+        by-degree output)
+    ;; initialize
+    (mapc (lambda (n)
+            (let ((degree (degree copy n)))
+              (incf num-nodes)
+              (setf (gethash n node-degree) degree)
+              (setf max-degree (max max-degree degree))))
+          (nodes copy))
+    (setf by-degree (make-array (1+ max-degree) :initial-element nil))
+    (maphash (lambda (node degree) (push node (aref by-degree degree)))
+             node-degree)
+    ;; reduction
+    (dotimes (n num-nodes (values k output))
+      (setf i 0)
+      (loop :until (aref by-degree i) :do (incf i))
+      ;; create alist element for the new core
+      (when (< k (setf k (max k i))) (push (list k) output))
+      ;; drop a node and demote all neighbors
+      (let ((node (pop (aref by-degree i))))
+        (push node (cdr (assoc k output)))
+        (mapc (lambda (node)
+                (setf (aref by-degree (gethash node node-degree))
+                      (remove node (aref by-degree (gethash node node-degree))))
+                (decf (gethash node node-degree))
+                (push node (aref by-degree (gethash node node-degree))))
+              (prog1 (remove-duplicates (remove node (neighbors copy node)))
+                (delete-node copy node)))))))
+
+(defgeneric k-cores (graph)
+  (:documentation "Return the k-cores of GRAPH."))
+
+(defmethod k-cores ((graph graph))
+  (multiple-value-bind (k cores) (degeneracy graph)
+    (declare (ignorable k)) cores))
