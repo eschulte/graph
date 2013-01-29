@@ -265,13 +265,13 @@
 (deftest basic-cycles-of-graph ()
   (with-fixture normal-graph
     (is (set-equal (basic-cycles *graph*)
-                   '((C E F B) (D C E))
+                   '((D C E) (D C B F E) (C B F E))
                    :test #'set-equal))))
 
 (deftest cycles-of-graph ()
   (with-fixture normal-graph
     (is (set-equal (cycles *graph*)
-                   '((D C E) (B F E C E D C) (C E F B))
+                   '((D C E) (D C B F E) (C B F E))
                    :test #'set-equal))))
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()

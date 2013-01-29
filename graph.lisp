@@ -605,14 +605,13 @@ Uses Tarjan's algorithm."))
                      (cond ((member neighbor path)
                             (push (subseq path 0 (1+ (position neighbor path)))
                                   cycles))
-                           ((not (member neighbor seen))
-                            (follow neighbor
-                                    (cons neighbor path)
-                                    (cons edge used-edges)))))))))
+                           (t (follow neighbor
+                                      (cons neighbor path)
+                                      (cons edge used-edges)))))))))
       (dolist (node (nodes graph))
         (unless (member node seen)
           (follow node (list node) nil))))
-    cycles))
+    (remove-duplicates cycles :test 'set-equal)))
 
 (defgeneric cycles (graph)
   (:documentation "Return all cycles of GRAPH (both basic and compound)."))
