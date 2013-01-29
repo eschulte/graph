@@ -116,27 +116,35 @@
 
 #+sbcl
 (sb-ext:define-hash-table-test edge-equalp sxhash-edge)
+#+clisp
+(ext:define-hash-table-test edge-equalp edge-equalp sxhash-edge)
 
 (defun dir-edge-equalp (edge1 edge2)
   (tree-equal edge1 edge2))
 
 #+sbcl
 (sb-ext:define-hash-table-test dir-edge-equalp sxhash)
+#+clisp
+(ext:define-hash-table-test dir-edge-equalp dir-edge-equalp sxhash)
 
 (defun make-edge-hash-table ()
   #+sbcl
   (make-hash-table :test 'edge-equalp)
+  #+clisp
+  (make-hash-table :test 'edge-equalp)
   #+ccl
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
-  #-(or ccl sbcl)
+  #-(or sbcl clisp ccl)
   (error "unsupport lisp distribution"))
 
 (defun make-diedge-hash-table ()
   #+sbcl
   (make-hash-table :test 'dir-edge-equalp)
+  #+clisp
+  (make-hash-table :test 'dir-edge-equalp)
   #+ccl
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
-  #-(or ccl sbcl)
+  #-(or sbcl clisp ccl)
   (error "unsupport lisp distribution"))
 
 
@@ -163,12 +171,13 @@ combine the values of elements of HASH which collide in the copy due
 to a new equality test specified with TEST."
   (let ((copy
          #+sbcl (make-hash-table :test (or test (hash-table-test hash)))
+         #+clisp (make-hash-table :test (or test (hash-table-test hash)))
          #+ccl (make-hash-table
                 :test (or test (hash-table-test hash))
                 :hash-function (case (or test (hash-table-test hash))
                                  (edge-equalp 'sxhash-edge)
                                  ((dir-edge-equalp equalp) 'sxhash)))
-         #-(or sbcl ccl) (error "unsupported lisp distribution")))
+         #-(or sbcl clisp ccl) (error "unsupported lisp distribution")))
     (maphash (lambda (k v) (setf (gethash k copy)
                             (if (and (gethash k copy) comb)
                                 (funcall comb (gethash k copy) v)
@@ -419,7 +428,7 @@ to a new equality test specified with TEST."
 (defmethod outdegree ((digraph digraph) node)
   (length (remove-if-not [{equal node} #'car] (node-edges digraph node))))
 
-(defgeneric (setf node-edges) (new graph node)
+(defgeneric (setf node-edges) (new graph node) ;; TODO: seg-faults in clisp
   (:documentation "Set the edges of NODE in GRAPH to NEW.
 Delete and return the old edges of NODE in GRAPH."))
 
