@@ -844,8 +844,7 @@ Optionally assign edge values from those listed in EDGE-VALS."))
 (defmethod farness ((graph graph) node)
   (assert (connectedp graph) (graph)
           "~S must be connected to calculate farness." graph)
-  ;; [#'length {shortest-path graph node}]
-  (reduce #'+ (mapcar (lambda (it) (length (shortest-path graph node it)))
+  (reduce #'+ (mapcar [#'length {shortest-path graph node}]
                       (remove node (nodes graph)))))
 
 (defgeneric closeness (graph node)
@@ -878,9 +877,7 @@ between s and t in GRAPH passes through NODE."))
 
 (defmethod katz-centrality ((graph graph) node &key (attenuation 0.8))
   (let ((cc (connected-component graph node)))
-    ;; [{expt attenuation} #'length {shortest-path graph node}]
-    (reduce #'+ (mapcar (lambda (el) (expt attenuation
-                                      (length (shortest-path graph node el))))
+    (reduce #'+ (mapcar [{expt attenuation} #'length {shortest-path graph node}]
                         (remove node cc)))))
 
 
