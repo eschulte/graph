@@ -1,0 +1,189 @@
+<html> 
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>GRAPH-JSON - json serialization of graphs</title>
+  <style type="text/css">
+  pre { padding:5px; background-color:#e0e0e0 }
+  h3, h4 { text-decoration: underline; }
+  a { text-decoration: none; padding: 1px 2px 1px 2px; }
+  a:visited { text-decoration: none; padding: 1px 2px 1px 2px; }
+  a:hover { text-decoration: none; padding: 1px 1px 1px 1px; border: 1px solid #000000; } 
+  a:focus { text-decoration: none; padding: 1px 2px 1px 2px; border: none; }
+  a.none { text-decoration: none; padding: 0; }
+  a.none:visited { text-decoration: none; padding: 0; } 
+  a.none:hover { text-decoration: none; border: none; padding: 0; } 
+  a.none:focus { text-decoration: none; border: none; padding: 0; } 
+  a.noborder { text-decoration: none; padding: 0; } 
+  a.noborder:visited { text-decoration: none; padding: 0; } 
+  a.noborder:hover { text-decoration: none; border: none; padding: 0; } 
+  a.noborder:focus { text-decoration: none; border: none; padding: 0; }  
+  pre.none { padding:5px; background-color:#ffffff }
+  </style>
+</head>
+
+<body bgcolor=white>
+
+<h2> GRAPH-JSON - json serialization of graphs</h2>
+
+<br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
+
+<p>The GRAPH-JSON library provides functions for serializing graph
+     objects as defined by the <a href="index.html">GRAPH</a>
+     library to/from JSON.</p>
+
+The code is available under the <a
+href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
+
+<p>
+<font color=red>Source:</font>
+<a href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
+
+<br>&nbsp;<br><h3><a class=none name="contents">Contents</a></h3>
+<ol>
+  <li><a href="#source">Source</a></li>
+  <li><a href="#introduction">Introduction</a></li>
+  <li><a href="#dictionary">The GRAPH-JSON dictionary</a></li>
+    <ol>
+      <li><a href="#from-d3"><code>from-d3</code></a></li>
+      <li><a href="#from-json"><code>from-json</code></a></li>
+      <li><a href="#to-d3"><code>to-d3</code></a></li>
+      <li><a href="#to-json"><code>to-json</code></a></li>
+    </ol>
+  <li><a href="#ack">Acknowledgements</a></li>
+</ol>
+
+<br>&nbsp;<br><h3><a class=none name="source">Source</a></h3>
+
+GRAPH-JSON together with this documentation can be found at <a
+href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
+
+<br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
+
+<p>Helper function for serializing Graphs to JSON objects and reading
+JSON objects back into graphs.  The JSON syntax for a graph is
+compatible with the JavaScript d3 visualization library, allowing
+for interactive viewing of graphs in the browser.</p>
+
+<p>See <a href="http://d3js.org/">d3</a>
+(specifically <a href="http://bl.ocks.org/4062045">d3-force</a>) for more.</p>
+
+<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH-JSON dictionary</a></h3>
+
+
+<!-- Entry for FROM-D3 -->
+
+<p><br>[Generic function]<br><a class=none name='from-d3'><b>from-d3</b> <i>graph input</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+
+
+</blockquote>
+
+<!-- End of entry for FROM-D3 -->
+
+
+<!-- Entry for FROM-D3 -->
+
+<p><br>[Method]<br><a class=none><b>from-d3</b> <i>(graph graph) input</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Parse a D3 format string or stream INPUT into GRAPH.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for FROM-D3 -->
+
+
+<!-- Entry for FROM-JSON -->
+
+<p><br>[Generic function]<br><a class=none name='from-json'><b>from-json</b> <i>graph input</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+
+
+</blockquote>
+
+<!-- End of entry for FROM-JSON -->
+
+
+<!-- Entry for FROM-JSON -->
+
+<p><br>[Method]<br><a class=none><b>from-json</b> <i>(graph graph) input</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Parse string or stream INPUT into GRAPH.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for FROM-JSON -->
+
+
+<!-- Entry for TO-D3 -->
+
+<p><br>[Generic function]<br><a class=none name='to-d3'><b>to-d3</b> <i>graph <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+
+
+</blockquote>
+
+<!-- End of entry for TO-D3 -->
+
+
+<!-- Entry for TO-D3 -->
+
+<p><br>[Method]<br><a class=none><b>to-d3</b> <i>(graph graph) <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return a JSON encoding of GRAPH formatted for D3.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for TO-D3 -->
+
+
+<!-- Entry for TO-JSON -->
+
+<p><br>[Generic function]<br><a class=none name='to-json'><b>to-json</b> <i>graph <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+
+
+</blockquote>
+
+<!-- End of entry for TO-JSON -->
+
+
+<!-- Entry for TO-JSON -->
+
+<p><br>[Method]<br><a class=none><b>to-json</b> <i>(graph graph) <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Write a JSON encoding of GRAPH to STREAM.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for TO-JSON -->
+
+
+<br>&nbsp;<br><h3><a class=none name="ack">Acknowledgements</a></h3>
+
+<p>
+This documentation was prepared with a hacked up version of <a href="http://weitz.de/documentation-template/">DOCUMENTATION-TEMPLATE</a>.
+</p>
+
+</body>
+</html>
