@@ -11,7 +11,8 @@
 ;; compatible with the JavaScript d3 visualization library, allowing
 ;; for interactive viewing of graphs in the browser.
 
-;; See [d3-link] for more.
+;; See [d3](http://d3js.org/)
+;; (specifically [d3-force](http://bl.ocks.org/4062045)) for more.
 
 ;;; Code:
 (in-package :graph-json)

@@ -4,6 +4,11 @@
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
+;;; Commentary
+
+;; Functions for reading/writing graphs from/to the
+;; [graphviz](http://www.graphviz.org/) DOT format.
+
 ;;; Code:
 (in-package :graph-dot)
 (eval-when (:compile-toplevel :load-toplevel :execute)
