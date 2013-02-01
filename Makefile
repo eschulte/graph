@@ -1,12 +1,17 @@
-PACKAGE=graph
+PACKAGES=graph graph-dot graph-json
 
-all: index.html
+all: index.html $(PACKAGES:=.html)
 
-$(PACKAGE).html: $(PACKAGE).lisp $(PACKAGE).asd document
-	./document
+%.pre: %.lisp %.asd document
+	./document $*
 
-index.html: $(PACKAGE).lisp $(PACKAGE).html
-	(cat $(PACKAGE).html|sed -n '/<html/,/INTRODUCTION_PASTE/p'|head -n -1; \
-        cat $(PACKAGE).lisp|sed -n '/Commentary/,/Code/p'|cut -c4-|head -n -2|tail -n +3|markdown; \
-        cat $(PACKAGE).html|sed -n '/INTRODUCTION_PASTE/,$$p'|tail -n +2) > index.html; \
-	rm $(PACKAGE).html
+%.html: %.lisp %.pre
+	(cat $*.pre|sed -n '/<html/,/INTRODUCTION_PASTE/p'|head -n -1; \
+        cat $*.lisp|sed -n '/Commentary/,/Code/p'|cut -c4-|head -n -2|tail -n +3|markdown; \
+        cat $*.pre|sed -n '/INTRODUCTION_PASTE/,$$p'|tail -n +2) > $@
+
+index.html: graph.html
+	cp $< $@
+
+clean:
+	rm -f index.html $(PACKAGES:=.html)

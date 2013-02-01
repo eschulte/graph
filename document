@@ -1,19 +1,50 @@
 #!/usr/bin/sbcl --script
 ;; -*- lisp -*-
 (load "~/.sbclrc" :if-does-not-exist nil)
-(require :graph)
 (require :schulte-documentation-template)
+(require :alexandria)
+(defvar *pkg-name* (string-downcase (second sb-ext:*posix-argv*)))
+(defvar *pkg* (read-from-string (concatenate 'string ":" *pkg-name*)))
+(require *pkg-name*)
 
-(schulte-documentation-template:create-template
- :graph
+(defvar *subtitles*
+  '((:graph . "simple graph data structure and algorithms")
+    (:graph-json . "json serialization of graphs")
+    (:graph-dot . "dot serialization of graphs")))
+
+(defvar *sources*
+  '((:graph . "http://github.com/eschulte/graph")
+    (:graph-json . "http://github.com/eschulte/graph")
+    (:graph-dot . "http://github.com/eschulte/graph")))
+
+(defvar *abstracts*
+  '((:graph .
+     "The GRAPH library strives for simplicity both in backing data
+       structures and in usage.  Graphs and Digraphs are represented
+       as CLOS objects with methods and algorithms provided for graph
+       manipulation and analysis.
+
+       </p><p>See the <a href=\"graph-json.html\">GRAPH-JSON</a> and
+       <a href=\"graph-dot.html\">GRAPH-DOT</a> libraries for
+       serialization and visualization of graphs.
+
+       </p><p><em>Note</em>: currently this
+       library is only supported on SBCL and Clozure CL because of the
+       need to create hashes with custom equality tests, however
+       <em>many</em> other lisps support this so extending should be
+       simple.  Patches welcome.")
+    (:graph-json .
+     "The GRAPH-JSON library provides functions for serializing graph
+     objects as defined by the <a href=\"index.html\">GRAPH</a>
+     library to/from JSON.")
+    (:graph-dot .
+     "The GRAPH-DOT library provides functions for serializing graph
+     objects as defined by the <a href=\"index.html\">GRAPH</a>
+     library to/from DOT.")))
+
+(schulte-documentation-template:create-template *pkg*
  :maybe-skip-methods-p t
- :target "graph.html"
- :subtitle "simple graph data structure and algorithms"
- :abstract "The GRAPH library strives for simplicity both in backing
- data structures and in usage.  Graphs and Digraphs are represented as
- CLOS objects with methods and algorithms provided for graph
- manipulation and analysis.</p><p><em>Note</em>: currently this
- library is only supported on SBCL and Clozure CL because of the need
- to create hashes with custom equality tests, however <em>many</em>
- other lisps support this so extending should be simple.  Patches
- welcome.")
+ :target (concatenate 'string *pkg-name* ".pre")
+ :subtitle (cdr (assoc *pkg* *subtitles*))
+ :abstract (cdr (assoc *pkg* *abstracts*))
+ :source   (cdr (assoc *pkg* *sources*)))
