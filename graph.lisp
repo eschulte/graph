@@ -423,7 +423,7 @@ to a new equality test specified with TEST."
   (length (remove-if-not [{member node} #'cdr] (node-edges digraph node))))
 
 (defgeneric outdegree (digraph node)
-  (:documentation "The number of edges directed from NODE in GRAPH."))
+  (:documentation "The number of edges directed from NODE in DIGRAPH."))
 
 (defmethod outdegree ((digraph digraph) node)
   (length (remove-if-not [{equal node} #'car] (node-edges digraph node))))
