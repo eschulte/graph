@@ -111,106 +111,6 @@ href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 
 <br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
 
-<p>Graphs are composed of two hash tables, nodes and edges.  The node
-hash is keyed by node and holds the edges containing that node,
-while the edge hash is keyed by edge containing any optional edge
-value.</p>
-
-<pre><code>                         Nodes                  Edges
-                        -------                -------
-+----Graph G-----+     key |  value             key | value
-|   3   2        |    -----+---------        -------+----------
-| a---b---c   g  |       a |  (a b)           (a b) |  3
-|    1|   |1     |       b |  (b d) (b c)     (b d) |  1
-|     d---e---f  |       c |  (b c) (c e)     (b c) |  2
-|       2   3    |       d |  (b d) (d e)     (c e) |  1
-+----------------+       e |  (d e) (c e)     (d e) |  2
-                         f |  (e f)           (e f) |  3
-                         g |
-</code></pre>
-
-<p>Graphs are CLOS objects which are constructed with the usual <code>make
-instance</code> and are populated with the <code>populate</code> function.</p>
-
-<pre><code>(defvar *graph* (populate (make-instance 'graph)
-                  :nodes '(a b c d e f g)
-                  :edges-w-values '(((a b) . 3)
-                                    ((b d) . 1)
-                                    ((b c) . 2)
-                                    ((c e) . 1)
-                                    ((d e) . 2)
-                                    ((e f) . 3))))
-</code></pre>
-
-<p>Standard accessors are provided.</p>
-
-<pre><code>* (nodes *graph*)
-(A B C D E F G)
-
-* (edges *graph*)
-((A B) (B D) (B C) (C E) (D E) (E F))
-
-* (node-edges *graph* 'b)
-((B C) (B D) (A B))
-
-* (edge-value *graph* '(d e))
-2
-</code></pre>
-
-<p>Nodes and edges may be removed using <code>delete-node</code> and
-<code>delete-edge</code>, or using setf methods on any of the accessors above.</p>
-
-<pre><code>* (delete-edge *graph* '(e f))
-3
-
-* (edges *graph*)
-((A B) (B D) (B C) (C E) (D E))
-
-* (setf (nodes *graph*) (remove 'a (nodes *graph*)))
-(B C D E F G)
-
-* (edges *graph*)
-((B D) (B C) (C E) (D E))
-</code></pre>
-
-<p>Some more sophisticated graph algorithms are implemented.  A couple
-are shown below, see the dictionary for a complete list.</p>
-
-<pre><code>* (shortest-path *graph* 'b 'e)
-((B C) (C E))
-
-* (connected-components *graph*)
-((G) (B D C E) (F))
-
-* (setf (nodes *graph*) '(B D C E))
-(B C D E)
-
-* (min-cut *graph*)
-((B C) (E D))
-2
-</code></pre>
-
-<p>Additionally digraphs represent graphs with directed edges.
-Starting with the original graph above we get the following.</p>
-
-<pre><code>* (strongly-connected-components *graph*)
-((G) (D F E C B A))
-
-* (strongly-connected-components (digraph-of *graph*))
-((G) (A) (B) (D) (C) (E) (F))
-
-* (delete-edge *graph* '(d e))
-2
-
-* (push '(e d) (edges *graph*))
-((A B) (B D) (B C) (C E) (E D) (E F))
-
-* (push '(d c) (edges *graph*))
-((A B) (B D) (B C) (C E) (E D) (E F) (D C))
-
-* (strongly-connected-components (digraph-of *graph*))
-((G) (A) (B) (D E C) (F))
-</code></pre>
 
 <br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH dictionary</a></h3>
 
@@ -842,7 +742,7 @@ Return an alist of nodes of GRAPH with their values.
 <p><br>[Generic function]<br><a class=none name='outdegree'><b>outdegree</b> <i>digraph node</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
-The number of edges directed from NODE in GRAPH.
+The number of edges directed from NODE in DIGRAPH.
 
 
 
