@@ -641,11 +641,10 @@ Uses Tarjan's algorithm."))
                         acc))
                      c2 :initial-value nil))))
     (let ((basic-cycles (basic-cycles graph)) cycles)
-      (loop :for cycle = (pop basic-cycles) :do
+      (loop :for cycle = (pop basic-cycles) :while cycle :do
          (push cycle cycles)
          (mapc (lambda (c) (push (combine c cycle) cycles))
-               (remove-if-not {intersection cycle} basic-cycles))
-         :until (null basic-cycles))
+               (remove-if-not {intersection cycle} basic-cycles)))
       cycles)))
 
 
