@@ -21,6 +21,9 @@
 (defvar *cycle* nil
   "Variable for use in graph tests.")
 
+(defvar *digraph* nil
+  "Digraph for use in graph tests.")
+
 (defvar *halfs* nil
   "Variable for use in graph tests.")
 
@@ -86,6 +89,18 @@
                     ((:b :t) . 2)
                     ((:t :s) . 2)))))
   (:teardown (setf *cycle* nil)))
+
+(defixture digraph
+  (:setup (setf *digraph*
+                (populate (make-instance 'digraph)
+                  :nodes '(a b c d e f g)
+                  :edges-w-values
+                  '(((a b) . 3)
+                    ((b d) . 1)
+                    ((b c) . 2)
+                    ((c e) . 1)
+                    ((d e) . 2)
+                    ((e f) . 3))))))
 
 (defixture halfs
   (:setup (setf *halfs*
@@ -273,6 +288,10 @@
     (is (set-equal (cycles *graph*)
                    '((D C E) (D C B F E) (C B F E))
                    :test #'set-equal))))
+
+(deftest cycles-of-a-digraph ()
+  (with-fixture digraph
+    (is (null (cycles *digraph*)))))
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
