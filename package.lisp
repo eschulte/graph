@@ -12,7 +12,8 @@
    :to-plist
    :from-plist
    :to-adjacency-matrix
-   :from-adjacency-matrix
+   :to-value-matrix
+   :from-value-matrix
    ;; Simple Graph Methods
    :edges
    :edges-w-values

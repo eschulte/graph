@@ -292,16 +292,6 @@ to a new equality test specified with TEST."
             (edges-w-values graph))
       matrix)))
 
-(defgeneric to-identity-matrix (graph)
-  (:documentation "Return the identity matrix of GRAPH."))
-
-(defmethod to-identity-matrix ((graph graph))
-  (let ((size (length (nodes graph))))
-    (do ((matrix (make-array (list size size) :initial-element 0))
-         (x 0 (+ x 1)))
-        ((= x size) matrix) 
-      (setf (aref matrix x x) 1))))
-
 (defgeneric to-value-matrix (graph)
   (:documentation "Return the value matrix of GRAPH."))
 
@@ -311,7 +301,7 @@ to a new equality test specified with TEST."
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
     (let ((matrix (make-array (list (1+ counter) (1+ counter))
-                              :initial-element 0)))
+                              :initial-element nil)))
       (mapc (lambda-bind (((a b) . value))
               (setf (aref matrix
                           (gethash a node-index-hash)
@@ -320,12 +310,12 @@ to a new equality test specified with TEST."
             (edges-w-values graph))
       matrix)))
 
-(defgeneric from-adjacency-matrix (graph matrix)
-  (:documentation "Populate GRAPH from the adjacency matrix MATRIX."))
+(defgeneric from-value-matrix (graph matrix)
+  (:documentation "Populate GRAPH from the value matrix MATRIX."))
 
-(defmethod from-adjacency-matrix ((graph graph) matrix)
+(defmethod from-value-matrix ((graph graph) matrix)
   (bind (((as bs) (array-dimensions matrix)))
-    (assert (= as bs) (matrix) "Adjacency matrix ~S must be square." matrix)
+    (assert (= as bs) (matrix) "Value matrix ~S must be square." matrix)
     (loop :for a :below as :do
        (loop :for b :below bs :do
           (when (aref matrix a b)
