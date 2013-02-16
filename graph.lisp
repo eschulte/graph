@@ -284,10 +284,11 @@ to a new equality test specified with TEST."
     (let ((matrix (make-array (list (1+ counter) (1+ counter))
                               :initial-element 0)))
       (mapc (lambda-bind (((a b) . value))
+              (declare (ignorable value))
               (setf (aref matrix
                           (gethash a node-index-hash)
                           (gethash b node-index-hash))
-                    (if value 1 0)))
+                    1))
             (edges-w-values graph))
       matrix)))
 
