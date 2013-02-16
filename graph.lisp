@@ -283,13 +283,12 @@ to a new equality test specified with TEST."
           (nodes graph))
     (let ((matrix (make-array (list (1+ counter) (1+ counter))
                               :initial-element 0)))
-      (mapc (lambda-bind (((a b) . value))
-              (declare (ignorable value))
+      (mapc (lambda-bind ((a b))
               (setf (aref matrix
                           (gethash a node-index-hash)
                           (gethash b node-index-hash))
                     1))
-            (edges-w-values graph))
+            (edges graph))
       matrix)))
 
 (defgeneric to-value-matrix (graph)
