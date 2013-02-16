@@ -36,6 +36,8 @@
    :edge-neighbors
    :neighbors
    :precedents
+   :topological-mapc
+   :topological-mapcar
    :connected-component
    :connectedp
    :connected-components

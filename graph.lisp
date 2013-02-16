@@ -559,16 +559,33 @@ EDGE2 will be combined."))
 (defmethod precedents ((digraph digraph) node)
   (mapcan [#'cdr {member node} #'reverse] (node-edges digraph node)))
 
+(defgeneric topological-mapc (function graph node)
+  (:documentation
+   "Call FUNCTION on the NODES of GRAPH in topological order from NODE."))
+
+(defmethod topological-mapc (function (graph graph) node)
+  (let ((from (list node)) (seen (list node)))
+    (loop :until (null from) :do
+       (let ((next (remove-duplicates (mapcan {neighbors graph} from))))
+         (mapc function from)
+         (setf from (set-difference next seen))
+         (setf seen (union next seen))))))
+
+(defgeneric topological-mapcar (function graph node)
+  (:documentation
+   "Call FUNCTION on the ELEMENTS of GRAPH in topological order from NODE.
+Return the list of FUNCTION return values."))
+
+(defmethod topological-mapcar (function graph node &aux return-values)
+  (topological-mapc (lambda (el) (push (funcall function el) return-values))
+                    graph node)
+  (nreverse return-values))
+
 (defgeneric connected-component (graph node)
   (:documentation "Return the connected component of NODE in GRAPH."))
 
 (defmethod connected-component ((graph graph) node)
-  (let ((from (list node)) (seen (list node)))
-    (loop :until (null from) :do
-       (let ((next (remove-duplicates (mapcan {neighbors graph} from))))
-         (setf from (set-difference next seen))
-         (setf seen (union next seen))))
-    (reverse seen)))
+  (topological-mapcar #'identity graph node))
 
 (defgeneric connectedp (graph)
   (:documentation "Return true if the graph is connected."))

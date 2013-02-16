@@ -39,6 +39,18 @@
                            (:bar :baz)))))
   (:teardown (setf *graph* nil)))
 
+(defixture line
+  (:setup (setf *graph*
+                (populate (make-instance 'graph)
+                  :nodes '(a b c d e f g)
+                  :edges '((a b)
+                           (b c)
+                           (c d)
+                           (d e)
+                           (e f)
+                           (f g)))))
+  (:teardown (setf *graph* nil)))
+
 (defixture less-small-graph
   (:setup (setf *graph*
                 (populate (make-instance 'graph)
@@ -222,6 +234,14 @@
   (with-fixture normal-graph
     (is (set-equal (neighbors (digraph-of *graph*) 'e)
                    '(C F)))))
+
+(deftest topo-maps-of-graph ()
+  (with-fixture line
+    (is (tree-equal (topological-mapcar #'identity *graph* 'g)
+                    '(G F E D C B A))))
+  (with-fixture normal-graph
+    (is (tree-equal (topological-mapcar #'identity (digraph-of *graph*) 'a)
+                    '(A B C D E F)))))
 
 (deftest conected-component-of-e-on-digraph ()
   (with-fixture normal-graph
