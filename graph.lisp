@@ -854,6 +854,36 @@ Optionally assign edge values from those listed in EDGE-VALS."))
       (mapc (lambda (n) (save-edge n (aref connections (random degree-sum)))) nodes)
       (edges-w-values graph))))
 
+(defgeneric erdos-renyi-populate (graph m)
+  (:documentation
+   "Populate GRAPH with M edges in an Erdős–Rényi random graph model."))
+
+(defmethod erdos-renyi-populate ((graph graph) m)
+  (let ((nodes (nodes graph)))
+    (loop :until (= m 0) :do
+       (let ((a (random-elt nodes))
+             (b (random-elt nodes)))
+         (unless (or (= a b) (has-edge-p graph (list a b)))
+           (add-edge graph (list a b))
+           (decf m)))))
+  graph)
+
+(defun erdos-renyi-graph (n m)
+  "Return an Erdős–Rényi graph with N nodes and M edges."
+  (assert (and (not (< m 0)) (< m (/ (* n (1- n)) 2))) (n m)
+          "an ~S-node graph can not have ~S edges" n m)
+  (erdos-renyi-populate (populate (make-instance 'graph)
+                          :nodes (loop :for i :below n :collect i))
+                        m))
+
+(defun erdos-renyi-digraph (n m)
+  "Return an Erdős–Rényi digraph with N nodes and M edges."
+  (assert (and (not (< m 0)) (< m (* n (1- n)))) (n m)
+          "an ~S-node digraph can not have ~S edges" n m)
+  (erdos-renyi-populate (populate (make-instance 'digraph)
+                          :nodes (loop :for i :below n :collect i))
+                        m))
+
 
 ;;; Centrality
 (defgeneric farness (graph node)

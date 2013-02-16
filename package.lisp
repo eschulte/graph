@@ -54,6 +54,9 @@
    :min-cut
    ;; Random Graph generation
    :preferential-attachment-populate
+   :erdos-renyi-populate
+   :erdos-renyi-graph
+   :erdos-renyi-digraph
    ;; Centrality
    :farness
    :closeness

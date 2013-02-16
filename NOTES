@@ -24,5 +24,9 @@ http://en.wikipedia.org/wiki/Assortativity
 
 Should take an optional :key function which defaults to node degree.
 
-** TODO a random graph generator
+** TODO a random graph generators [1/2]
 http://en.wikipedia.org/wiki/Random_graph
+
+Both of the following types of random graphs
+- [ ] [[http://en.wikipedia.org/wiki/Edgar_Gilbert][Edgar_Gilbert]]
+- [X] [[http://en.wikipedia.org/wiki/Erd%C5%91s%E2%80%93R%C3%A9nyi_model][Erdos-Renyi]]
