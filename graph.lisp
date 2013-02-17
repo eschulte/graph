@@ -880,10 +880,13 @@ Optionally assign edge values from those listed in EDGE-VALS."))
    "Populate GRAPH with M edges in an Erdős–Rényi random graph model."))
 
 (defmethod erdos-renyi-populate ((graph graph) m)
-  (let ((nodes (nodes graph)))
+  (let* ((nodes (coerce (nodes graph) 'vector))
+         (num (length nodes)))
     (loop :until (= m 0) :do
-       (let ((a (random-elt nodes))
-             (b (random-elt nodes)))
+       ;; NOTE: this naive approach will slow down drastically for
+       ;;       large nearly complete graphs
+       (let ((a (aref nodes (random num)))
+             (b (aref nodes (random num))))
          (unless (or (= a b) (has-edge-p graph (list a b)))
            (add-edge graph (list a b))
            (decf m)))))

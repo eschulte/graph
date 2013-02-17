@@ -385,6 +385,14 @@
     (is (= many (length (nodes graph))))
     (is (= (1- many) (length (edges graph))))))
 
+(deftest test-erdos-renyi-graphs ()
+  (let ((g (erdos-renyi-graph 8 16)))
+    (is (= 8  (length (nodes g))))
+    (is (= 16 (length (edges g)))))
+  (let ((dg (erdos-renyi-digraph 3 5)))
+    (is (= 3 (length (nodes dg))))
+    (is (= 5 (length (edges dg))))))
+
 (deftest farness-of-s-in-network ()
   (with-fixture small-network
     (is (= 4 (farness *network* :s)))))
