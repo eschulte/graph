@@ -394,7 +394,7 @@
     (is (= 1 (betweenness *star* :s)))
     (is (= 0 (betweenness *star* :a)))))
 
-(deftest conversion-to-adjacency-matrix ()
+(deftest conversion-to-adjacency-and-value-matrix ()
   (flet ((sum (array)
            (let ((dims (array-dimensions array)))
              (reduce #'+
@@ -419,12 +419,17 @@
              (sum #2A((0 1 0 1)
                       (0 0 0 1)
                       (1 1 0 0)
-                      (0 0 0 0))))))))
+                      (0 0 0 0)))))
+      (is (= (sum (to-value-matrix *network*))
+             (reduce #'+ (mapcar #'cdr (edges-w-values *network*))))))
+    (with-fixture halfs
+      (is (= (sum (to-value-matrix *halfs*))
+             (reduce #'+ (mapcar #'cdr (edges-w-values *halfs*))))))))
 
-(deftest conversion-from-adjacency-matrix ()
-  (is (set-equal (edges-w-values (from-adjacency-matrix (make-instance 'graph)
-                                                        #2A((nil 1 nil)
-                                                            (nil nil 2)
-                                                            (nil nil nil))))
+(deftest conversion-from-value-matrix ()
+  (is (set-equal (edges-w-values (from-value-matrix (make-instance 'graph)
+                                                    #2A((nil 1 nil)
+                                                        (nil nil 2)
+                                                        (nil nil nil))))
                  '(((1 2) . 2) ((0 1) . 1))
                  :test 'equalp)))
