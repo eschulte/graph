@@ -40,6 +40,7 @@
    :connected-component
    :connectedp
    :connected-components
+   :topological-sort
    ;; Cycles and strongly connected components
    :strongly-connected-components
    :basic-cycles

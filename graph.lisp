@@ -10,7 +10,7 @@
 ;; hash is keyed by node and holds the edges containing that node,
 ;; while the edge hash is keyed by edge containing any optional edge
 ;; value.
-;; 
+;;
 ;;                              Nodes                  Edges
 ;;                             -------                -------
 ;;     +----Graph G-----+     key |  value             key | value
@@ -581,6 +581,27 @@ EDGE2 will be combined."))
          (push cc ccs)))
     ccs))
 
+(defgeneric topological-sort (digraph)
+  (:documentation
+   "Returns a topologically ordered list of the nodes in DIGRAPH."))
+
+(defmethod topological-sort (digraph)
+  (assert (null (basic-cycles digraph)) (digraph)
+          "~S has a cycle so no topological sort is possible" digraph)
+  (let ((index (make-hash-table))
+        stack)
+    (labels ((visit (node)
+               (mapc (lambda (neighbor)
+                       (unless (gethash neighbor index)
+                         (visit neighbor)))
+                     (neighbors digraph node))
+               ;; mark this node
+               (setf (gethash node index) 1)
+               (push node stack)))
+      (mapc (lambda (node) (unless (gethash node index) (visit node)))
+            (nodes digraph)))
+    stack))
+
 
 ;;; Cycles and strongly connected components
 (defgeneric strongly-connected-components (graph)
@@ -978,24 +999,3 @@ the `cdr' holds the nodes in the ordering."))
 (defmethod k-cores ((graph graph))
   (multiple-value-bind (k cores) (degeneracy graph)
     (declare (ignorable k)) cores))
-
-(defgeneric topological-sort (digraph)
-  (:documentation "Returns a topologically ordered list of the nodes in DIGRAPH.")) 
-
-(defmethod topological-sort (digraph)
-  (assert (null (basic-cycles digraph)) (digraph)
-          "~S has a cycle so no topological sort is possible" digraph)
-  (let ((index (make-hash-table))
-        stack)
-    (labels ((visit (node)
-               (mapc (lambda (neighbor)
-                       (unless (gethash neighbor index)
-                         (visit neighbor)))
-                     (neighbors digraph node))
-             ;; mark this node
-             (setf (gethash node index) 1)
-             (push node stack)))
-    (mapc (lambda (node) (unless (gethash node index) (visit node)))
-          (nodes digraph)))
-    stack))
-
