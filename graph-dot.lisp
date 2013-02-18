@@ -25,10 +25,17 @@
         (format nil " [label=\"~a\"];~%" (funcall edge-label edge))
         ";")))
 
-(defun node-to-dot (node &optional node-label)
-  (if node-label
-      (format nil "  \"~a\" [label=\"~a\"];~%" node (funcall node-label node))
-      (format nil "  \"~a\";" node)))
+(defun node-to-dot (node &optional node-label node-color)
+  (cond
+    ((and node-label (not node-color))
+     (format nil "  \"~a\" [label=\"~a\"];~%" node (funcall node-label node)))
+    ((and nodel-label node-color)
+     (format nil "  \"~a\" [label=\"~a\"] [fillcolor=\"~a\"];~%"
+             node (funcall node-label node) (funcall node-color node)))
+    ((and (not node-label) node-color)
+     (format nil "  \"~a\" [fillcolor=\"~a\"];~%"
+             node (funcall node-color node)))
+    (t (format nil "  \"~a\";" node))))
 
 (defgeneric to-dot (graph &key stream node-label edge-label)
   (:documentation "Print the dot code representing GRAPH.
