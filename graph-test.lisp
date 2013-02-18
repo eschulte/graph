@@ -273,6 +273,14 @@
                           (position (cadr x) s))
                    (return t))))))))
 
+(deftest levels-with-digraph ()
+  (with-fixture digraph
+    (let ((l (levels *digraph*)))
+      (is (not (dolist (x (edges *digraph*))
+                 (when (> (gethash (car x) l)
+                          (gethash (cadr x) l))
+                   (return t))))))))
+
 (deftest basic-cycles-of-small-graph ()
   (with-fixture small-graph
     (is (set-equal (basic-cycles *graph*)

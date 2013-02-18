@@ -605,6 +605,34 @@ EDGE2 will be combined."))
     stack))
 
 
+(defgeneric levels (digraph &key alist)
+  (:documentation "Assign a positive integer to each node in DIGRAPH,
+called its level, where, for each directed edge (a b) the
+corresponding integers satisfy a < b. Returns either a hash table
+where the nodes are keys and the levels are values, or an association
+list of nodes and their levels."))
+
+(defmethod levels (digraph &key alist)
+  (let ((longest (make-hash-table))
+        ret)
+    (dolist (x (topological-sort digraph))
+      (let ((max-val 0)
+            (incoming (precedents digraph x)))
+        (if incoming
+            (progn
+              (dolist (y incoming)
+                (when (> (gethash y longest) max-val)
+                  (setf max-val (gethash y longest))))
+              (setf (gethash x longest) (+ 1 max-val)))
+            (setf (gethash x longest) max-val))))
+    (if alist
+        (progn
+          (maphash (lambda (k v)
+                     (push (cons k v) ret))
+                   longest)
+          (nreverse ret))
+        longest)))
+
 ;;; Cycles and strongly connected components
 (defgeneric strongly-connected-components (graph)
   (:documentation

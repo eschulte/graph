@@ -41,6 +41,7 @@
    :connectedp
    :connected-components
    :topological-sort
+   :levels
    ;; Cycles and strongly connected components
    :strongly-connected-components
    :basic-cycles
