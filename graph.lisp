@@ -583,7 +583,9 @@ EDGE2 will be combined."))
 
 (defgeneric topological-sort (digraph)
   (:documentation
-   "Returns a topologically ordered list of the nodes in DIGRAPH."))
+   "Returns a topologically ordered list of the nodes in DIGRAPH, such
+   that, for each edge in DIGRAPH, the start of the edge appears in the
+   list before the end of the edge."))
 
 (defmethod topological-sort (digraph)
   (assert (null (basic-cycles digraph)) (digraph)

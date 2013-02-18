@@ -265,6 +265,14 @@
                    '((:QUX) (:BAR :BAZ :FOO))
                    :test #'set-equal))))
 
+(deftest topological-sort-with-digraph ()
+  (with-fixture digraph
+    (let ((s (topological-sort *digraph*)))
+      (is (not (dolist (x (edges *digraph*))
+                 (when (> (position (car x) s)
+                          (position (cadr x) s))
+                   (return t))))))))
+
 (deftest basic-cycles-of-small-graph ()
   (with-fixture small-graph
     (is (set-equal (basic-cycles *graph*)
