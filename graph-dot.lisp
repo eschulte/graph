@@ -29,34 +29,39 @@
   (cond
     ((and node-label (not node-color))
      (format nil "  \"~a\" [label=\"~a\"];~%" node (funcall node-label node)))
-    ((and nodel-label node-color)
-     (format nil "  \"~a\" [label=\"~a\"] [fillcolor=\"~a\"];~%"
+    ((and node-label node-color)
+     (format nil "  \"~a\" [label=\"~a\"] [style=\"filled\"] [fillcolor=\"~a\"];~%"
              node (funcall node-label node) (funcall node-color node)))
     ((and (not node-label) node-color)
-     (format nil "  \"~a\" [fillcolor=\"~a\"];~%"
+     (format nil "  \"~a\" [style=\"filled\"] [fillcolor=\"~a\"];~%"
              node (funcall node-color node)))
     (t (format nil "  \"~a\";" node))))
 
-(defgeneric to-dot (graph &key stream node-label edge-label)
-  (:documentation "Print the dot code representing GRAPH.
-Keyword arguments NODE-LABEL and EDGE-LABEL may provide functions
-which when called on a node or edge return a label for that element of
-the dot graph."))
+(defgeneric to-dot (graph &key stream node-label edge-label node-color)
+  (:documentation "Print the dot code representing GRAPH. Keyword
+arguments NODE-LABEL and EDGE-LABEL may provide functions which when
+called on a node or edge return a label for that element of the dot
+graph. NODE-COLOR expects a function that when called on a node
+returns a color that will be used to fill the node."))
 
 (defmethod to-dot ((graph graph)
-                   &key (stream t) node-label (edge-label {edge-value graph}))
+                   &key (stream t) node-label (edge-label {edge-value graph})
+                     node-color)
   (format stream "~a to_dot {~%" (intern (string-downcase (type-of graph))))
-  (mapc [{format stream "~a"} {node-to-dot _ node-label}] (nodes graph))
+  (mapc [{format stream "~a"} {node-to-dot _ node-label node-color}]
+        (nodes graph))
   (mapc [{format stream "~a"} {edge-to-dot _ (type-of graph) edge-label}]
         (edges graph))
   (format stream "}~%"))
 
-(defgeneric to-dot-file (graph path &key node-label edge-label)
+(defgeneric to-dot-file (graph path &key node-label edge-label node-color)
   (:documentation "Write a dot representation of GRAPH to PATH."))
 
-(defmethod to-dot-file ((graph graph) path &key node-label edge-label)
+(defmethod to-dot-file
+    ((graph graph) path &key node-label edge-label node-color)
   (with-open-file (out path :direction :output :if-exists :supersede)
-    (to-dot graph :stream out :node-label node-label :edge-label edge-label)))
+    (to-dot graph :stream out :node-label node-label
+            :edge-label edge-label :node-color node-color)))
 
 (defun from-dot (dot-string)
   "Parse the DOT format string DOT-STRING into a graph.
