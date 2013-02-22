@@ -610,11 +610,13 @@ EDGE2 will be combined."))
 called its level, where, for each directed edge (a b) the
 corresponding integers satisfy a < b. Returns either a hash table
 where the nodes are keys and the levels are values, or an association
-list of nodes and their levels."))
+list of nodes and their levels, along with the number of levels in
+DIGRAPH."))
 
 (defmethod levels (digraph &key alist)
   (let ((longest (make-hash-table))
-        ret)
+        ret
+        (max-levels 0))
     (dolist (x (topological-sort digraph))
       (let ((max-val 0)
             (incoming (precedents digraph x)))
@@ -623,15 +625,17 @@ list of nodes and their levels."))
               (dolist (y incoming)
                 (when (> (gethash y longest) max-val)
                   (setf max-val (gethash y longest))))
-              (setf (gethash x longest) (+ 1 max-val)))
+              (setf (gethash x longest) (+ 1 max-val))
+              (and (> (+ 1 max-val) max-levels)
+                   (setf max-levels (+ 1 max-val))))
             (setf (gethash x longest) max-val))))
     (if alist
         (progn
           (maphash (lambda (k v)
                      (push (cons k v) ret))
                    longest)
-          (nreverse ret))
-        longest)))
+          (values (nreverse ret) (+ 1 max-levels)))
+        (values longest (+ 1 max-levels)))))
 
 ;;; Cycles and strongly connected components
 (defgeneric strongly-connected-components (graph)
