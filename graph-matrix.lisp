@@ -25,7 +25,8 @@ The result is a `gsll' array."))
             (nodes graph))
       (let ((matrix (grid:make-foreign-array
                      '(unsigned-byte 8)
-                     :dimensions (list (1+ counter) (1+ counter)))))
+                     :dimensions (list (1+ counter) (1+ counter))
+                     :initial-element 0)))
         (mapc (lambda-bind ((a b))
                 (setf (grid:aref matrix
                                  (gethash a node-index-hash)
