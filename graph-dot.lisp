@@ -25,17 +25,15 @@
         (format nil " [label=\"~a\"];~%" (funcall edge-label edge))
         ";")))
 
-(defun node-to-dot (node &optional node-label node-color)
-  (cond
-    ((and node-label (not node-color))
-     (format nil "  \"~a\" [label=\"~a\"];~%" node (funcall node-label node)))
-    ((and node-label node-color)
-     (format nil "  \"~a\" [label=\"~a\"] [style=\"filled\"] [fillcolor=\"~a\"];~%"
-             node (funcall node-label node) (funcall node-color node)))
-    ((and (not node-label) node-color)
-     (format nil "  \"~a\" [style=\"filled\"] [fillcolor=\"~a\"];~%"
-             node (funcall node-color node)))
-    (t (format nil "  \"~a\";" node))))
+(defun node-to-dot (node &optional
+                           (node-label (constantly nil))
+                           (node-color (constantly nil)))
+  (flet ((wrap (val wrapper) (if val (format nil wrapper val) "")))
+    (concatenate 'string
+      "  \"" node "\""
+      (wrap (funcall node-label node) " [label=\"~a\"]")
+      (wrap (funcall node-color node) " [style=\"filled\"] [fillcolor=\"~a\"]")
+      ";" (list #\Newline))))
 
 (defgeneric to-dot (graph &key stream node-label edge-label node-color)
   (:documentation "Print the dot code representing GRAPH. Keyword
