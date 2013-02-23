@@ -17,23 +17,24 @@
 
 ;;; Visualization
 (defun edge-to-dot (edge type &optional edge-label)
-  (concatenate 'string
-    (case type
-      (graph   (apply #'format nil "  \"~a\" -- \"~a\"" edge))
-      (digraph (apply #'format nil "  \"~a\" -> \"~a\"" edge)))
-    (if edge-label
-        (format nil " [label=\"~a\"];~%" (funcall edge-label edge))
-        ";")))
+  (flet ((wrp (val wrapper) (if val (format nil wrapper val) "")))
+    (let ((edge-label (or edge-label (constantly nil))))
+      (concatenate 'string
+        (case type
+          (graph   (apply #'format nil "  \"~a\" -- \"~a\"" edge))
+          (digraph (apply #'format nil "  \"~a\" -> \"~a\"" edge)))
+        (wrp (funcall edge-label edge) " [label=\"~a\"]")
+        ";" (list #\Newline)))))
 
-(defun node-to-dot (node &optional
-                           (node-label (constantly nil))
-                           (node-color (constantly nil)))
-  (flet ((wrap (val wrapper) (if val (format nil wrapper val) "")))
-    (concatenate 'string
-      "  \"" node "\""
-      (wrap (funcall node-label node) " [label=\"~a\"]")
-      (wrap (funcall node-color node) " [style=\"filled\"] [fillcolor=\"~a\"]")
-      ";" (list #\Newline))))
+(defun node-to-dot (node &optional node-label node-color)
+  (flet ((wrp (val wrapper) (if val (format nil wrapper val) "")))
+    (let ((node-label (or node-label (constantly nil)))
+          (node-color (or node-color (constantly nil))))
+      (concatenate 'string
+        (format nil "  \"~a\"" node)
+        (wrp (funcall node-label node) " [label=\"~a\"]")
+        (wrp (funcall node-color node) " [style=\"filled\"] [fillcolor=\"~a\"]")
+        ";" (list #\Newline)))))
 
 (defgeneric to-dot (graph &key stream node-label edge-label node-color)
   (:documentation "Print the dot code representing GRAPH. Keyword
