@@ -46,6 +46,7 @@
    :strongly-connected-components
    :basic-cycles
    :cycles
+   :minimum-spanning-tree
    ;; Shortest Path
    :shortest-path
    ;; Max Flow

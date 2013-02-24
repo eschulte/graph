@@ -720,6 +720,27 @@ Uses Tarjan's algorithm."))
                (remove-if-not {intersection cycle} basic-cycles)))
       cycles)))
 
+(defgeneric minimum-spanning-tree (graph)
+  (:documentation "Return a minimum spanning tree of GRAPH.
+Prim's algorithm is used."))
+
+(defmethod minimum-spanning-tree ((graph graph))
+  (assert (connectedp graph) (graph) "~S is not connected" graph)
+  (let ((copy (copy graph))
+        (tree (populate (make-instance 'graph)
+                :nodes (list (random-elt (nodes graph)))))
+        (total-nodes (length (nodes graph))))
+    (loop :until (= (length (nodes tree)) total-nodes) :do
+       (let ((e (car (sort
+                      (remove-if-not
+                       {intersection (set-difference (nodes copy) (nodes tree))}
+                       (mapcan {node-edges copy} (nodes tree)))
+                      #'< :key {edge-value copy}))))
+         (when e
+           (add-edge tree e (edge-value graph e))
+           (delete-edge copy e))))
+    tree))
+
 
 ;;; Shortest Path
 (defgeneric shortest-path (graph a b)

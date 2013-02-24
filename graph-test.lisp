@@ -309,6 +309,12 @@
   (with-fixture digraph
     (is (null (cycles *digraph*)))))
 
+(deftest minimum-spanning-tree-on-a-network ()
+  (with-fixture small-network
+    (is (= (reduce #'+ (mapcar {edge-value *network*}
+                               (edges (minimum-spanning-tree *network*))))
+           4))))
+
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
     (is (tree-equal (shortest-path (digraph-of *graph*) :foo :baz)
