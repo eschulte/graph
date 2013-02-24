@@ -12,7 +12,8 @@
    :to-plist
    :from-plist
    :to-adjacency-matrix
-   :from-adjacency-matrix
+   :to-value-matrix
+   :from-value-matrix
    ;; Simple Graph Methods
    :edges
    :edges-w-values
@@ -39,10 +40,13 @@
    :connected-component
    :connectedp
    :connected-components
+   :topological-sort
+   :levels
    ;; Cycles and strongly connected components
    :strongly-connected-components
    :basic-cycles
    :cycles
+   :minimum-spanning-tree
    ;; Shortest Path
    :shortest-path
    ;; Max Flow
@@ -53,6 +57,9 @@
    :min-cut
    ;; Random Graph generation
    :preferential-attachment-populate
+   :erdos-renyi-populate
+   :erdos-renyi-graph
+   :erdos-renyi-digraph
    ;; Centrality
    :farness
    :closeness

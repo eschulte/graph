@@ -1,6 +1,6 @@
 ;;; graph.lisp --- because its easier to write than to learn such a library
 
-;; Copyright (C) Eric Schulte 2012-2013
+;; Copyright (C) Eric Schulte and Thomas Dye 2012-2013
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
@@ -10,7 +10,7 @@
 ;; hash is keyed by node and holds the edges containing that node,
 ;; while the edge hash is keyed by edge containing any optional edge
 ;; value.
-;; 
+;;
 ;;                              Nodes                  Edges
 ;;                             -------                -------
 ;;     +----Graph G-----+     key |  value             key | value
@@ -282,6 +282,24 @@ to a new equality test specified with TEST."
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
     (let ((matrix (make-array (list (1+ counter) (1+ counter))
+                              :initial-element 0)))
+      (mapc (lambda-bind ((a b))
+              (setf (aref matrix
+                          (gethash a node-index-hash)
+                          (gethash b node-index-hash))
+                    1))
+            (edges graph))
+      matrix)))
+
+(defgeneric to-value-matrix (graph)
+  (:documentation "Return the value matrix of GRAPH."))
+
+(defmethod to-value-matrix ((graph graph))
+  (let ((node-index-hash (make-hash-table))
+        (counter -1))
+    (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
+          (nodes graph))
+    (let ((matrix (make-array (list (1+ counter) (1+ counter))
                               :initial-element nil)))
       (mapc (lambda-bind (((a b) . value))
               (setf (aref matrix
@@ -291,12 +309,12 @@ to a new equality test specified with TEST."
             (edges-w-values graph))
       matrix)))
 
-(defgeneric from-adjacency-matrix (graph matrix)
-  (:documentation "Populate GRAPH from the adjacency matrix MATRIX."))
+(defgeneric from-value-matrix (graph matrix)
+  (:documentation "Populate GRAPH from the value matrix MATRIX."))
 
-(defmethod from-adjacency-matrix ((graph graph) matrix)
+(defmethod from-value-matrix ((graph graph) matrix)
   (bind (((as bs) (array-dimensions matrix)))
-    (assert (= as bs) (matrix) "Adjacency matrix ~S must be square." matrix)
+    (assert (= as bs) (matrix) "Value matrix ~S must be square." matrix)
     (loop :for a :below as :do
        (loop :for b :below bs :do
           (when (aref matrix a b)
@@ -563,6 +581,61 @@ EDGE2 will be combined."))
          (push cc ccs)))
     ccs))
 
+(defgeneric topological-sort (digraph)
+  (:documentation
+   "Returns a topologically ordered list of the nodes in DIGRAPH, such
+   that, for each edge in DIGRAPH, the start of the edge appears in the
+   list before the end of the edge."))
+
+(defmethod topological-sort (digraph)
+  (assert (null (basic-cycles digraph)) (digraph)
+          "~S has a cycle so no topological sort is possible" digraph)
+  (let ((index (make-hash-table))
+        stack)
+    (labels ((visit (node)
+               (mapc (lambda (neighbor)
+                       (unless (gethash neighbor index)
+                         (visit neighbor)))
+                     (neighbors digraph node))
+               ;; mark this node
+               (setf (gethash node index) 1)
+               (push node stack)))
+      (mapc (lambda (node) (unless (gethash node index) (visit node)))
+            (nodes digraph)))
+    stack))
+
+(defgeneric levels (digraph &key alist)
+  (:documentation "Assign a positive integer to each node in DIGRAPH,
+called its level, where, for each directed edge (a b) the
+corresponding integers satisfy a < b. Returns either a hash table
+where the nodes are keys and the levels are values, or an association
+list of nodes and their levels, along with the number of levels in
+DIGRAPH."))
+
+(defmethod levels (digraph &key alist)
+  (let ((longest (make-hash-table))
+        ret
+        (max-levels 0))
+    (dolist (x (topological-sort digraph))
+      (let ((max-val 0)
+            (incoming (precedents digraph x)))
+        (if incoming
+            (progn
+              (dolist (y incoming)
+                (when (> (gethash y longest) max-val)
+                  (setf max-val (gethash y longest))))
+              (setf (gethash x longest) (+ 1 max-val))
+              (and (> (+ 1 max-val) max-levels)
+                   (setf max-levels (+ 1 max-val))))
+            (setf (gethash x longest) max-val))))
+    (if alist
+        (progn
+          (maphash (lambda (k v)
+                     (push (cons k v) ret))
+                   longest)
+          (values (nreverse ret) (+ 1 max-levels)))
+        (values longest (+ 1 max-levels)))))
+
 
 ;;; Cycles and strongly connected components
 (defgeneric strongly-connected-components (graph)
@@ -610,7 +683,9 @@ Uses Tarjan's algorithm."))
                (push node seen)
                (dolist (edge (node-edges graph node))
                  (unless (member edge used-edges :test (edge-eq graph))
-                   (dolist (neighbor (remove node edge))
+                   (dolist (neighbor (case (type-of graph)
+                                       (graph   (remove node edge))
+                                       (digraph (cdr (member node edge)))))
                      (cond ((member neighbor path)
                             (push (subseq path 0 (1+ (position neighbor path)))
                                   cycles))
@@ -639,12 +714,32 @@ Uses Tarjan's algorithm."))
                         acc))
                      c2 :initial-value nil))))
     (let ((basic-cycles (basic-cycles graph)) cycles)
-      (loop :for cycle = (pop basic-cycles) :do
+      (loop :for cycle = (pop basic-cycles) :while cycle :do
          (push cycle cycles)
          (mapc (lambda (c) (push (combine c cycle) cycles))
-               (remove-if-not {intersection cycle} basic-cycles))
-         :until (null basic-cycles))
+               (remove-if-not {intersection cycle} basic-cycles)))
       cycles)))
+
+(defgeneric minimum-spanning-tree (graph)
+  (:documentation "Return a minimum spanning tree of GRAPH.
+Prim's algorithm is used."))
+
+(defmethod minimum-spanning-tree ((graph graph))
+  (assert (connectedp graph) (graph) "~S is not connected" graph)
+  (let ((copy (copy graph))
+        (tree (populate (make-instance 'graph)
+                :nodes (list (random-elt (nodes graph)))))
+        (total-nodes (length (nodes graph))))
+    (loop :until (= (length (nodes tree)) total-nodes) :do
+       (let ((e (car (sort
+                      (remove-if-not
+                       {intersection (set-difference (nodes copy) (nodes tree))}
+                       (mapcan {node-edges copy} (nodes tree)))
+                      #'< :key {edge-value copy}))))
+         (when e
+           (add-edge tree e (edge-value graph e))
+           (delete-edge copy e))))
+    tree))
 
 
 ;;; Shortest Path
@@ -834,6 +929,39 @@ Optionally assign edge values from those listed in EDGE-VALS."))
         (save-edge (pop nodes) (pop nodes)))
       (mapc (lambda (n) (save-edge n (aref connections (random degree-sum)))) nodes)
       (edges-w-values graph))))
+
+(defgeneric erdos-renyi-populate (graph m)
+  (:documentation
+   "Populate GRAPH with M edges in an Erdős–Rényi random graph model."))
+
+(defmethod erdos-renyi-populate ((graph graph) m)
+  (let* ((nodes (coerce (nodes graph) 'vector))
+         (num (length nodes)))
+    (loop :until (= m 0) :do
+       ;; NOTE: this naive approach will slow down drastically for
+       ;;       large nearly complete graphs
+       (let ((a (aref nodes (random num)))
+             (b (aref nodes (random num))))
+         (unless (or (= a b) (has-edge-p graph (list a b)))
+           (add-edge graph (list a b))
+           (decf m)))))
+  graph)
+
+(defun erdos-renyi-graph (n m)
+  "Return an Erdős–Rényi graph with N nodes and M edges."
+  (assert (and (not (< m 0)) (< m (/ (* n (1- n)) 2))) (n m)
+          "an ~S-node graph can not have ~S edges" n m)
+  (erdos-renyi-populate (populate (make-instance 'graph)
+                          :nodes (loop :for i :below n :collect i))
+                        m))
+
+(defun erdos-renyi-digraph (n m)
+  "Return an Erdős–Rényi digraph with N nodes and M edges."
+  (assert (and (not (< m 0)) (< m (* n (1- n)))) (n m)
+          "an ~S-node digraph can not have ~S edges" n m)
+  (erdos-renyi-populate (populate (make-instance 'digraph)
+                          :nodes (loop :for i :below n :collect i))
+                        m))
 
 
 ;;; Centrality

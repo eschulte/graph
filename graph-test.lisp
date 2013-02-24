@@ -21,6 +21,9 @@
 (defvar *cycle* nil
   "Variable for use in graph tests.")
 
+(defvar *digraph* nil
+  "Digraph for use in graph tests.")
+
 (defvar *halfs* nil
   "Variable for use in graph tests.")
 
@@ -86,6 +89,18 @@
                     ((:b :t) . 2)
                     ((:t :s) . 2)))))
   (:teardown (setf *cycle* nil)))
+
+(defixture digraph
+  (:setup (setf *digraph*
+                (populate (make-instance 'digraph)
+                  :nodes '(a b c d e f g)
+                  :edges-w-values
+                  '(((a b) . 3)
+                    ((b d) . 1)
+                    ((b c) . 2)
+                    ((c e) . 1)
+                    ((d e) . 2)
+                    ((e f) . 3))))))
 
 (defixture halfs
   (:setup (setf *halfs*
@@ -250,6 +265,22 @@
                    '((:QUX) (:BAR :BAZ :FOO))
                    :test #'set-equal))))
 
+(deftest topological-sort-with-digraph ()
+  (with-fixture digraph
+    (let ((s (topological-sort *digraph*)))
+      (is (not (dolist (x (edges *digraph*))
+                 (when (> (position (car x) s)
+                          (position (cadr x) s))
+                   (return t))))))))
+
+(deftest levels-with-digraph ()
+  (with-fixture digraph
+    (let ((l (levels *digraph*)))
+      (is (not (dolist (x (edges *digraph*))
+                 (when (> (gethash (car x) l)
+                          (gethash (cadr x) l))
+                   (return t))))))))
+
 (deftest basic-cycles-of-small-graph ()
   (with-fixture small-graph
     (is (set-equal (basic-cycles *graph*)
@@ -273,6 +304,16 @@
     (is (set-equal (cycles *graph*)
                    '((D C E) (D C B F E) (C B F E))
                    :test #'set-equal))))
+
+(deftest cycles-of-a-digraph ()
+  (with-fixture digraph
+    (is (null (cycles *digraph*)))))
+
+(deftest minimum-spanning-tree-on-a-network ()
+  (with-fixture small-network
+    (is (= (reduce #'+ (mapcar {edge-value *network*}
+                               (edges (minimum-spanning-tree *network*))))
+           4))))
 
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
@@ -366,6 +407,14 @@
     (is (= many (length (nodes graph))))
     (is (= (1- many) (length (edges graph))))))
 
+(deftest test-erdos-renyi-graphs ()
+  (let ((g (erdos-renyi-graph 8 16)))
+    (is (= 8  (length (nodes g))))
+    (is (= 16 (length (edges g)))))
+  (let ((dg (erdos-renyi-digraph 3 5)))
+    (is (= 3 (length (nodes dg))))
+    (is (= 5 (length (edges dg))))))
+
 (deftest farness-of-s-in-network ()
   (with-fixture small-network
     (is (= 4 (farness *network* :s)))))
@@ -375,7 +424,7 @@
     (is (= 1 (betweenness *star* :s)))
     (is (= 0 (betweenness *star* :a)))))
 
-(deftest conversion-to-adjacency-matrix ()
+(deftest conversion-to-adjacency-and-value-matrix ()
   (flet ((sum (array)
            (let ((dims (array-dimensions array)))
              (reduce #'+
@@ -389,23 +438,28 @@
                                        (t             1))))))))))
     (with-fixture normal-graph
       (is (= (sum (to-adjacency-matrix *graph*))
-             (sum #2A((nil T   nil nil nil nil)
-                      (nil nil T   nil nil nil)
-                      (nil nil nil T   nil nil)
-                      (nil nil nil nil T   nil)
-                      (nil nil T   nil nil T)
-                      (nil T   nil nil nil nil))))))
+             (sum #2A((0 1 0 0 0 0)
+                      (0 0 1 0 0 0)
+                      (0 0 0 1 0 0)
+                      (0 0 0 0 1 0)
+                      (0 0 1 0 0 1)
+                      (0 1 0 0 0 0))))))
     (with-fixture small-network
       (is (= (sum (to-adjacency-matrix *network*))
-             (sum #2A((nil 1   nil 4)
-                      (nil nil nil 2)
-                      (2   1   nil nil)
-                      (nil nil nil nil))))))))
+             (sum #2A((0 1 0 1)
+                      (0 0 0 1)
+                      (1 1 0 0)
+                      (0 0 0 0)))))
+      (is (= (sum (to-value-matrix *network*))
+             (reduce #'+ (mapcar #'cdr (edges-w-values *network*))))))
+    (with-fixture halfs
+      (is (= (sum (to-value-matrix *halfs*))
+             (reduce #'+ (mapcar #'cdr (edges-w-values *halfs*))))))))
 
-(deftest conversion-from-adjacency-matrix ()
-  (is (set-equal (edges-w-values (from-adjacency-matrix (make-instance 'graph)
-                                                        #2A((nil 1 nil)
-                                                            (nil nil 2)
-                                                            (nil nil nil))))
+(deftest conversion-from-value-matrix ()
+  (is (set-equal (edges-w-values (from-value-matrix (make-instance 'graph)
+                                                    #2A((nil 1 nil)
+                                                        (nil nil 2)
+                                                        (nil nil nil))))
                  '(((1 2) . 2) ((0 1) . 1))
                  :test 'equalp)))
