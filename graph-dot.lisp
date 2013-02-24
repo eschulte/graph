@@ -1,6 +1,6 @@
 ;;; graph-dot.lisp --- serialize graphs to and from DOT format
 
-;; Copyright (C) Eric Schulte 2013
+;; Copyright (C) Eric Schulte and Thomas Dye 2013
 
 ;; Licensed under the Gnu Public License Version 3 or later
 
