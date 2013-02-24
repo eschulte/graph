@@ -84,13 +84,14 @@ dot executable.
 
 <!-- Entry for TO-DOT -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream node-label edge-label stream edge-label</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream node-label edge-label color-scheme node-fill-color node-color node-font-color stream edge-label</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
-Print the dot code representing GRAPH.
-Keyword arguments NODE-LABEL and EDGE-LABEL may provide functions
-which when called on a node or edge return a label for that element of
-the dot graph.
+Print the dot code representing GRAPH. Keyword
+arguments NODE-LABEL and EDGE-LABEL may provide functions which when
+called on a node or edge return a label for that element of the dot
+graph. NODE-FILL-COLOR expects a function that when called on a node
+returns a color that will be used to fill the node.
 
 
 
@@ -102,7 +103,7 @@ the dot graph.
 
 <!-- Entry for TO-DOT-FILE -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> node-label edge-label</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> node-label edge-label color-scheme node-fill-color node-color node-font-color</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write a dot representation of GRAPH to PATH.

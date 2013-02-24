@@ -77,9 +77,12 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#edge-value"><code>edge-value</code></a></li>
       <li><a href="#edges"><code>edges</code></a></li>
       <li><a href="#edges-w-values"><code>edges-w-values</code></a></li>
+      <li><a href="#erdos-renyi-digraph"><code>erdos-renyi-digraph</code></a></li>
+      <li><a href="#erdos-renyi-graph"><code>erdos-renyi-graph</code></a></li>
+      <li><a href="#erdos-renyi-populate"><code>erdos-renyi-populate</code></a></li>
       <li><a href="#farness"><code>farness</code></a></li>
-      <li><a href="#from-adjacency-matrix"><code>from-adjacency-matrix</code></a></li>
       <li><a href="#from-plist"><code>from-plist</code></a></li>
+      <li><a href="#from-value-matrix"><code>from-value-matrix</code></a></li>
       <li><a href="#graph"><code>graph</code></a></li>
       <li><a href="#graph-equal"><code>graph-equal</code></a></li>
       <li><a href="#graph-of"><code>graph-of</code></a></li>
@@ -88,10 +91,12 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#indegree"><code>indegree</code></a></li>
       <li><a href="#k-cores"><code>k-cores</code></a></li>
       <li><a href="#katz-centrality"><code>katz-centrality</code></a></li>
+      <li><a href="#levels"><code>levels</code></a></li>
       <li><a href="#max-flow"><code>max-flow</code></a></li>
       <li><a href="#merge-edges"><code>merge-edges</code></a></li>
       <li><a href="#merge-nodes"><code>merge-nodes</code></a></li>
       <li><a href="#min-cut"><code>min-cut</code></a></li>
+      <li><a href="#minimum-spanning-tree"><code>minimum-spanning-tree</code></a></li>
       <li><a href="#neighbors"><code>neighbors</code></a></li>
       <li><a href="#node-edges"><code>node-edges</code></a></li>
       <li><a href="#nodes"><code>nodes</code></a></li>
@@ -106,6 +111,8 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#subgraph"><code>subgraph</code></a></li>
       <li><a href="#to-adjacency-matrix"><code>to-adjacency-matrix</code></a></li>
       <li><a href="#to-plist"><code>to-plist</code></a></li>
+      <li><a href="#to-value-matrix"><code>to-value-matrix</code></a></li>
+      <li><a href="#topological-sort"><code>topological-sort</code></a></li>
     </ol>
   <li><a href="#ack">Acknowledgements</a></li>
 </ol>
@@ -547,6 +554,51 @@ Return an alist of edges of GRAPH with their values.
 <!-- End of entry for EDGES-W-VALUES -->
 
 
+<!-- Entry for ERDOS-RENYI-DIGRAPH -->
+
+<p><br>[Function]<br><a class=none name='erdos-renyi-digraph'><b>erdos-renyi-digraph</b> <i>n m</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return an Erdős–Rényi digraph with N nodes and M edges.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for ERDOS-RENYI-DIGRAPH -->
+
+
+<!-- Entry for ERDOS-RENYI-GRAPH -->
+
+<p><br>[Function]<br><a class=none name='erdos-renyi-graph'><b>erdos-renyi-graph</b> <i>n m</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return an Erdős–Rényi graph with N nodes and M edges.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for ERDOS-RENYI-GRAPH -->
+
+
+<!-- Entry for ERDOS-RENYI-POPULATE -->
+
+<p><br>[Generic function]<br><a class=none name='erdos-renyi-populate'><b>erdos-renyi-populate</b> <i>graph m</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Populate GRAPH with M edges in an Erdős–Rényi random graph model.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for ERDOS-RENYI-POPULATE -->
+
+
 <!-- Entry for FARNESS -->
 
 <p><br>[Generic function]<br><a class=none name='farness'><b>farness</b> <i>graph node</i> =&gt; <i>result</i></a>
@@ -562,21 +614,6 @@ Sum of the distance from NODE to every other node in connected GRAPH.
 <!-- End of entry for FARNESS -->
 
 
-<!-- Entry for FROM-ADJACENCY-MATRIX -->
-
-<p><br>[Generic function]<br><a class=none name='from-adjacency-matrix'><b>from-adjacency-matrix</b> <i>graph matrix</i> =&gt; <i>result</i></a>
-<blockquote><br>
-
-Populate GRAPH from the adjacency matrix MATRIX.
-
-
-
-
-</blockquote>
-
-<!-- End of entry for FROM-ADJACENCY-MATRIX -->
-
-
 <!-- Entry for FROM-PLIST -->
 
 <p><br>[Generic function]<br><a class=none name='from-plist'><b>from-plist</b> <i>graph plist</i> =&gt; <i>result</i></a>
@@ -590,6 +627,21 @@ Populate GRAPH with the contents of PLIST.
 </blockquote>
 
 <!-- End of entry for FROM-PLIST -->
+
+
+<!-- Entry for FROM-VALUE-MATRIX -->
+
+<p><br>[Generic function]<br><a class=none name='from-value-matrix'><b>from-value-matrix</b> <i>graph matrix</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Populate GRAPH from the value matrix MATRIX.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for FROM-VALUE-MATRIX -->
 
 
 <!-- Entry for GRAPH -->
@@ -715,6 +767,26 @@ Combined measure of number and nearness of nodes to NODE.
 <!-- End of entry for KATZ-CENTRALITY -->
 
 
+<!-- Entry for LEVELS -->
+
+<p><br>[Generic function]<br><a class=none name='levels'><b>levels</b> <i>digraph <tt>&amp;key</tt> alist</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Assign a positive integer to each node in DIGRAPH,
+called its level, where, for each directed edge (a b) the
+corresponding integers satisfy a < b. Returns either a hash table
+where the nodes are keys and the levels are values, or an association
+list of nodes and their levels, along with the number of levels in
+DIGRAPH.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for LEVELS -->
+
+
 <!-- Entry for MAX-FLOW -->
 
 <p><br>[Generic function]<br><a class=none name='max-flow'><b>max-flow</b> <i>graph from to</i> =&gt; <i>result</i></a>
@@ -779,6 +851,22 @@ Return both the global min-cut of GRAPH and the weight of the cut.
 </blockquote>
 
 <!-- End of entry for MIN-CUT -->
+
+
+<!-- Entry for MINIMUM-SPANNING-TREE -->
+
+<p><br>[Generic function]<br><a class=none name='minimum-spanning-tree'><b>minimum-spanning-tree</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return a minimum spanning tree of GRAPH.
+Prim's algorithm is used.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for MINIMUM-SPANNING-TREE -->
 
 
 <!-- Entry for NEIGHBORS -->
@@ -996,6 +1084,38 @@ Serialize GRAPH as a plist.
 </blockquote>
 
 <!-- End of entry for TO-PLIST -->
+
+
+<!-- Entry for TO-VALUE-MATRIX -->
+
+<p><br>[Generic function]<br><a class=none name='to-value-matrix'><b>to-value-matrix</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the value matrix of GRAPH.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for TO-VALUE-MATRIX -->
+
+
+<!-- Entry for TOPOLOGICAL-SORT -->
+
+<p><br>[Generic function]<br><a class=none name='topological-sort'><b>topological-sort</b> <i>digraph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Returns a topologically ordered list of the nodes in DIGRAPH, such
+   that, for each edge in DIGRAPH, the start of the edge appears in the
+   list before the end of the edge.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for TOPOLOGICAL-SORT -->
 
 
 <br>&nbsp;<br><h3><a class=none name="ack">Acknowledgements</a></h3>
