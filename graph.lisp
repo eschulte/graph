@@ -604,7 +604,6 @@ EDGE2 will be combined."))
             (nodes digraph)))
     stack))
 
-
 (defgeneric levels (digraph &key alist)
   (:documentation "Assign a positive integer to each node in DIGRAPH,
 called its level, where, for each directed edge (a b) the
@@ -637,6 +636,7 @@ DIGRAPH."))
           (values (nreverse ret) (+ 1 max-levels)))
         (values longest (+ 1 max-levels)))))
 
+
 ;;; Cycles and strongly connected components
 (defgeneric strongly-connected-components (graph)
   (:documentation
