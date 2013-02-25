@@ -741,6 +741,38 @@ Prim's algorithm is used."))
            (delete-edge copy e))))
     tree))
 
+(defgeneric connected-groups-of-size (graph size)
+  (:documentation "Return all connected node groups of SIZE in GRAPH."))
+
+(defmethod connected-groups-of-size ((graph graph) size)
+  ;; Note: this function doesn't work with hyper graphs
+  (assert (> size 1) (size) "can't group less than two items")
+  (let ((connected-groups (edges graph)))
+    (loop :for i :from 2 :below size :do
+       (setf connected-groups
+             (mapcan (lambda (group)
+                       (mapcar {union group}
+                               (remove-if {subsetp _ group}
+                                          (mapcan {node-edges graph}
+                                                  group))))
+                     connected-groups)))
+    (remove-duplicates connected-groups :test 'set-equal)))
+
+(defgeneric closedp (graph nodes)
+  (:documentation "Return true if NODES are fully connected in GRAPH."))
+
+(defmethod closedp ((graph graph) nodes)
+  (block nil ;; Note: this function doesn't work with hyper graphs
+    (map-combinations (lambda (pair) (unless (has-edge-p graph pair) (return nil)))
+                      nodes :length 2)))
+
+(defgeneric clustering-coefficient (graph)
+  (:documentation "Fraction of connected triples which are closed."))
+
+(defmethod clustering-coefficient ((graph graph))
+  (let ((triples (connected-groups-of-size graph 3)))
+    (/ (length (remove-if-not {closedp graph} triples)) (length triples))))
+
 
 ;;; Shortest Path
 (defgeneric shortest-path (graph a b)

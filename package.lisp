@@ -47,6 +47,9 @@
    :basic-cycles
    :cycles
    :minimum-spanning-tree
+   :connected-groups-of-size
+   :closedp
+   :clustering-coefficient
    ;; Shortest Path
    :shortest-path
    ;; Max Flow

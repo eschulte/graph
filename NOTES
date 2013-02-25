@@ -7,7 +7,7 @@ if nodes could hold other nodes in their edge list, and edges could
 hold other edges in their node list, what sort of structure would this
 be?  A useful generalization of a graph?
 
-* Tasks [2/7]
+* Tasks [3/7]
 ** DONE min cut
 Some notes in the stuff/ directory.
 ** TODO breadth/depth first maps
@@ -15,7 +15,7 @@ Some notes in the stuff/ directory.
 Prim's algorithm
 
 ** TODO minimum edge coloring
-** TODO clustering coefficient
+** DONE clustering coefficient
 the clustering coefficient
 \begin{equation*}
   C = \frac{\text{number of closed connected triples}}{\text{number of connected triples}}
