@@ -61,9 +61,13 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#add-paths"><code>add-paths</code></a></li>
       <li><a href="#basic-cycles"><code>basic-cycles</code></a></li>
       <li><a href="#betweenness"><code>betweenness</code></a></li>
+      <li><a href="#cliques"><code>cliques</code></a></li>
+      <li><a href="#closedp"><code>closedp</code></a></li>
       <li><a href="#closeness"><code>closeness</code></a></li>
+      <li><a href="#clustering-coefficient"><code>clustering-coefficient</code></a></li>
       <li><a href="#connected-component"><code>connected-component</code></a></li>
       <li><a href="#connected-components"><code>connected-components</code></a></li>
+      <li><a href="#connected-groups-of-size"><code>connected-groups-of-size</code></a></li>
       <li><a href="#connectedp"><code>connectedp</code></a></li>
       <li><a href="#copy"><code>copy</code></a></li>
       <li><a href="#cycles"><code>cycles</code></a></li>
@@ -306,6 +310,37 @@ between s and t in GRAPH passes through NODE.
 <!-- End of entry for BETWEENNESS -->
 
 
+<!-- Entry for CLIQUES -->
+
+<p><br>[Generic function]<br><a class=none name='cliques'><b>cliques</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return the maximal cliques of GRAPH.
+The Bron-Kerbosh algorithm is used.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for CLIQUES -->
+
+
+<!-- Entry for CLOSEDP -->
+
+<p><br>[Generic function]<br><a class=none name='closedp'><b>closedp</b> <i>graph nodes</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return true if NODES are fully connected in GRAPH.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for CLOSEDP -->
+
+
 <!-- Entry for CLOSENESS -->
 
 <p><br>[Generic function]<br><a class=none name='closeness'><b>closeness</b> <i>graph node</i> =&gt; <i>result</i></a>
@@ -319,6 +354,21 @@ Inverse of the <code>farness</code> for NODE in GRAPH.
 </blockquote>
 
 <!-- End of entry for CLOSENESS -->
+
+
+<!-- Entry for CLUSTERING-COEFFICIENT -->
+
+<p><br>[Generic function]<br><a class=none name='clustering-coefficient'><b>clustering-coefficient</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Fraction of connected triples which are closed.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for CLUSTERING-COEFFICIENT -->
 
 
 <!-- Entry for CONNECTED-COMPONENT -->
@@ -349,6 +399,21 @@ Return a list of the connected components of GRAPH.
 </blockquote>
 
 <!-- End of entry for CONNECTED-COMPONENTS -->
+
+
+<!-- Entry for CONNECTED-GROUPS-OF-SIZE -->
+
+<p><br>[Generic function]<br><a class=none name='connected-groups-of-size'><b>connected-groups-of-size</b> <i>graph size</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return all connected node groups of SIZE in GRAPH.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for CONNECTED-GROUPS-OF-SIZE -->
 
 
 <!-- Entry for CONNECTEDP -->
