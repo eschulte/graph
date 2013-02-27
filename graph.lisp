@@ -613,9 +613,7 @@ list of nodes and their levels, along with the number of levels in
 DIGRAPH."))
 
 (defmethod levels (digraph &key alist)
-  (let ((longest (make-hash-table))
-        ret
-        (max-levels 0))
+  (let ((longest (make-hash-table)))
     (dolist (x (topological-sort digraph))
       (let ((max-val 0)
             (incoming (precedents digraph x)))
@@ -624,17 +622,11 @@ DIGRAPH."))
               (dolist (y incoming)
                 (when (> (gethash y longest) max-val)
                   (setf max-val (gethash y longest))))
-              (setf (gethash x longest) (+ 1 max-val))
-              (and (> (+ 1 max-val) max-levels)
-                   (setf max-levels (+ 1 max-val))))
+              (setf (gethash x longest) (+ 1 max-val)))
             (setf (gethash x longest) max-val))))
-    (if alist
-        (progn
-          (maphash (lambda (k v)
-                     (push (cons k v) ret))
-                   longest)
-          (values (nreverse ret) (+ 1 max-levels)))
-        (values longest (+ 1 max-levels)))))
+    (values (if alist (nreverse (hash-table-alist longest))
+                longest)
+            (+ 1 (reduce #'max (hash-table-values longest))))))
 
 
 ;;; Cycles and strongly connected components
@@ -740,6 +732,56 @@ Prim's algorithm is used."))
            (add-edge tree e (edge-value graph e))
            (delete-edge copy e))))
     tree))
+
+(defgeneric connected-groups-of-size (graph size)
+  (:documentation "Return all connected node groups of SIZE in GRAPH."))
+
+(defmethod connected-groups-of-size ((graph graph) size)
+  ;; Note: this function doesn't work with hyper graphs
+  (assert (> size 1) (size) "can't group less than two items")
+  (let ((connected-groups (edges graph)))
+    (loop :for i :from 2 :below size :do
+       (setf connected-groups
+             (mapcan (lambda (group)
+                       (mapcar {union group}
+                               (remove-if {subsetp _ group}
+                                          (mapcan {node-edges graph}
+                                                  group))))
+                     connected-groups)))
+    (remove-duplicates connected-groups :test 'set-equal)))
+
+(defgeneric closedp (graph nodes)
+  (:documentation "Return true if NODES are fully connected in GRAPH."))
+
+(defmethod closedp ((graph graph) nodes)
+  (block nil ;; Note: this function doesn't work with hyper graphs
+    (map-combinations (lambda (pair) (unless (has-edge-p graph pair) (return nil)))
+                      nodes :length 2)))
+
+(defgeneric clustering-coefficient (graph)
+  (:documentation "Fraction of connected triples which are closed."))
+
+(defmethod clustering-coefficient ((graph graph))
+  (let ((triples (connected-groups-of-size graph 3)))
+    (/ (length (remove-if-not {closedp graph} triples)) (length triples))))
+
+(defgeneric cliques (graph)
+  (:documentation "Return the maximal cliques of GRAPH.
+The Bron-Kerbosh algorithm is used."))
+
+(defmethod cliques ((graph graph) &aux cliques)
+  (labels ((bron-kerbosch (r p x)
+             (if (and (null x) (null p))
+                 (push r cliques)
+                 (loop :for v :in p :collect ;; TODO: use `degeneracy' ordering
+                    (let ((n (neighbors graph v)))
+                      (bron-kerbosch (union (list v) r)
+                                     (intersection (set-difference p r) n)
+                                     (intersection x n)))
+                    :do (setf p (remove v p)
+                              x (union (list v) x))))))
+    (bron-kerbosch nil (nodes graph) nil))
+  cliques)
 
 
 ;;; Shortest Path

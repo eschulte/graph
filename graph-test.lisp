@@ -315,6 +315,31 @@
                                (edges (minimum-spanning-tree *network*))))
            4))))
 
+(deftest connected-groups-of-size-in-less-small-graph ()
+  (with-fixture less-small-graph
+    (is (= (length (edges *graph*)) (length (connected-groups-of-size *graph* 2))))
+    (is (set-equal '((:foo :bar :baz) (:zaf :qux :zap))
+                   (connected-groups-of-size *graph* 3)
+                   :test #'set-equal))
+    (is (null (connected-groups-of-size *graph* 4)))))
+
+(deftest closed-groups-in-less-small-graph ()
+  (with-fixture less-small-graph
+    (is (every {closedp *graph*} (connected-groups-of-size *graph* 3)))))
+
+(deftest clustering-coefficient-of-less-small-graph ()
+  (with-fixture less-small-graph (is (= 1 (clustering-coefficient *graph*)))))
+
+(deftest cliques-of-some-graphs ()
+  (with-fixture less-small-graph
+    (is (set-equal (cliques *graph*)
+                   '((:FIZ) (:QUX :ZAF :ZAP) (:FOO :BAZ :BAR))
+                   :test #'set-equal)))
+  (with-fixture halfs
+    (is (set-equal (cliques *halfs*)
+                   '((:Q :S :R) (:C :S) (:A :C :B))
+                   :test #'set-equal))))
+
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
     (is (tree-equal (shortest-path (digraph-of *graph*) :foo :baz)
