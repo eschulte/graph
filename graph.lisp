@@ -765,6 +765,24 @@ Prim's algorithm is used."))
   (let ((triples (connected-groups-of-size graph 3)))
     (/ (length (remove-if-not {closedp graph} triples)) (length triples))))
 
+(defgeneric cliques (graph)
+  (:documentation "Return the maximal cliques of GRAPH.
+The Bron-Kerbosh algorithm is used."))
+
+(defmethod cliques ((graph graph) &aux cliques)
+  (labels ((bron-kerbosch (r p x)
+             (if (and (null x) (null p))
+                 (push r cliques)
+                 (loop :for v :in p :collect ;; TODO: use `degeneracy' ordering
+                    (let ((n (neighbors graph v)))
+                      (bron-kerbosch (union (list v) r)
+                                     (intersection (set-difference p r) n)
+                                     (intersection x n)))
+                    :do (setf p (remove v p)
+                              x (union (list v) x))))))
+    (bron-kerbosch nil (nodes graph) nil))
+  cliques)
+
 
 ;;; Shortest Path
 (defgeneric shortest-path (graph a b)
