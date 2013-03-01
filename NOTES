@@ -7,7 +7,7 @@ if nodes could hold other nodes in their edge list, and edges could
 hold other edges in their node list, what sort of structure would this
 be?  A useful generalization of a graph?
 
-* Tasks [3/8]
+* Tasks [4/8]
 ** DONE min cut
 Some notes in the stuff/ directory.
 ** TODO breadth/depth first maps
@@ -26,11 +26,11 @@ http://en.wikipedia.org/wiki/Assortativity
 
 Should take an optional :key function which defaults to node degree.
 
-** TODO random graph generators [1/2]
+** DONE random graph generators [2/2]
 http://en.wikipedia.org/wiki/Random_graph
 
 Both of the following types of random graphs
-- [ ] [[http://en.wikipedia.org/wiki/Edgar_Gilbert][Edgar_Gilbert]]
+- [X] [[http://en.wikipedia.org/wiki/Edgar_Gilbert][Edgar_Gilbert]]
 - [X] [[http://en.wikipedia.org/wiki/Erd%C5%91s%E2%80%93R%C3%A9nyi_model][Erdos-Renyi]]
 
 ** TODO more attractive documentation
