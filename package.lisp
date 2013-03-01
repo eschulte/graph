@@ -64,6 +64,9 @@
    :erdos-renyi-populate
    :erdos-renyi-graph
    :erdos-renyi-digraph
+   :edgar-gilbert-populate
+   :edgar-gilbert-graph
+   :edgar-gilbert-digraph
    ;; Centrality
    :farness
    :closeness

@@ -1005,6 +1005,36 @@ Optionally assign edge values from those listed in EDGE-VALS."))
                           :nodes (loop :for i :below n :collect i))
                         m))
 
+(defgeneric edgar-gilbert-populate (graph p)
+  (:documentation
+   "Populate GRAPH including every possible edge with probability P."))
+
+(defmethod edgar-gilbert-populate ((graph graph) p)
+  (setf (edges graph) nil)
+  (map-combinations (lambda (pair) ;; Note: needs refinement for hyper-graphs
+                      (when (< (random 1.0) p) (add-edge graph pair)))
+                    (nodes graph) :length 2)
+  graph)
+
+(defmethod edgar-gilbert-populate ((digraph digraph) p)
+  (setf (edges digraph) nil)
+  (mapc (lambda (from) ;; Note: needs refinement for hyper-graphs
+          (mapc (lambda (to)
+                  (when (< (random 1.0) p) (add-edge digraph (list from to))))
+                (remove from (nodes digraph))))
+        (nodes digraph))
+  digraph)
+
+(defun edgar-gilbert-graph (n p)
+  (edgar-gilbert-populate (populate (make-instance 'graph)
+                            :nodes (loop :for i :below n :collect i))
+                          p))
+
+(defun edgar-gilbert-digraph (n p)
+  (edgar-gilbert-populate (populate (make-instance 'digraph)
+                            :nodes (loop :for i :below n :collect i))
+                          p))
+
 
 ;;; Centrality
 (defgeneric farness (graph node)
