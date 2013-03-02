@@ -7,7 +7,7 @@ if nodes could hold other nodes in their edge list, and edges could
 hold other edges in their node list, what sort of structure would this
 be?  A useful generalization of a graph?
 
-* Tasks [4/8]
+* Tasks [4/9]
 ** DONE min cut
 Some notes in the stuff/ directory.
 ** TODO breadth/depth first maps
@@ -37,3 +37,5 @@ Both of the following types of random graphs
 like it or not, people will initially look for pictures
 - graph-dot -> images in documentation
 - graph-json -> images in documentation
+** TODO graph Laplacian
+http://web.mit.edu/newsoffice/2013/short-algorithm-long-range-consequences-0301.html
