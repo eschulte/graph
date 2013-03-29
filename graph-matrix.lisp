@@ -22,7 +22,7 @@
   (let ((matrix (make-array (list order order)
                             :element-type '(unsigned-byte 32)
                             :initial-element 0)))
-    (loop for i from 0 below order do
+    (loop :for i :from 0 :below order :do
          (setf (aref matrix i i) 1))
     matrix))
 
@@ -92,16 +92,16 @@
            (adjacency (to-adjacency-matrix-new graph))
            (adjacency-powers (copy-array adjacency))
            (len (length (nodes graph))))
-      (loop for i from 0 below (* len len) do
+      (loop :for i :from 0 :below (* len len) :do
            (setf (row-major-aref result i)
                  (+ (row-major-aref result i)
                     (row-major-aref adjacency i))))
-      (loop for i from 2 to max-power do
+      (loop :for i :from 2 :to max-power :do
            (setf adjacency-powers (mmult adjacency-powers adjacency))
            (setf (row-major-aref result i)
                  (+ (row-major-aref result i)
                     (row-major-aref adjacency-powers i))))
-      (loop for i from 0 below (* len len) do
+      (loop :for i :from 0 :below (* len len) :do
            (when (< 1 (row-major-aref result i))
              (setf (row-major-aref result i) 1)))
       result))
@@ -128,7 +128,7 @@
         (len (* (array-dimension rd 0)
                 (array-dimension rd 1)))
         (result (copy-array rd :element-type '(unsigned-byte 32))))
-    (loop for i from 0 below len do
+    (loop :for i :from 0 :below len :do
          (setf (row-major-aref result i)
                (* (row-major-aref rd i)
                   (row-major-aref rdprime i))))
@@ -145,14 +145,14 @@
     (setf result (make-array (list len len)
                              :element-type '(unsigned-byte 32)
                              :initial-element *infinity*))
-    (loop for i from 0 below len do
+    (loop :for i :from 0 :below len :do
          (setf (aref result i i) 0))
-    (loop for i from 0 below (* len len) do
+    (loop :for i :from 0 :below (* len len) :do
          (when (= (row-major-aref adj-mat i) 1)
            (setf (row-major-aref result i) 1)))
-    (loop for i from 2 below len do
+    (loop :for i :from 2 :below len :do
          (setf adj-n (mmult adj-mat adj-n))
-         (loop for j from 0 below (* len len) do
+         (loop :for j :from 0 :below (* len len) :do
               (when
                   (and (= (row-major-aref result j) *infinity*)
                        (> (row-major-aref adj-n j) 0))
@@ -161,19 +161,19 @@
 
 (defun mmult (a b)
   (loop
-     with m = (array-dimension a 0)
-     with n = (array-dimension a 1)
-     with l = (array-dimension b 1)
-     with c = (make-array (list m l)
-                          :initial-element 0
-                          :element-type '(unsigned-byte 32))
-     for i below m do
-       (loop for k below l do
-            (setf (aref c i k)
-                  (loop for j below n
-                     sum (* (aref a i j)
-                            (aref b j k)))))
-     finally (return c)))
+     :with m = (array-dimension a 0)
+     :with n = (array-dimension a 1)
+     :with l = (array-dimension b 1)
+     :with c = (make-array (list m l)
+                           :initial-element 0
+                           :element-type '(unsigned-byte 32))
+     :for i :below m :do
+     (loop :for k :below l :do
+        (setf (aref c i k)
+              (loop :for j :below n
+                 :sum (* (aref a i j)
+                         (aref b j k)))))
+     :finally (return c)))
 
 ;; Transpose a mxn matrix A to a nxm matrix B=A'.
 (defun mtp (A)
@@ -182,8 +182,8 @@
          (B (make-array `(,n ,m)
                         :initial-element 0
                         :element-type '(unsigned-byte 32))))
-    (loop for i from 0 below m do
-          (loop for j from 0 below n do
+    (loop :for i :from 0 :below m :do
+          (loop :for j :from 0 :below n :do
                 (setf (aref B j i)
                       (aref A i j))))
     B))
