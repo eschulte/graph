@@ -15,66 +15,98 @@
 
 (defvar *infinity* 4294967295)
 
-(defgeneric make-identity-matrix (order)
-  (:documentation "Return an identity matrix of order ORDER."))
+(defgeneric make-identity-matrix (order &key fast)
+  (:documentation "Return an identity matrix of order ORDER. If FAST,
+  then use a femlisp matrix."))
 
-(defmethod make-identity-matrix (order)
-  (let ((matrix (make-array (list order order)
-                            :element-type '(unsigned-byte 32)
-                            :initial-element 0)))
-    (loop :for i :from 0 :below order :do
-         (setf (aref matrix i i) 1))
+(defmethod make-identity-matrix (order &key fast)
+  (let ((matrix))
+    (setf matrix (if fast 
+                     (fl.function::eye order order '(unsigned-byte 32))
+                     (make-array (list order order)
+                                 :element-type '(unsigned-byte 32)
+                                 :initial-element 0)))
+    (or fast (loop :for i :from 0 :below order :do
+           (setf (aref matrix i i) 1)))
     matrix))
 
-(defgeneric make-universal-matrix (rows cols)
+(defgeneric make-universal-matrix (rows cols &key fast)
   (:documentation "Return a universal matrix with ROWS rows and COLS
-  columns."))
+  columns.  If FAST, then use a femlisp matrix."))
 
-(defmethod make-universal-matrix (rows cols)
+(defmethod make-universal-matrix (rows cols &key fast)
   (let ((matrix (make-array (list rows cols)
                             :element-type '(unsigned-byte 32)
                             :initial-element 1)))
+    (and fast (setf matrix (make-instance
+                            (fl.function::standard-matrix
+                             '(unsigned-byte 32))
+                            :content matrix)))
     matrix))
 
-(defgeneric to-adjacency-matrix-new (graph)
-  (:documentation "Return the adjacency matrix of GRAPH."))
+(defgeneric to-adjacency-matrix-new (graph &key fast)
+  (:documentation "Return the adjacency matrix of GRAPH. If FAST, then
+  use a femlisp matrix."))
 
-(defmethod to-adjacency-matrix-new ((graph graph))
+(defmethod to-adjacency-matrix-new ((graph graph) &key fast)
   (let ((node-index-hash (make-hash-table))
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
-    (let ((matrix
-           (make-array (list (1+ counter) (1+ counter))
-                       :element-type '(unsigned-byte 32)
-                       :initial-element 0)))
+    (let ((matrix (make-array (list (1+ counter) (1+ counter))
+                               :element-type '(unsigned-byte 32)
+                               :initial-element 0)))
+      (and fast (setf matrix (make-instance
+                              (fl.function::standard-matrix
+                               '(unsigned-byte 32))
+                              :content matrix)))
       (mapc (lambda-bind
              ((a b))
-             (progn
-               (setf (aref matrix
-                           (gethash a node-index-hash)
-                           (gethash b node-index-hash))
-                     1)
-               (setf (aref matrix
-                           (gethash b node-index-hash)
-                           (gethash a node-index-hash))
-                     1)))
+             (if fast
+                 (progn
+                   (setf (fl.function::mref matrix
+                                            (gethash a node-index-hash)
+                                            (gethash b node-index-hash))
+                         1)
+                   (setf (fl.function::mref matrix
+                                            (gethash b node-index-hash)
+                                            (gethash a node-index-hash))
+                         1))
+                 (progn
+                   (setf (aref matrix
+                               (gethash a node-index-hash)
+                               (gethash b node-index-hash))
+                         1)
+                   (setf (aref matrix
+                               (gethash b node-index-hash)
+                               (gethash a node-index-hash))
+                         1))))
             (edges graph))
       matrix)))
 
-(defmethod to-adjacency-matrix-new ((graph digraph))
+(defmethod to-adjacency-matrix-new ((graph digraph) &key fast)
   (let ((node-index-hash (make-hash-table))
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
-    (let (( matrix (make-array (list (1+ counter) (1+ counter))
+    (let ((matrix (make-array (list (1+ counter) (1+ counter))
                                :element-type '(unsigned-byte 32)
                                :initial-element 0)))
+      (and fast (setf matrix (make-instance
+                              (fl.function::standard-matrix
+                               '(unsigned-byte 32))
+                              :content matrix)))
       (mapc (lambda-bind ((a b))
-                         (setf (aref matrix
-                                     (gethash a node-index-hash)
-                                     (gethash b node-index-hash))
-                               1))
+                         (if fast
+                             (setf
+                              (fl.function::mref matrix
+                                                 (gethash a node-index-hash)
+                                                 (gethash b node-index-hash))
+                              1)
+                             (setf (aref matrix
+                                         (gethash a node-index-hash)
+                                         (gethash b node-index-hash))
+                                   1)))
             (edges graph))
       matrix)))
 
