@@ -5,4 +5,4 @@
         :curry-compose-reader-macros
         :graph
         :cl-ppcre)
-  (:export :to-dot :to-dot-file :from-dot))
+  (:export :to-dot :to-dot-file :from-dot :make-subgraph))

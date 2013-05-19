@@ -16,6 +16,42 @@
 
 
 ;;; Visualization
+(defstruct subgraph
+  "The information needed to specify a DOT subgraph."
+  unique-name
+  node-attributes
+  edge-attributes
+  attributes
+  node-list)
+
+(defun subgraph-print (s)
+  "Returns a string containing a DOT subgraph statement. S is a
+SUBGRAPH structure."
+  (when (subgraph-p s)
+    (with-output-to-string (out)
+      (format out "subgraph cluster~a {~%" (subgraph-unique-name s))
+      (when (subgraph-node-attributes s)
+        (format out "  node [")
+        (mapc (lambda (pair)
+                (format out "~a=~a, " (car pair) (cdr pair)))
+              (subgraph-node-attributes s))
+        (format out "];~%"))
+      (when (subgraph-edge-attributes s)
+        (format out "  edge [")
+        (mapc (lambda (pair)
+                (format out "~a=~a, " (car pair) (cdr pair)))
+              (subgraph-edge-attributes s))
+        (format out "];~%"))
+      (when (subgraph-attributes s)
+        (mapc (lambda (pair)
+                (format out "  ~a=~a;~%" (car pair) (cdr pair)))
+              (subgraph-attributes s)))
+      (when (subgraph-node-list s)
+        (mapc (lambda (n)
+                (format out "  ~a;~%" n))
+              (subgraph-node-list s)))
+      (format out "  }~%"))))
+
 (defun edge-to-dot (edge type &optional edge-label edge-arrow-head
                                 edge-arrow-size edge-arrow-tail edge-color
                                 edge-color-scheme edge-comment
@@ -136,7 +172,7 @@
                             edge-label-font-color edge-pen-width
                             edge-same-head edge-same-tail edge-tail-clip
                             edge-tail-label edge-tail-port edge-weight
-                            edge-ext-label)
+                            edge-ext-label subgraphs)
   (:documentation "Print the dot code representing GRAPH. The keyword
 argument ATTRIBUTES takes an assoc list with DOT graph attribute (name
 . value) pairs. The various NODE-* and EDGE-* keyword arguments take
@@ -145,7 +181,8 @@ attribute of the corresponding element of the dot graph. The names of
 the NODE-* and EDGE-* keyword argments are based on the DOT attribute,
 with the addition of a hyphen between words of multi-word DOT
 attribute names. The DOT graph, node, and edge attributes are
-described at http://www.graphviz.org/doc/info/attrs.html."))
+described at http://www.graphviz.org/doc/info/attrs.html. SUBGRAPHS is
+a list of SUBGRAPH structures."))
 
 (defmethod to-dot ((graph graph)
                    &key (stream t) attributes node-label
@@ -160,7 +197,7 @@ described at http://www.graphviz.org/doc/info/attrs.html."))
                      edge-label-angle edge-label-float edge-label-font-color
                      edge-pen-width edge-same-head edge-same-tail
                      edge-tail-clip edge-tail-label edge-tail-port edge-weight
-                     edge-ext-label)
+                     edge-ext-label subgraphs)
   (format stream "~a to_dot {~%"
           (intern (string-downcase (type-of graph))))
   (mapc (lambda (pair)
@@ -180,6 +217,9 @@ described at http://www.graphviz.org/doc/info/attrs.html."))
         edge-tail-clip edge-tail-label edge-tail-port edge-weight
         edge-ext-label}]
         (edges graph))
+  (mapc (lambda (s)
+          (format stream "~a" (subgraph-print s)))
+        subgraphs)
   (format stream "}~%"))
 
 (defgeneric to-dot-file (graph path
@@ -219,7 +259,7 @@ described at http://www.graphviz.org/doc/info/attrs.html."))
                           edge-label-font-color edge-pen-width
                           edge-same-head edge-same-tail edge-tail-clip
                           edge-tail-label edge-tail-port edge-weight
-                          edge-ext-label)
+                          edge-ext-label subgraphs)
   (with-open-file (out path :direction :output :if-exists :supersede)
     (to-dot graph :stream out :attributes attributes :node-label node-label
             :edge-label edge-label :node-fill-color node-fill-color
@@ -242,7 +282,8 @@ described at http://www.graphviz.org/doc/info/attrs.html."))
             :edge-pen-width edge-pen-width :edge-same-head edge-same-head
             :edge-same-tail edge-same-tail :edge-tail-clip edge-tail-clip
             :edge-tail-label edge-tail-label :edge-tail-port edge-tail-port
-            :edge-weight edge-weight :edge-ext-label edge-ext-label)))
+            :edge-weight edge-weight :edge-ext-label edge-ext-label
+            :subgraphs subgraphs)))
 
 (defun from-dot (dot-string)
   "Parse the DOT format string DOT-STRING into a graph.
