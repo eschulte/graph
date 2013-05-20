@@ -16,8 +16,8 @@
 (defvar *infinity* 4294967295)
 
 (defgeneric make-identity-matrix (order &key fast)
-  (:documentation "Return an identity matrix of order ORDER. If FAST,
-  then use a femlisp matrix."))
+  (:documentation "Return an identity matrix of order ORDER.
+If FAST, then use a femlisp matrix."))
 
 (defmethod make-identity-matrix (order &key fast)
   (let ((matrix))
@@ -31,8 +31,8 @@
     matrix))
 
 (defgeneric make-universal-matrix (rows cols &key fast)
-  (:documentation "Return a universal matrix with ROWS rows and COLS
-  columns.  If FAST, then use a femlisp matrix."))
+  (:documentation "Return a universal matrix with ROWS rows and COLS columns.
+If FAST, then use a femlisp matrix."))
 
 (defmethod make-universal-matrix (rows cols &key fast)
   (let ((matrix))
@@ -45,8 +45,8 @@
     matrix))
 
 (defgeneric to-adjacency-matrix-new (graph &key fast)
-  (:documentation "Return the adjacency matrix of GRAPH. If FAST, then
-  use a femlisp matrix.  If FAST, then use a femlisp matrix."))
+  (:documentation "Return the adjacency matrix of GRAPH.
+If FAST, then use a femlisp matrix.  If FAST, then use a femlisp matrix."))
 
 (defmethod to-adjacency-matrix-new ((graph graph) &key fast)
   (let ((node-index-hash (make-hash-table))
@@ -150,8 +150,8 @@
     result))
 
 (defgeneric reachablep (graph reachability-matrix from to &key fast)
-  (:documentation "Returns 1 if TO is reachable from FROM, 0
-  otherwise. If FAST, then use a femlisp matrix."))
+  (:documentation "Returns 1 if TO is reachable from FROM, 0 otherwise.
+If FAST, then use a femlisp matrix."))
 
 (defmethod reachablep ((graph graph) reachability-matrix from to &key fast)
   (let ((node-index-hash (make-hash-table))
