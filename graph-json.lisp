@@ -114,8 +114,13 @@ the HTML page."))
     <script src=\"http://d3js.org/d3.v3.min.js\"></script>
     <script>
 
-      var width = 960,
-      height = 500;
+      var width = \"innerWidth\" in window 
+               ? window.innerWidth
+               : document.documentElement.offsetWidth;
+
+      var height = \"innerHeight\" in window 
+               ? window.innerHeight
+               : document.documentElement.offsetHeight;
 
       var color = d3.scale.category20();
 
