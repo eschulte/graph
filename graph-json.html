@@ -48,6 +48,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#from-d3"><code>from-d3</code></a></li>
       <li><a href="#from-json"><code>from-json</code></a></li>
       <li><a href="#to-d3"><code>to-d3</code></a></li>
+      <li><a href="#to-html"><code>to-html</code></a></li>
       <li><a href="#to-json"><code>to-json</code></a></li>
     </ol>
   <li><a href="#ack">Acknowledgements</a></li>
@@ -74,18 +75,6 @@ for interactive viewing of graphs in the browser.</p>
 <!-- Entry for FROM-D3 -->
 
 <p><br>[Generic function]<br><a class=none name='from-d3'><b>from-d3</b> <i>graph input</i> =&gt; <i>result</i></a>
-<blockquote><br>
-
-
-
-</blockquote>
-
-<!-- End of entry for FROM-D3 -->
-
-
-<!-- Entry for FROM-D3 -->
-
-<p><br>[Method]<br><a class=none><b>from-d3</b> <i>(graph graph) input</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Parse a D3 format string or stream INPUT into GRAPH.
@@ -130,6 +119,10 @@ Parse string or stream INPUT into GRAPH.
 <p><br>[Generic function]<br><a class=none name='to-d3'><b>to-d3</b> <i>graph <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
+Return a JSON encoding of GRAPH formatted for D3.
+Edges should have numeric values which d3 will translate into their width.
+
+
 
 
 </blockquote>
@@ -137,19 +130,22 @@ Parse string or stream INPUT into GRAPH.
 <!-- End of entry for TO-D3 -->
 
 
-<!-- Entry for TO-D3 -->
+<!-- Entry for TO-HTML -->
 
-<p><br>[Method]<br><a class=none><b>to-d3</b> <i>(graph graph) <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-html'><b>to-html</b> <i>graph <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
-Return a JSON encoding of GRAPH formatted for D3.
+Write GRAPH to an HTML file.
+The resulting HTML file will display an interactive version of GRAPH.
+Uses <code>to-d3</code> to first encode the graph as JSON which is embedded in
+the HTML page.
 
 
 
 
 </blockquote>
 
-<!-- End of entry for TO-D3 -->
+<!-- End of entry for TO-HTML -->
 
 
 <!-- Entry for TO-JSON -->

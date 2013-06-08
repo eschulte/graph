@@ -46,6 +46,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
   <li><a href="#dictionary">The GRAPH-DOT dictionary</a></li>
     <ol>
       <li><a href="#from-dot"><code>from-dot</code></a></li>
+      <li><a href="#make-subgraph"><code>make-subgraph</code></a></li>
       <li><a href="#to-dot"><code>to-dot</code></a></li>
       <li><a href="#to-dot-file"><code>to-dot-file</code></a></li>
     </ol>
@@ -82,16 +83,33 @@ dot executable.
 <!-- End of entry for FROM-DOT -->
 
 
-<!-- Entry for TO-DOT -->
+<!-- Entry for MAKE-SUBGRAPH -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream node-label edge-label node-color-scheme node-shape node-fill-color node-color node-font-color node-comment node-group node-label-loc node-pen-width node-style node-ext-label edge-arrow-head edge-arrow-size edge-arrow-tail edge-color edge-color-scheme edge-comment edge-constraint edge-decorate edge-dir edge-fill-color edge-font-color edge-head-clip edge-head-label edge-head-port edge-label-angle edge-label-float edge-label-font-color edge-pen-width edge-same-head edge-same-tail edge-tail-clip edge-tail-label edge-tail-port edge-weight edge-ext-label stream edge-label node-ordering</i> =&gt; <i>result</i></a>
+<p><br>[Function]<br><a class=none name='make-subgraph'><b>make-subgraph</b> <i><tt>&amp;key</tt> (unique-name dum0) (node-attributes dum1) (edge-attributes dum2) (attributes dum3) (node-list dum4)</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
-Print the dot code representing GRAPH. Keyword
-arguments NODE-LABEL and EDGE-LABEL may provide functions which when
-called on a node or edge return a label for that element of the dot
-graph. NODE-FILL-COLOR expects a function that when called on a node
-returns a color that will be used to fill the node.
+
+
+</blockquote>
+
+<!-- End of entry for MAKE-SUBGRAPH -->
+
+
+<!-- Entry for TO-DOT -->
+
+<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream attributes node-label edge-label node-color-scheme node-shape node-fill-color node-color node-font-color node-comment node-group node-label-loc node-pen-width node-style node-ext-label edge-arrow-head edge-arrow-size edge-arrow-tail edge-color edge-color-scheme edge-comment edge-constraint edge-decorate edge-dir edge-fill-color edge-font-color edge-head-clip edge-head-label edge-head-port edge-label-angle edge-label-float edge-label-font-color edge-pen-width edge-same-head edge-same-tail edge-tail-clip edge-tail-label edge-tail-port edge-weight edge-ext-label subgraphs stream edge-label node-ordering</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Print the dot code representing GRAPH. The keyword
+argument ATTRIBUTES takes an assoc list with DOT graph attribute (name
+. value) pairs. The various NODE-* and EDGE-* keyword arguments take
+functions, which when called on a node or edge return a value for that
+attribute of the corresponding element of the dot graph. The names of
+the NODE-* and EDGE-* keyword argments are based on the DOT attribute,
+with the addition of a hyphen between words of multi-word DOT
+attribute names. The DOT graph, node, and edge attributes are
+described at http://www.graphviz.org/doc/info/attrs.html. SUBGRAPHS is
+a list of SUBGRAPH structures.
 
 
 
@@ -103,7 +121,7 @@ returns a color that will be used to fill the node.
 
 <!-- Entry for TO-DOT-FILE -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> node-label edge-label node-color-scheme node-shape node-fill-color node-color node-font-color node-comment node-group node-label-loc node-ordering node-pen-width node-style node-ext-label edge-arrow-head edge-arrow-size edge-arrow-tail edge-color edge-color-scheme edge-comment edge-constraint edge-decorate edge-dir edge-fill-color edge-font-color edge-head-clip edge-head-label edge-head-port edge-label-angle edge-label-float edge-label-font-color edge-pen-width edge-same-head edge-same-tail edge-tail-clip edge-tail-label edge-tail-port edge-weight edge-ext-label</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> attributes node-label edge-label node-color-scheme node-shape node-fill-color node-color node-font-color node-comment node-group node-label-loc node-ordering node-pen-width node-style node-ext-label edge-arrow-head edge-arrow-size edge-arrow-tail edge-color edge-color-scheme edge-comment edge-constraint edge-decorate edge-dir edge-fill-color edge-font-color edge-head-clip edge-head-label edge-head-port edge-label-angle edge-label-float edge-label-font-color edge-pen-width edge-same-head edge-same-tail edge-tail-clip edge-tail-label edge-tail-port edge-weight edge-ext-label subgraphs</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write a dot representation of GRAPH to PATH.
