@@ -3,7 +3,7 @@
   :version "0.0.0"
   :licence "GPL V3"
   :depends-on
-  (alexandria metabang-bind curry-compose-reader-macros graph gsll)
+  (alexandria metabang-bind curry-compose-reader-macros graph femlisp)
   :components
   ((:static-file "COPYING")
    (:file "package-matrix")

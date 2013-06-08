@@ -1,4 +1,4 @@
-;;; graph.lisp --- because its easier to write than to learn such a library
+;;; graph-test.lisp --- tests for the graph library
 
 ;; Copyright (C) Eric Schulte 2012
 

@@ -16,6 +16,42 @@
 
 
 ;;; Visualization
+(defstruct subgraph
+  "The information needed to specify a DOT subgraph."
+  unique-name
+  node-attributes
+  edge-attributes
+  attributes
+  node-list)
+
+(defun subgraph-print (s)
+  "Returns a string containing a DOT subgraph statement. S is a
+SUBGRAPH structure."
+  (when (subgraph-p s)
+    (with-output-to-string (out)
+      (format out "subgraph cluster~a {~%" (subgraph-unique-name s))
+      (when (subgraph-node-attributes s)
+        (format out "  node [")
+        (mapc (lambda (pair)
+                (format out "~a=~a, " (car pair) (cdr pair)))
+              (subgraph-node-attributes s))
+        (format out "];~%"))
+      (when (subgraph-edge-attributes s)
+        (format out "  edge [")
+        (mapc (lambda (pair)
+                (format out "~a=~a, " (car pair) (cdr pair)))
+              (subgraph-edge-attributes s))
+        (format out "];~%"))
+      (when (subgraph-attributes s)
+        (mapc (lambda (pair)
+                (format out "  ~a=~a;~%" (car pair) (cdr pair)))
+              (subgraph-attributes s)))
+      (when (subgraph-node-list s)
+        (mapc (lambda (n)
+                (format out "  ~a;~%" n))
+              (subgraph-node-list s)))
+      (format out "  }~%"))))
+
 (defun edge-to-dot (edge type &optional edge-label edge-arrow-head
                                 edge-arrow-size edge-arrow-tail edge-color
                                 edge-color-scheme edge-comment
@@ -123,7 +159,7 @@
         (wrp (funcall node-ext-label node) " [xlabel=\"~a\"]")
         ";" (list #\Newline)))))
 
-(defgeneric to-dot (graph &key stream node-label edge-label
+(defgeneric to-dot (graph &key stream attributes node-label edge-label
                             node-color-scheme node-shape node-fill-color
                             node-color node-font-color node-comment
                             node-group node-label-loc node-pen-width
@@ -136,15 +172,21 @@
                             edge-label-font-color edge-pen-width
                             edge-same-head edge-same-tail edge-tail-clip
                             edge-tail-label edge-tail-port edge-weight
-                            edge-ext-label)
-  (:documentation "Print the dot code representing GRAPH. Keyword
-arguments NODE-LABEL and EDGE-LABEL may provide functions which when
-called on a node or edge return a label for that element of the dot
-graph. NODE-FILL-COLOR expects a function that when called on a node
-returns a color that will be used to fill the node."))
+                            edge-ext-label subgraphs)
+  (:documentation "Print the dot code representing GRAPH. The keyword
+argument ATTRIBUTES takes an assoc list with DOT graph attribute (name
+. value) pairs. The various NODE-* and EDGE-* keyword arguments take
+functions, which when called on a node or edge return a value for that
+attribute of the corresponding element of the dot graph. The names of
+the NODE-* and EDGE-* keyword argments are based on the DOT attribute,
+with the addition of a hyphen between words of multi-word DOT
+attribute names. The DOT graph, node, and edge attributes are
+described at http://www.graphviz.org/doc/info/attrs.html. SUBGRAPHS is
+a list of SUBGRAPH structures."))
 
 (defmethod to-dot ((graph graph)
-                   &key (stream t) node-label (edge-label {edge-value graph})
+                   &key (stream t) attributes node-label
+                     (edge-label {edge-value graph})
                      node-color-scheme node-shape node-fill-color node-color
                      node-font-color node-comment node-group node-label-loc
                      node-ordering node-pen-width node-style node-ext-label
@@ -155,9 +197,12 @@ returns a color that will be used to fill the node."))
                      edge-label-angle edge-label-float edge-label-font-color
                      edge-pen-width edge-same-head edge-same-tail
                      edge-tail-clip edge-tail-label edge-tail-port edge-weight
-                     edge-ext-label)
+                     edge-ext-label subgraphs)
   (format stream "~a to_dot {~%"
           (intern (string-downcase (type-of graph))))
+  (mapc (lambda (pair)
+          (format stream "  ~a=~a;~%" (car pair) (cdr pair)))
+        attributes)
   (mapc [{format stream "~a"}
         {node-to-dot _ node-label node-color-scheme node-shape node-fill-color
         node-color node-font-color node-comment node-group node-label-loc
@@ -172,31 +217,35 @@ returns a color that will be used to fill the node."))
         edge-tail-clip edge-tail-label edge-tail-port edge-weight
         edge-ext-label}]
         (edges graph))
+  (mapc (lambda (s)
+          (format stream "~a" (subgraph-print s)))
+        subgraphs)
   (format stream "}~%"))
 
-(defgeneric to-dot-file (graph path &key node-label edge-label
-                                      node-color-scheme node-shape
-                                      node-fill-color
-                                      node-color node-font-color node-comment
-                                      node-group node-label-loc node-ordering
-                                      node-pen-width node-style
-                                      node-ext-label edge-arrow-head
-                                      edge-arrow-size edge-arrow-tail
-                                      edge-color edge-color-scheme
-                                      edge-comment edge-constraint
-                                      edge-decorate edge-dir
-                                      edge-fill-color edge-font-color
-                                      edge-head-clip edge-head-label
-                                      edge-head-port edge-label-angle
-                                      edge-label-float edge-label-font-color
-                                      edge-pen-width edge-same-head
-                                      edge-same-tail edge-tail-clip
-                                      edge-tail-label edge-tail-port
-                                      edge-weight edge-ext-label)
+(defgeneric to-dot-file (graph path
+                         &key attributes node-label edge-label
+                           node-color-scheme node-shape
+                           node-fill-color
+                           node-color node-font-color node-comment
+                           node-group node-label-loc node-ordering
+                           node-pen-width node-style
+                           node-ext-label edge-arrow-head
+                           edge-arrow-size edge-arrow-tail
+                           edge-color edge-color-scheme
+                           edge-comment edge-constraint
+                           edge-decorate edge-dir
+                           edge-fill-color edge-font-color
+                           edge-head-clip edge-head-label
+                           edge-head-port edge-label-angle
+                           edge-label-float edge-label-font-color
+                           edge-pen-width edge-same-head
+                           edge-same-tail edge-tail-clip
+                           edge-tail-label edge-tail-port
+                           edge-weight edge-ext-label)
   (:documentation "Write a dot representation of GRAPH to PATH."))
 
 (defmethod to-dot-file
-    ((graph graph) path &key node-label edge-label
+    ((graph graph) path &key attributes node-label edge-label
                           node-color-scheme node-shape node-fill-color
                           node-color node-font-color node-comment
                           node-group node-label-loc node-ordering
@@ -210,9 +259,9 @@ returns a color that will be used to fill the node."))
                           edge-label-font-color edge-pen-width
                           edge-same-head edge-same-tail edge-tail-clip
                           edge-tail-label edge-tail-port edge-weight
-                          edge-ext-label)
+                          edge-ext-label subgraphs)
   (with-open-file (out path :direction :output :if-exists :supersede)
-    (to-dot graph :stream out :node-label node-label
+    (to-dot graph :stream out :attributes attributes :node-label node-label
             :edge-label edge-label :node-fill-color node-fill-color
             :node-color-scheme node-color-scheme :node-color node-color
             :node-font-color node-font-color :node-shape node-shape
@@ -233,7 +282,8 @@ returns a color that will be used to fill the node."))
             :edge-pen-width edge-pen-width :edge-same-head edge-same-head
             :edge-same-tail edge-same-tail :edge-tail-clip edge-tail-clip
             :edge-tail-label edge-tail-label :edge-tail-port edge-tail-port
-            :edge-weight edge-weight :edge-ext-label edge-ext-label)))
+            :edge-weight edge-weight :edge-ext-label edge-ext-label
+            :subgraphs subgraphs)))
 
 (defun from-dot (dot-string)
   "Parse the DOT format string DOT-STRING into a graph.
