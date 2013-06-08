@@ -249,15 +249,22 @@ to a new equality test specified with TEST."
 
 
 ;;; Serialize graphs
-(defgeneric to-plist (graph)
-  (:documentation "Serialize GRAPH as a plist."))
+(defgeneric to-plist (graph &key node-fun edge-fun)
+  (:documentation "Serialize GRAPH as a plist.
+Keyword arguments NODE-FUN and EDGE-FUN will be called on a node or
+edge and should return a plist of data to associate with the given
+node or edge in the results."))
 
-(defmethod to-plist ((graph graph))
+(defmethod to-plist ((graph graph) &key node-fun edge-fun)
   (let ((counts (make-hash-table)) (counter -1))
-    (list :nodes (mapcar {list :name}
+    (list :nodes (mapcar (lambda (node)
+                           (append (list :name node)
+                                   (when node-fun (funcall node-fun node))))
                          (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
                                (nodes graph)))
-          :edges (map 'list (lambda (edge value) (list :edge edge :value value))
+          :edges (map 'list (lambda (edge value)
+                              (append (list :edge edge :value value)
+                                      (when edge-fun (funcall edge-fun edge))))
                       (mapcar {mapcar {gethash _ counts}} (edges graph))
                       (mapcar {edge-value graph} (edges graph))))))
 
