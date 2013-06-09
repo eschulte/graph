@@ -30,9 +30,12 @@
 (defmethod yason:encode ((symbol symbol) &optional (stream *standard-output*))
   (yason:encode (string-downcase (symbol-name symbol)) stream))
 
-(defmethod to-json ((graph graph) &optional (stream *standard-output*))
-  "Write a JSON encoding of GRAPH to STREAM."
-  (let ((plist (to-plist graph)))
+(defgeneric to-json (graph &key stream node-fn edge-fn)
+  (:documentation "Write a JSON encoding of GRAPH to STREAM."))
+
+(defmethod to-json
+    ((graph graph) &key (stream *standard-output*) node-fn edge-fn)
+  (let ((plist (to-plist graph :node-fn node-fn :edge-fn edge-fn)))
     (yason:encode
      (plist-hash-table
       (list :nodes (mapcar #'plist-hash-table (getf plist :nodes))
@@ -73,12 +76,17 @@ be silently dropped."
                        (getf plist :links))))
 
 ;;; D3 format JSON import and export
-(defgeneric to-d3 (graph &optional stream)
+(defgeneric to-d3 (graph &key stream group-fn)
   (:documentation "Return a JSON encoding of GRAPH formatted for D3.
-Edges should have numeric values which d3 will translate into their width."))
+Edges should have numeric values which d3 will translate into their
+width.  Optional keyword argument GROUP-FN should be a function from
+nodes to group numbers."))
 
-(defmethod to-d3 ((graph graph) &optional (stream *standard-output*))
-  (let* ((plist (plist-to-d3 (to-plist graph)))
+(defmethod to-d3 ((graph graph) &key (stream *standard-output*) group-fn)
+  (let* ((plist (plist-to-d3
+                 (if group-fn
+                     (to-plist graph :node-fn [{list :group} group-fn])
+                     (to-plist graph))))
          (hash (plist-hash-table
                 (list :nodes (mapcar #'plist-hash-table (getf plist :nodes))
                       :links (mapcar #'plist-hash-table (getf plist :links))))))
@@ -93,14 +101,14 @@ Edges should have numeric values which d3 will translate into their width."))
 (defmethod from-d3 ((graph graph) input)
   (from-plist graph (d3-to-plist (json-to-plist input))))
 
-(defgeneric to-html (graph &optional stream)
+(defgeneric to-html (graph &key stream group-fn)
   (:documentation "Write GRAPH to an HTML file.
 The resulting HTML file will display an interactive version of GRAPH.
 Uses `to-d3' to first encode the graph as JSON which is embedded in
 the HTML page."))
 
-(defmethod to-html ((graph graph) &optional (stream *standard-output*))
-  (format stream d3-html (to-d3 graph nil)))
+(defmethod to-html ((graph graph) &key (stream *standard-output*) group-fn)
+  (format stream d3-html (to-d3 graph :stream nil :group-fn group-fn)))
 
 (defvar d3-html
   "<!DOCTYPE html>
@@ -114,8 +122,13 @@ the HTML page."))
     <script src=\"http://d3js.org/d3.v3.min.js\"></script>
     <script>
 
-      var width = 960,
-      height = 500;
+      var width = \"innerWidth\" in window 
+               ? window.innerWidth
+               : document.documentElement.offsetWidth;
+
+      var height = \"innerHeight\" in window 
+               ? window.innerHeight
+               : document.documentElement.offsetHeight;
 
       var color = d3.scale.category20();
 
