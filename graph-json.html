@@ -116,11 +116,13 @@ Parse string or stream INPUT into GRAPH.
 
 <!-- Entry for TO-D3 -->
 
-<p><br>[Generic function]<br><a class=none name='to-d3'><b>to-d3</b> <i>graph <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-d3'><b>to-d3</b> <i>graph <tt>&amp;key</tt> stream group-fn stream</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Return a JSON encoding of GRAPH formatted for D3.
-Edges should have numeric values which d3 will translate into their width.
+Edges should have numeric values which d3 will translate into their
+width.  Optional keyword argument GROUP-FN should be a function from
+nodes to group numbers.
 
 
 
@@ -132,7 +134,7 @@ Edges should have numeric values which d3 will translate into their width.
 
 <!-- Entry for TO-HTML -->
 
-<p><br>[Generic function]<br><a class=none name='to-html'><b>to-html</b> <i>graph <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-html'><b>to-html</b> <i>graph <tt>&amp;key</tt> stream group-fn stream</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write GRAPH to an HTML file.
@@ -150,19 +152,7 @@ the HTML page.
 
 <!-- Entry for TO-JSON -->
 
-<p><br>[Generic function]<br><a class=none name='to-json'><b>to-json</b> <i>graph <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
-<blockquote><br>
-
-
-
-</blockquote>
-
-<!-- End of entry for TO-JSON -->
-
-
-<!-- Entry for TO-JSON -->
-
-<p><br>[Method]<br><a class=none><b>to-json</b> <i>(graph graph) <tt>&amp;optional</tt> stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-json'><b>to-json</b> <i>graph <tt>&amp;key</tt> stream node-fn edge-fn stream</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write a JSON encoding of GRAPH to STREAM.

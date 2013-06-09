@@ -1180,10 +1180,13 @@ Return the adjacency matrix of GRAPH.
 
 <!-- Entry for TO-PLIST -->
 
-<p><br>[Generic function]<br><a class=none name='to-plist'><b>to-plist</b> <i>graph</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-plist'><b>to-plist</b> <i>graph <tt>&amp;key</tt> node-fun edge-fun</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Serialize GRAPH as a plist.
+Keyword arguments NODE-FUN and EDGE-FUN will be called on a node or
+edge and should return a plist of data to associate with the given
+node or edge in the results.
 
 
 
