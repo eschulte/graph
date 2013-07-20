@@ -8,3 +8,16 @@
   ((:static-file "COPYING")
    (:file "package-matrix")
    (:file "graph-matrix" :depends-on ("package-matrix"))))
+
+(defsystem :graph-matrix-test
+  :description "test the matrix graph representations"
+  :version "0.0.0"
+  :licence "GPL V3"
+  :depends-on
+  (alexandria metabang-bind stefil curry-compose-reader-macros
+   graph graph-matrix)
+  :components
+  ((:static-file "COPYING")
+   (:module "test"
+    :components ((:file "package-matrix")
+                 (:file "graph-matrix" :depends-on ("package-matrix"))))))
