@@ -70,6 +70,26 @@ matrix M2, nil otherwise."
   (and (eql (matrix-n-rows m1) (matrix-n-rows m2))
        (eql (matrix-n-cols m1) (matrix-n-cols m2))))
 
+(defgeneric matrix-entries-different-p (m1 m2)
+  (:documentation "Return nil if all the entries in matrix M1 are eql
+  to the corresponding entries in matrix M2, 1 if matrix M1 is not the
+  same size as matrix M2, and otherwise a list of cells that are not
+  eql."))
+
+(defmethod matrix-entries-different-p ((m1 matrix) (m2 matrix))
+  (let ((result))
+    (if (matrix-same-size-p m1 m2)
+        (let ((m (matrix-n-rows m1))
+              (n (matrix-n-cols m1)))
+          (loop :for i :from 0 :below m :do
+             (loop :for j :from 0 :below n :do
+                (unless (eql (matrix-ref m1 i j)
+                             (matrix-ref m2 i j))
+                  (push (list i j) result))))
+          (when result (reverse result)))
+        (setf result 1))
+    result))
+
 (defun matrix-symmetric-p (matrix)
   "Return t if matrix MATRIX is symmetric, nil otherwise."
   (let* ((m (matrix-n-rows matrix))
@@ -359,7 +379,7 @@ matrix M2, nil otherwise."
                  (unless
                      (equal 0 (matrix-ref
                                rd
-                               (gethash node node-index-hash) v))
+                               (gethash k node-index-hash)))
                    (push k result)))
              node-index-hash)
     (reverse result)))
@@ -386,7 +406,7 @@ matrix M2, nil otherwise."
     (maphash #'(lambda (k v)
                  (unless (equal 0 (matrix-ref
                                    strong-components
-                                   (gethash node node-index-hash) v))
+                                   (gethash k node-index-hash)))
                    (push k result)))
              node-index-hash)
     (reverse result)))
