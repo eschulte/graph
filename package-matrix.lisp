@@ -15,6 +15,7 @@
    :matrix-n-cols
    :matrix-same-size-p
    :matrix-symmetric-p
+   :matrix-entries-different-p
    :matrix-copy
    :matrix-transpose
    :make-universal-matrix

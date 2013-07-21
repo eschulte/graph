@@ -13,7 +13,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (enable-curry-compose-reader-macros))
 
-(defvar *infinity* 4294967295)
+(defconstant infinity 4294967295)
 
 (defclass matrix ()
   ((self :initarg :self :accessor self :initform nil)))
@@ -108,13 +108,15 @@ matrix M2, nil otherwise."
 
 (defmethod matrix-copy ((matrix matrix))
   (let ((result (make-instance 'matrix)))
-    (setf (self result)
-          (copy-array (self matrix)))
+    (when (self matrix)
+      (setf (self result)
+            (copy-array (self matrix))))
     result))
 
 (defmethod matrix-copy ((fm fast-matrix))
   (let ((result (make-instance 'fast-matrix)))
-    (setf (self result) (fl.function::copy (self fm)))
+    (when (self fm)
+      (setf (self result) (fl.function::copy (self fm))))
     result))
 
 (defgeneric matrix-sum (m1 m2 &key boolean)
@@ -266,13 +268,13 @@ matrix M2, nil otherwise."
 
 (defgeneric make-infinity-matrix (matrix rows cols)
   (:documentation "Return a matrix of ROWS rows and COLS cols with
-  each entry set to *infinity*"))
+  each entry set to infinity"))
 
 (defmethod make-infinity-matrix ((matrix matrix) rows cols)
   (progn
     (setf (self matrix) (make-array (list rows cols)
                                     :element-type '(unsigned-byte 32)
-                                    :initial-element *infinity*))
+                                    :initial-element infinity))
     matrix))
 
 ; Can't get a femlisp solution to work
@@ -281,7 +283,7 @@ matrix M2, nil otherwise."
     (setf (self fm) (fl.function::zeros rows cols '(unsigned-byte 32)))
     (loop :for i :from 0 :below rows :do
        (loop :for j :from 0 :below cols :do
-          (setf (matrix-ref fm i j) *infinity*)))
+          (setf (matrix-ref fm i j) infinity)))
     fm))
 
 (defgeneric make-identity-matrix (matrix order)
@@ -341,11 +343,12 @@ matrix M2, nil otherwise."
 ;;; might check that LIMIT has been set sensibly, throw an error if not?
 ;;; check that this gives correct results
 (defmethod to-reachability-matrix ((graph graph) (matrix matrix) &key limit)
-  (let ((result (make-identity-matrix matrix (length (nodes graph))))
+  (let* ((result (make-identity-matrix (matrix-copy matrix)
+                                      (length (nodes graph))))
         (max-power (or limit (- (length (nodes graph)) 1)))
-        (adjacency (to-adjacency-matrix-new graph matrix))
-        (adjacency-powers (to-adjacency-matrix-new graph matrix)))
-    (setf result (matrix-sum adjacency result))
+        (adjacency (to-adjacency-matrix-new graph (matrix-copy matrix)))
+        (adjacency-powers (matrix-copy adjacency)))
+    (setf result (matrix-sum adjacency result :boolean t))
     (loop :for i :from 2 :to max-power :do
        (setf adjacency-powers (matrix-product adjacency-powers adjacency))
        (setf result (matrix-sum adjacency-powers result :boolean t)))
@@ -377,9 +380,10 @@ matrix M2, nil otherwise."
           (nodes graph))
     (maphash #'(lambda (k v)
                  (unless
-                     (equal 0 (matrix-ref
-                               rd
-                               (gethash k node-index-hash)))
+                     (equal 0
+                            (matrix-ref rd
+                                        (gethash from node-index-hash)
+                                        v))
                    (push k result)))
              node-index-hash)
     (reverse result)))
@@ -415,8 +419,8 @@ matrix M2, nil otherwise."
   (:documentation "Return the distance matrix ND of graph GRAPH."))
 
 (defmethod to-distance-matrix ((graph graph) (nd matrix))
-  (let* ((a (to-adjacency-matrix-new graph nd))
-         (a-power (to-adjacency-matrix-new graph nd))
+  (let* ((a (to-adjacency-matrix-new graph (matrix-copy nd)))
+         (a-power (to-adjacency-matrix-new graph (matrix-copy nd)))
          (m (matrix-n-rows a))
          (finished))
     (setf nd (make-infinity-matrix nd m m))
@@ -431,7 +435,7 @@ matrix M2, nil otherwise."
        (setf finished t)
        (loop :for j :from 0 :below m :do
           (loop :for k :from 0 :below m :do
-             (when (and (eql (matrix-ref nd j k) *infinity*)
+             (when (and (eql (matrix-ref nd j k) infinity)
                         (> (matrix-ref a-power j k) 0))
                (setf (matrix-ref nd j k) i)
                (setf finished nil)))))

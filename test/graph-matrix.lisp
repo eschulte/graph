@@ -52,7 +52,7 @@
                                      (3 2)
                                      (4 3)
                                      (4 1)))))
-  (:teardown (set *graph* nil)))
+  (:teardown (setf *graph* nil)))
 
 ;;; Hage and Harary 1983, Figure 5.10, p. 107
 (defixture hh-5-10
@@ -169,45 +169,58 @@
 ;;; Tests comparing results to Hage and Harary's book
 
 (deftest digraph-and-adjacency-matrix ()
-  (with-fixture hh-5-3
-        (is (not (matrix-entries-different-p
-                  (to-adjacency-matrix-new *graph* (make-instance 'matrix))
-                  (make-array '(4 4)
-                              :initial-contents
-                              ((0 0 1 1) (1 0 1 0) (0 1 0 0) (1 0 1 0))))))))
+  (let ((m (make-instance 'matrix)))
+    (setf (graph-matrix::self m)
+          (make-array '(4 4)
+                      :initial-contents
+                      '((0 0 1 1) (1 0 1 0) (0 1 0 0) (1 0 1 0))))
+    (with-fixture hh-5-3
+      (is (not (matrix-entries-different-p
+                (to-adjacency-matrix-new *graph* (make-instance 'matrix))
+                m))))))
 
 (deftest digraph-and-reachability-matrix ()
-  (with-fixture hh-5-10
-        (is (not (matrix-entries-different-p
-                  (to-reachability-matrix *graph* (make-instance 'matrix))
-                  (make-array '(4 4)
-                              :initial-contents
-                              ((1 1 1 1) (0 1 1 1) (0 1 1 1) (0 0 0 1))))))))
+  (let ((m (make-instance 'matrix)))
+    (setf (graph-matrix::self m)
+          (make-array '(4 4)
+                      :initial-contents
+                      '((1 1 1 1)(0 1 1 1)(0 1 1 1)(0 0 0 1))))
+    (with-fixture hh-5-10
+      (is (not (matrix-entries-different-p
+                (to-reachability-matrix *graph* (make-instance 'matrix))
+                m))))))
 
 (deftest digraph-and-distance-matrix ()
-  (with-fixture hh-5-11
-        (is (not (matrix-entries-different-p
-                  (to-distance-matrix *graph* (make-instance 'matrix))
-                  (make-array '(5 5)
-                              :initial-contents
-                              ((0 1 1 *infinity* *infinity*)
-                               (2 0 1 *infinity* *infinity*)
-                               (1 2 0 *infinity* *infinity*)
-                               (2 3 1 0 *infinity*)
-                               (1 2 2 1 0))))))))
+  (let ((m (make-instance 'matrix)))
+    (setf (graph-matrix::self m)
+          (make-array
+           '(5 5)
+           :initial-contents
+           '((0 1 1 graph-matrix::infinity graph-matrix::infinity)
+             (2 0 1 graph-matrix::infinity graph-matrix::infinity)
+             (1 2 0 graph-matrix::infinity graph-matrix::infinity)
+             (2 3 1 0 graph-matrix::infinity)
+             (1 2 2 1 0))))
+    (with-fixture hh-5-11
+      (is (not (matrix-entries-different-p
+                (to-distance-matrix *graph* (make-instance 'matrix))
+                m))))))
 
 (deftest digraph-and-strong-component-matrix ()
-  (with-fixture hh-4-18
-    (is (not (matrix-entries-different-p
-              (to-strong-component-matrix
-               (to-reachability-matrix *graph* (make-instance 'matrix)))
-              (make-array '(8 8)
-                          :initial-contents
-                          ((1 0 0 0 0 0 0 0)
-                           (0 1 0 0 0 0 0 0)
-                           (0 0 1 0 0 0 0 0)
-                           (0 0 0 1 1 1 0 0)
-                           (0 0 0 1 1 1 0 0)
-                           (0 0 0 1 1 1 0 0)
-                           (0 0 0 0 0 0 1 0)
-                           (0 0 0 0 0 0 0 1))))))))
+  (let ((m (make-instance 'matrix)))
+    (setf (graph-matrix::self m)
+          (make-array '(8 8)
+                      :initial-contents
+                      '((1 0 0 0 0 0 0 0)
+                        (0 1 0 0 0 0 0 0)
+                        (0 0 1 0 0 0 0 0)
+                        (0 0 0 1 1 1 0 0)
+                        (0 0 0 1 1 1 0 0)
+                        (0 0 0 1 1 1 0 0)
+                        (0 0 0 0 0 0 1 0)
+                        (0 0 0 0 0 0 0 1))))
+    (with-fixture hh-4-18
+      (is (not (matrix-entries-different-p
+                (to-strong-component-matrix
+                 (to-reachability-matrix *graph* (make-instance 'matrix)))
+                m))))))
