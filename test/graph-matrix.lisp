@@ -115,11 +115,6 @@
 
 
 ;;; Tests
-(deftest adjacency-matrix-new-through-matrix-ref ()
-  (with-fixture basic-graph
-    (let ((m (to-adjacency-matrix-new *graph* (make-instance 'matrix))))
-      (is (equal (to-adjacency-matrix *graph*)
-                 (graph-matrix::self m))))))
 
 ;;; Test whether matrix comparison works as expected
 
