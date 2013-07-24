@@ -120,7 +120,7 @@
 
 (deftest matrix-entries-are-not-different ()
   (with-fixture basic-graph
-    (let ((m (to-adjacency-matrix-new *graph* (make-instance 'matrix))))
+    (let ((m (to-adjacency-matrix *graph* (make-instance 'matrix))))
       (is (not (matrix-entries-different-p m m))))))
 
 (deftest matrix-entries-are-different ()
@@ -137,8 +137,8 @@
 
 (deftest adjacency-matrix-vs-fast-matrix ()
   (with-fixture basic-graph
-    (let ((m (to-adjacency-matrix-new *graph* (make-instance 'matrix)))
-          (f (to-adjacency-matrix-new *graph* (make-instance 'fast-matrix))))
+    (let ((m (to-adjacency-matrix *graph* (make-instance 'matrix)))
+          (f (to-adjacency-matrix *graph* (make-instance 'fast-matrix))))
       (is (not (matrix-entries-different-p m f))))))
 
 (deftest reachability-matrix-vs-fast-matrix ()
@@ -167,17 +167,19 @@
   (let ((m (make-instance 'matrix)))
     (setf (graph-matrix::self m)
           (make-array '(4 4)
+                      :element-type '(unsigned-byte 32)
                       :initial-contents
                       '((0 0 1 1) (1 0 1 0) (0 1 0 0) (1 0 1 0))))
     (with-fixture hh-5-3
       (is (not (matrix-entries-different-p
-                (to-adjacency-matrix-new *graph* (make-instance 'matrix))
+                (to-adjacency-matrix *graph* (make-instance 'matrix))
                 m))))))
 
 (deftest digraph-and-reachability-matrix ()
   (let ((m (make-instance 'matrix)))
     (setf (graph-matrix::self m)
           (make-array '(4 4)
+                      :element-type '(unsigned-byte 32)
                       :initial-contents
                       '((1 1 1 1)(0 1 1 1)(0 1 1 1)(0 0 0 1))))
     (with-fixture hh-5-10
@@ -190,6 +192,7 @@
     (setf (graph-matrix::self m)
           (make-array
            '(5 5)
+           :element-type '(unsigned-byte 32)
            :initial-contents
            '((0 1 1 graph-matrix::infinity graph-matrix::infinity)
              (2 0 1 graph-matrix::infinity graph-matrix::infinity)
@@ -205,6 +208,7 @@
   (let ((m (make-instance 'matrix)))
     (setf (graph-matrix::self m)
           (make-array '(8 8)
+                      :element-type '(unsigned-byte 32)
                       :initial-contents
                       '((1 0 0 0 0 0 0 0)
                         (0 1 0 0 0 0 0 0)
