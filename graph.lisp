@@ -280,23 +280,6 @@ node or edge in the results."))
                                       (getf el :value)))
                               (getf plist :edges)))))
 
-(defgeneric to-adjacency-matrix (graph)
-  (:documentation "Return the adjacency matrix of GRAPH."))
-
-(defmethod to-adjacency-matrix ((graph graph))
-  (let ((node-index-hash (make-hash-table))
-        (counter -1))
-    (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
-          (nodes graph))
-    (let ((matrix (make-array (list (1+ counter) (1+ counter))
-                              :initial-element 0)))
-      (mapc (lambda-bind ((a b))
-              (setf (aref matrix
-                          (gethash a node-index-hash)
-                          (gethash b node-index-hash))
-                    1))
-            (edges graph))
-      matrix)))
 
 (defgeneric to-value-matrix (graph)
   (:documentation "Return the value matrix of GRAPH."))
