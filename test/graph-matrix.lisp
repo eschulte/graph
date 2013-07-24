@@ -200,10 +200,7 @@
              (1 2 2 1 0))))
     (with-fixture hh-5-11
       (let ((d (to-distance-matrix *graph* (make-instance 'matrix))))
-        (is (tree-equal
-             (graph-matrix::self d)
-             (graph-matrix::self m)
-             :test 'eql))))))
+        (is (not (matrix-entries-different-p d m)))))))
 
 (deftest digraph-and-strong-component-matrix ()
   (let ((m (make-instance 'matrix)))
