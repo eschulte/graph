@@ -21,7 +21,7 @@
    :make-universal-matrix
    :make-identity-matrix
    :make-zeros-matrix
-   :to-adjacency-matrix-new
+   :to-adjacency-matrix
    :to-reachability-matrix
    :reachablep
    :reachable-from
