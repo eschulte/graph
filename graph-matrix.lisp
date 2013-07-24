@@ -168,12 +168,6 @@ matrix M2, nil otherwise."
                         (matrix-ref m2 i j)))))
          result)))
 
-;;; Not working, complains about a -1 value
-;; (defmethod matrix-difference ((m1 fast-matrix) (m2 fast-matrix))
-;;   (let ((result (make-instance 'fast-matrix)))
-;;     (setf (self result) (fl.function::m- (self m1) (self m2)))
-;;     result))
-
 (defgeneric matrix-elementwise-product (m1 m2 &key boolean)
   (:documentation "Return the result of multiplying the elements of
   matrix M1 and matrix M2. M1 and M2 must be the same size."))
@@ -299,10 +293,10 @@ matrix M2, nil otherwise."
   (setf (self fm) (fl.matlisp::eye order order '(unsigned-byte 32)))
   fm)
 
-(defgeneric to-adjacency-matrix-new (graph matrix)
+(defgeneric to-adjacency-matrix (graph matrix)
   (:documentation "Return the adjacency matrix of GRAPH."))
 
-(defmethod to-adjacency-matrix-new ((graph graph) (matrix matrix))
+(defmethod to-adjacency-matrix ((graph graph) (matrix matrix))
   (let ((node-index-hash (make-hash-table))
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
@@ -320,7 +314,7 @@ matrix M2, nil otherwise."
           (edges graph))
     matrix))
 
-(defmethod to-adjacency-matrix-new ((graph digraph) (matrix matrix))
+(defmethod to-adjacency-matrix ((graph digraph) (matrix matrix))
   (let ((node-index-hash (make-hash-table))
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
@@ -341,12 +335,11 @@ matrix M2, nil otherwise."
   reachability matrix with paths of length LIMIT or less."))
 
 ;;; might check that LIMIT has been set sensibly, throw an error if not?
-;;; check that this gives correct results
 (defmethod to-reachability-matrix ((graph graph) (matrix matrix) &key limit)
   (let* ((result (make-identity-matrix (matrix-copy matrix)
                                       (length (nodes graph))))
         (max-power (or limit (- (length (nodes graph)) 1)))
-        (adjacency (to-adjacency-matrix-new graph (matrix-copy matrix)))
+        (adjacency (to-adjacency-matrix graph (matrix-copy matrix)))
         (adjacency-powers (matrix-copy adjacency)))
     (setf result (matrix-sum adjacency result :boolean t))
     (loop :for i :from 2 :to max-power :do
@@ -372,7 +365,7 @@ matrix M2, nil otherwise."
   (:documentation "Given a reachability matrix RD, return a list of
   the nodes in graph GRAPH reachable from node FROM."))
 
-(defmethod reachable-from ( (graph graph) (rd matrix) from)
+(defmethod reachable-from ((graph graph) (rd matrix) from)
   (let ((node-index-hash (make-hash-table))
         (counter -1)
         (result))
@@ -419,8 +412,8 @@ matrix M2, nil otherwise."
   (:documentation "Return the distance matrix ND of graph GRAPH."))
 
 (defmethod to-distance-matrix ((graph graph) (nd matrix))
-  (let* ((a (to-adjacency-matrix-new graph (matrix-copy nd)))
-         (a-power (to-adjacency-matrix-new graph (matrix-copy nd)))
+  (let* ((a (to-adjacency-matrix graph (matrix-copy nd)))
+         (a-power (to-adjacency-matrix graph (matrix-copy nd)))
          (m (matrix-n-rows a))
          (finished))
     (setf nd (make-infinity-matrix nd m m))
