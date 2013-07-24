@@ -167,7 +167,7 @@
   (let ((m (make-instance 'matrix)))
     (setf (graph-matrix::self m)
           (make-array '(4 4)
-                      :element-type '(unsigned-byte 32)
+                      :element-type 'fixnum
                       :initial-contents
                       '((0 0 1 1) (1 0 1 0) (0 1 0 0) (1 0 1 0))))
     (with-fixture hh-5-3
@@ -179,7 +179,7 @@
   (let ((m (make-instance 'matrix)))
     (setf (graph-matrix::self m)
           (make-array '(4 4)
-                      :element-type '(unsigned-byte 32)
+                      :element-type 'fixnum
                       :initial-contents
                       '((1 1 1 1)(0 1 1 1)(0 1 1 1)(0 0 0 1))))
     (with-fixture hh-5-10
@@ -192,23 +192,24 @@
     (setf (graph-matrix::self m)
           (make-array
            '(5 5)
-           :element-type '(unsigned-byte 32)
            :initial-contents
-           '((0 1 1 graph-matrix::infinity graph-matrix::infinity)
-             (2 0 1 graph-matrix::infinity graph-matrix::infinity)
-             (1 2 0 graph-matrix::infinity graph-matrix::infinity)
-             (2 3 1 0 graph-matrix::infinity)
+           `((0 1 1 ,graph-matrix::infinity ,graph-matrix::infinity)
+             (2 0 1 ,graph-matrix::infinity ,graph-matrix::infinity)
+             (1 2 0 ,graph-matrix::infinity ,graph-matrix::infinity)
+             (2 3 1 0 ,graph-matrix::infinity)
              (1 2 2 1 0))))
     (with-fixture hh-5-11
-      (is (not (matrix-entries-different-p
-                (to-distance-matrix *graph* (make-instance 'matrix))
-                m))))))
+      (let ((d (to-distance-matrix *graph* (make-instance 'matrix))))
+        (is (tree-equal
+             (graph-matrix::self d)
+             (graph-matrix::self m)
+             :test 'eql))))))
 
 (deftest digraph-and-strong-component-matrix ()
   (let ((m (make-instance 'matrix)))
     (setf (graph-matrix::self m)
           (make-array '(8 8)
-                      :element-type '(unsigned-byte 32)
+                      :element-type 'fixnum
                       :initial-contents
                       '((1 0 0 0 0 0 0 0)
                         (0 1 0 0 0 0 0 0)
