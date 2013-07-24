@@ -13,7 +13,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (enable-curry-compose-reader-macros))
 
-(defconstant infinity 4294967295)
+(defconstant infinity most-positive-fixnum)
 
 (defclass matrix ()
   ((self :initarg :self :accessor self :initform nil)))
@@ -210,7 +210,7 @@ matrix M2, nil otherwise."
 (defmethod matrix-product ((m1 fast-matrix) (m2 fast-matrix))
   (and (eql (matrix-n-cols m1) (matrix-n-rows m2))
        (let ((result (make-instance 'fast-matrix)))
-         (setf (self result) (fl.matlisp::m* (self m1) (self m2)))
+         (setf (self result) (fl.function::m* (self m1) (self m2)))
          result)))
 
 (defgeneric matrix-transpose (matrix)
@@ -239,12 +239,12 @@ matrix M2, nil otherwise."
 
 (defmethod make-zeros-matrix ((matrix matrix) rows cols)
   (setf (self matrix) (make-array (list rows cols)
-                                  :element-type '(unsigned-byte 32)
+                                  :element-type 'fixnum
                                   :initial-element 0))
   matrix)
 
 (defmethod make-zeros-matrix ((fm fast-matrix) rows cols)
-  (setf (self fm) (fl.function::zeros rows cols '(unsigned-byte 32)))
+  (setf (self fm) (fl.function::zeros rows cols 'fixnum))
   fm)
 
 (defgeneric make-universal-matrix (matrix rows cols)
@@ -252,12 +252,12 @@ matrix M2, nil otherwise."
 
 (defmethod make-universal-matrix ((matrix matrix) rows cols)
   (setf (self matrix) (make-array (list rows cols)
-                                  :element-type '(unsigned-byte 32)
+                                  :element-type 'fixnum
                                   :initial-element 1))
   matrix)
 
 (defmethod make-universal-matrix ((fm fast-matrix) rows cols)
-  (setf (self fm) (fl.function::ones rows cols '(unsigned-byte 32)))
+  (setf (self fm) (fl.function::ones rows cols 'fixnum))
   fm)
 
 (defgeneric make-infinity-matrix (matrix rows cols)
@@ -267,14 +267,14 @@ matrix M2, nil otherwise."
 (defmethod make-infinity-matrix ((matrix matrix) rows cols)
   (progn
     (setf (self matrix) (make-array (list rows cols)
-                                    :element-type '(unsigned-byte 32)
+                                    :element-type 'fixnum
                                     :initial-element infinity))
     matrix))
 
 ; Can't get a femlisp solution to work
 (defmethod make-infinity-matrix ((fm fast-matrix) rows cols)
   (progn
-    (setf (self fm) (fl.function::zeros rows cols '(unsigned-byte 32)))
+    (setf (self fm) (fl.function::zeros rows cols 'fixnum))
     (loop :for i :from 0 :below rows :do
        (loop :for j :from 0 :below cols :do
           (setf (matrix-ref fm i j) infinity)))
@@ -290,7 +290,7 @@ matrix M2, nil otherwise."
   matrix)
 
 (defmethod make-identity-matrix ((fm fast-matrix) order)
-  (setf (self fm) (fl.matlisp::eye order order '(unsigned-byte 32)))
+  (setf (self fm) (fl.function::eye order order 'fixnum))
   fm)
 
 (defgeneric to-adjacency-matrix (graph matrix)
@@ -403,7 +403,7 @@ matrix M2, nil otherwise."
     (maphash #'(lambda (k v)
                  (unless (equal 0 (matrix-ref
                                    strong-components
-                                   (gethash k node-index-hash)))
+                                   (gethash node node-index-hash) v))
                    (push k result)))
              node-index-hash)
     (reverse result)))
