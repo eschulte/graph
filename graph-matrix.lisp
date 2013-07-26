@@ -334,11 +334,15 @@ matrix M2, nil otherwise."
   two less than the number of nodes in GRAPH, produces a limited
   reachability matrix with paths of length LIMIT or less."))
 
-;;; might check that LIMIT has been set sensibly, throw an error if not?
 (defmethod to-reachability-matrix ((graph graph) (matrix matrix) &key limit)
   (let* ((result (make-identity-matrix (matrix-copy matrix)
                                       (length (nodes graph))))
-        (max-power (or limit (- (length (nodes graph)) 1)))
+         (max-power (or
+                     (when (and (integerp limit)
+                                (> limit 1)
+                                (< limit (- (length (nodes graph)) 1)))
+                       limit)
+                     (- (length (nodes graph)) 1)))
         (adjacency (to-adjacency-matrix graph (matrix-copy matrix)))
         (adjacency-powers (matrix-copy adjacency)))
     (setf result (matrix-sum adjacency result :boolean t))
