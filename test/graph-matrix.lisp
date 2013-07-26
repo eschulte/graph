@@ -66,6 +66,20 @@
                                      (3 4)))))
   (:teardown (setf *graph* nil)))
 
+
+;;; Hage and Harary 1991, Figure 4.5, p. 121
+(defixture hh-4-5
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(1 2 3 4)
+                          :edges '((1 2)
+                                   (1 3)
+                                   (1 4)
+                                   (2 3)
+                                   (3 1)
+                                   (4 3)))))
+  (:teardown (setf *graph* nil)))
+
 ;;; Hage and Harary 1983, Figure 5.11, p. 110
 (defixture hh-5-11
     (:setup (setf *graph*
@@ -111,6 +125,7 @@
                                      (222 3)
                                      (222 33)))))
   (:teardown (setf *graph* nil)))
+
 
 
 
@@ -185,6 +200,20 @@
     (with-fixture hh-5-10
       (is (not (matrix-entries-different-p
                 (to-reachability-matrix *graph* (make-instance 'matrix))
+                m))))))
+
+;;; This is the matrix R2 on p. 126
+(deftest digraph-and-reachability-matrix-with-limit-2 ()
+  (let ((m (make-instance 'matrix)))
+    (setf (graph-matrix::self m)
+          (make-array '(4 4)
+                      :element-type 'fixnum
+                      :initial-contents
+                      '((1 1 1 1)(1 1 1 0)(1 1 1 1)(1 0 1 1))))
+    (with-fixture hh-4-5
+      (is (not (matrix-entries-different-p
+                (to-reachability-matrix
+                 *graph* (make-instance 'matrix) :limit 2)
                 m))))))
 
 (deftest digraph-and-distance-matrix ()
