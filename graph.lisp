@@ -396,7 +396,8 @@ node or edge in the results."))
     node))
 
 (defgeneric add-edge (graph edge &optional value)
-  (:documentation "Add EDGE to GRAPH with optional VALUE."))
+  (:documentation "Add EDGE to GRAPH with optional VALUE. The nodes of
+  EDGE are also added to GRAPH."))
 
 (defmethod add-edge ((graph graph) edge &optional value)
   (mapc (lambda (node)
