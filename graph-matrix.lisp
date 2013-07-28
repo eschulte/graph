@@ -335,16 +335,16 @@ matrix M2, nil otherwise."
   reachability matrix with paths of length LIMIT or less."))
 
 (defmethod to-reachability-matrix ((graph graph) (matrix matrix) &key limit)
+  (assert (or (not limit) (and (integerp limit) (> limit 1)
+                               (< limit (- (length (nodes graph)) 1))))
+          (limit)
+          "~S must be an integer between 2 and ~S"
+          limit (- (length (nodes graph)) 2))
   (let* ((result (make-identity-matrix (matrix-copy matrix)
-                                      (length (nodes graph))))
-         (max-power (or
-                     (when (and (integerp limit)
-                                (> limit 1)
-                                (< limit (- (length (nodes graph)) 1)))
-                       limit)
-                     (- (length (nodes graph)) 1)))
-        (adjacency (to-adjacency-matrix graph (matrix-copy matrix)))
-        (adjacency-powers (matrix-copy adjacency)))
+                                       (length (nodes graph))))
+         (max-power (or limit (- (length (nodes graph)) 1)))
+         (adjacency (to-adjacency-matrix graph (matrix-copy matrix)))
+         (adjacency-powers (matrix-copy adjacency)))
     (setf result (matrix-sum adjacency result :boolean t))
     (loop :for i :from 2 :to max-power :do
        (setf adjacency-powers (matrix-product adjacency-powers adjacency))
