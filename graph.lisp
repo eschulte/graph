@@ -480,6 +480,15 @@ Return the old value of EDGE."))
           edge)
     (remhash edge (edge-h graph))))
 
+(defgeneric reverse-edges (graph)
+  (:documentation "Return a copy of GRAPH with all edges reversed."))
+
+(defmethod reverse-edges ((graph graph))
+  (populate (make-instance (type-of graph))
+    :nodes (nodes graph)
+    :edges-w-values (mapcar (lambda-bind ((edge . value)) (cons (reverse edge) value))
+                            (edges-w-values graph))))
+
 
 ;;; Complex graph methods
 (defgeneric merge-nodes (graph node1 node2 &key new)
