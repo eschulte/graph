@@ -437,6 +437,44 @@ edge in the results."))
 (defmethod outdegree ((digraph digraph) node)
   (length (remove-if-not [{equal node} #'car] (node-edges digraph node))))
 
+(defgeneric transmitterp (digraph node)
+  (:documentation "Returns t if node is a transmitter, i.e., has
+  indegree of 0 and positive outdegree."))
+
+(defmethod transmitterp ((digraph digraph) node)
+  (and (eq (indegree digraph node) 0) (> (outdegree digraph node) 0)))
+
+(defgeneric receiverp (digraph node)
+  (:documentation "Returns t if node is a receiver, i.e., has
+  outdegree of 0 and positive indegree."))
+
+(defmethod receiverp ((digraph digraph) node)
+  (and (eq (outdegree digraph node) 0) (> (indegree digraph node) 0)))
+
+(defgeneric isolatep (digraph node)
+  (:documentation "Returns t if node is an isolate, i.e., both
+  indegree and outdegree are 0."))
+
+(defmethod isolatep ((digraph digraph) node)
+  (and (eq (indegree digraph node) 0) (eq (outdegree digraph node) 0)))
+
+(defgeneric carrierp (digraph node)
+  (:documentation "Returns t if node is a carrier, i.e.,
+  both indegree and outdegree are 1."))
+
+(defmethod carrierp ((digraph digraph) node)
+  (and (eq (indegree digraph node) 1) (eq (outdegree digraph node) 1)))
+
+(defgeneric ordinaryp (digraph node)
+  (:documentation "Returns t if node is ordinary, i.e., is not a
+  transmitter, receiver, isolate, or carrier."))
+
+(defmethod ordinaryp ((digraph digraph) node)
+  (not (or (transmitterp digraph node)
+           (receiverp digraph node)
+           (isolatep digraph node)
+           (carrierp digraph node))))
+
 (defgeneric (setf node-edges) (new graph node) ;; TODO: seg-faults in clisp
   (:documentation "Set the edges of NODE in GRAPH to NEW.
 Delete and return the old edges of NODE in GRAPH."))
