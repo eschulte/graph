@@ -475,6 +475,38 @@ edge in the results."))
            (isolatep digraph node)
            (carrierp digraph node))))
 
+(defgeneric transmitters (digraph)
+  (:documentation "Return a list of the transmitters in digraph."))
+
+(defmethod transmitters ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (transmitterp digraph n) (push n r)))))
+
+(defgeneric receivers (digraph)
+  (:documentation "Return a list of the receivers in digraph."))
+
+(defmethod receivers ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (receiverp digraph n) (push n r)))))
+
+(defgeneric isolates (digraph)
+  (:documentation "Return a list of the isolated node in digraph."))
+
+(defmethod isolates ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (isolatep digraph n) (push n r)))))
+
+(defgeneric ordinaries (digraph)
+  (:documentation "Return a list of the ordinary nodes in digraph."))
+
+(defmethod ordinaries ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (ordinaryp digraph n) (push n r)))))
+
 (defgeneric (setf node-edges) (new graph node) ;; TODO: seg-faults in clisp
   (:documentation "Set the edges of NODE in GRAPH to NEW.
 Delete and return the old edges of NODE in GRAPH."))
