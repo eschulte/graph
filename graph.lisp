@@ -618,16 +618,48 @@ EDGE2 will be combined."))
 (defmethod precedents ((digraph digraph) node)
   (mapcan [#'cdr {member node} #'reverse] (node-edges digraph node)))
 
-(defgeneric connected-component (graph node)
-  (:documentation "Return the connected component of NODE in GRAPH."))
+(defgeneric connected-component (graph node &key type)
+  (:documentation "Return the connected component of NODE in GRAPH.
+The TYPE keyword argument only has an effect for directed graphs in
+which it may be set to one of the following with :STRONG being the
+default value.
 
-(defmethod connected-component ((graph graph) node)
+:STRONG ..... connections only traverse edges along the direction of
+              the edge
+
+:WEAK ....... connections may traverse edges in any direction
+              regardless of the edge direction
+
+:UNILATERAL . two nodes a and b connected iff a is strongly connected
+              to b or b is strongly connected to a"))
+
+(defun connected-component- (node neighbor-fn)
+  ;; Helper function for `connected-component'.
   (let ((from (list node)) (seen (list node)))
     (loop :until (null from) :do
-       (let ((next (remove-duplicates (mapcan {neighbors graph} from))))
+       (let ((next (remove-duplicates (mapcan neighbor-fn from))))
          (setf from (set-difference next seen))
          (setf seen (union next seen))))
     (reverse seen)))
+
+(defmethod connected-component ((graph graph) node &key type)
+  (declare (ignorable type))
+  (connected-component- node {neighbors graph}))
+
+(defmethod connected-component ((digraph digraph) node &key type)
+  (ecase (or type :strong)
+    (:strong (connected-component- node {neighbors digraph}))
+    (:weak   (connected-component- node {neighbors (graph-of digraph)}))
+    (:unilateral
+     (let ((weakly   (connected-component- node {neighbors (graph-of digraph)}))
+           (strongly (connected-component- node {neighbors digraph})))
+       ;; keep weakly connected components which are strongly
+       ;; connected to NODE in digraph or to which NODE is strongly
+       ;; connected in the directional compliment of digraph
+       (union strongly
+              (remove-if-not
+               [{member node} {connected-component (reverse-edges digraph)}]
+               (set-difference weakly strongly)))))))
 
 (defgeneric connectedp (graph)
   (:documentation "Return true if the graph is connected."))
@@ -640,16 +672,29 @@ EDGE2 will be combined."))
   (every [{subsetp (nodes digraph)} {connected-component digraph}]
          (nodes digraph)))
 
-(defgeneric connected-components (graph)
-  (:documentation "Return a list of the connected components of GRAPH."))
+(defgeneric connected-components (graph &key type)
+  (:documentation "Return a list of the connected components of GRAPH.
+Keyword TYPE is passed to `connected-component' and only has effect
+for directed graphs."))
 
-(defmethod connected-components ((graph graph))
-  (let ((nodes (sort (nodes graph) #'< :key {degree graph})) ccs)
-    (loop :until (null nodes) :do
-       (let ((cc (connected-component graph (car nodes))))
-         (setf nodes (set-difference nodes cc))
-         (push cc ccs)))
-    ccs))
+(defmethod connected-components ((graph graph) &key type)
+  (flet ((cc-helper ()
+           (let ((nodes (sort (nodes graph) #'< :key {degree graph})) ccs)
+             (loop :until (null nodes) :do
+                (let ((cc (connected-component graph (car nodes) :type type)))
+                  (setf nodes (set-difference nodes cc))
+                  (push cc ccs)))
+             ccs)))
+    (cond
+      ((and type (eq (type-of graph) 'graph))
+       (warn "type parameter has no effect for undirected graphs")
+       (cc-helper))
+      ((eq type :unilateral)
+       (warn "unilateral connected component partition may not be well defined")
+       (cc-helper))
+      ((and (eq type :strong))
+       (strongly-connected-components graph))
+      (t (cc-helper)))))
 
 (defgeneric topological-sort (digraph)
   (:documentation
