@@ -1,4 +1,4 @@
-;;; graph-test.lisp --- tests for the graph library
+;;; test/graph.lisp --- tests for the graph library
 
 ;; Copyright (C) Eric Schulte 2012
 

@@ -31,6 +31,7 @@
    :delete-node
    :edge-value
    :delete-edge
+   :reverse-edges
    ;; Complex Graph Methods
    :merge-nodes
    :merge-edges

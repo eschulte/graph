@@ -249,22 +249,22 @@ to a new equality test specified with TEST."
 
 
 ;;; Serialize graphs
-(defgeneric to-plist (graph &key node-fun edge-fun)
+(defgeneric to-plist (graph &key node-fn edge-fn)
   (:documentation "Serialize GRAPH as a plist.
-Keyword arguments NODE-FUN and EDGE-FUN will be called on a node or
-edge and should return a plist of data to associate with the given
-node or edge in the results."))
+Keyword arguments NODE-FN and EDGE-FN will be called on a node or edge
+and should return a plist of data to associate with the given node or
+edge in the results."))
 
-(defmethod to-plist ((graph graph) &key node-fun edge-fun)
+(defmethod to-plist ((graph graph) &key node-fn edge-fn)
   (let ((counts (make-hash-table)) (counter -1))
     (list :nodes (mapcar (lambda (node)
                            (append (list :name node)
-                                   (when node-fun (funcall node-fun node))))
+                                   (when node-fn (funcall node-fn node))))
                          (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
                                (nodes graph)))
           :edges (map 'list (lambda (edge value)
                               (append (list :edge edge :value value)
-                                      (when edge-fun (funcall edge-fun edge))))
+                                      (when edge-fn (funcall edge-fn edge))))
                       (mapcar {mapcar {gethash _ counts}} (edges graph))
                       (mapcar {edge-value graph} (edges graph))))))
 
@@ -280,23 +280,6 @@ node or edge in the results."))
                                       (getf el :value)))
                               (getf plist :edges)))))
 
-(defgeneric to-adjacency-matrix (graph)
-  (:documentation "Return the adjacency matrix of GRAPH."))
-
-(defmethod to-adjacency-matrix ((graph graph))
-  (let ((node-index-hash (make-hash-table))
-        (counter -1))
-    (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
-          (nodes graph))
-    (let ((matrix (make-array (list (1+ counter) (1+ counter))
-                              :initial-element 0)))
-      (mapc (lambda-bind ((a b))
-              (setf (aref matrix
-                          (gethash a node-index-hash)
-                          (gethash b node-index-hash))
-                    1))
-            (edges graph))
-      matrix)))
 
 (defgeneric to-value-matrix (graph)
   (:documentation "Return the value matrix of GRAPH."))
@@ -413,7 +396,8 @@ node or edge in the results."))
     node))
 
 (defgeneric add-edge (graph edge &optional value)
-  (:documentation "Add EDGE to GRAPH with optional VALUE."))
+  (:documentation "Add EDGE to GRAPH with optional VALUE. The nodes of
+  EDGE are also added to GRAPH."))
 
 (defmethod add-edge ((graph graph) edge &optional value)
   (mapc (lambda (node)
@@ -452,6 +436,76 @@ node or edge in the results."))
 
 (defmethod outdegree ((digraph digraph) node)
   (length (remove-if-not [{equal node} #'car] (node-edges digraph node))))
+
+(defgeneric transmitterp (digraph node)
+  (:documentation "Returns t if node is a transmitter, i.e., has
+  indegree of 0 and positive outdegree."))
+
+(defmethod transmitterp ((digraph digraph) node)
+  (and (eq (indegree digraph node) 0) (> (outdegree digraph node) 0)))
+
+(defgeneric receiverp (digraph node)
+  (:documentation "Returns t if node is a receiver, i.e., has
+  outdegree of 0 and positive indegree."))
+
+(defmethod receiverp ((digraph digraph) node)
+  (and (eq (outdegree digraph node) 0) (> (indegree digraph node) 0)))
+
+(defgeneric isolatep (digraph node)
+  (:documentation "Returns t if node is an isolate, i.e., both
+  indegree and outdegree are 0."))
+
+(defmethod isolatep ((digraph digraph) node)
+  (and (eq (indegree digraph node) 0) (eq (outdegree digraph node) 0)))
+
+(defgeneric carrierp (digraph node)
+  (:documentation "Returns t if node is a carrier, i.e.,
+  both indegree and outdegree are 1."))
+
+(defmethod carrierp ((digraph digraph) node)
+  (and (eq (indegree digraph node) 1) (eq (outdegree digraph node) 1)))
+
+(defgeneric ordinaryp (digraph node)
+  (:documentation "Returns t if node is ordinary, i.e., is not a
+  transmitter, receiver, isolate, or carrier."))
+
+(defmethod ordinaryp ((digraph digraph) node)
+  (not (or (transmitterp digraph node)
+           (receiverp digraph node)
+           (isolatep digraph node)
+           (carrierp digraph node))))
+
+(defgeneric transmitters (digraph)
+  (:documentation "Return a list of the transmitters in digraph."))
+
+(defmethod transmitters ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (transmitterp digraph n) (push n r)))))
+
+(defgeneric receivers (digraph)
+  (:documentation "Return a list of the receivers in digraph."))
+
+(defmethod receivers ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (receiverp digraph n) (push n r)))))
+
+(defgeneric isolates (digraph)
+  (:documentation "Return a list of the isolated node in digraph."))
+
+(defmethod isolates ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (isolatep digraph n) (push n r)))))
+
+(defgeneric ordinaries (digraph)
+  (:documentation "Return a list of the ordinary nodes in digraph."))
+
+(defmethod ordinaries ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (ordinaryp digraph n) (push n r)))))
 
 (defgeneric (setf node-edges) (new graph node) ;; TODO: seg-faults in clisp
   (:documentation "Set the edges of NODE in GRAPH to NEW.
@@ -495,6 +549,15 @@ Return the old value of EDGE."))
                                   :test (edge-eq graph))))
           edge)
     (remhash edge (edge-h graph))))
+
+(defgeneric reverse-edges (graph)
+  (:documentation "Return a copy of GRAPH with all edges reversed."))
+
+(defmethod reverse-edges ((graph graph))
+  (populate (make-instance (type-of graph))
+    :nodes (nodes graph)
+    :edges-w-values (mapcar (lambda-bind ((edge . value)) (cons (reverse edge) value))
+                            (edges-w-values graph))))
 
 
 ;;; Complex graph methods
@@ -555,38 +618,89 @@ EDGE2 will be combined."))
 (defmethod precedents ((digraph digraph) node)
   (mapcan [#'cdr {member node} #'reverse] (node-edges digraph node)))
 
-(defgeneric connected-component (graph node)
-  (:documentation "Return the connected component of NODE in GRAPH."))
+(defgeneric connected-component (graph node &key type)
+  (:documentation "Return the connected component of NODE in GRAPH.
+The TYPE keyword argument only has an effect for directed graphs in
+which it may be set to one of the following with :STRONG being the
+default value.
 
-(defmethod connected-component ((graph graph) node)
+:STRONG ..... connections only traverse edges along the direction of
+              the edge
+
+:WEAK ....... connections may traverse edges in any direction
+              regardless of the edge direction
+
+:UNILATERAL . two nodes a and b connected iff a is strongly connected
+              to b or b is strongly connected to a"))
+
+(defun connected-component- (node neighbor-fn)
+  ;; Helper function for `connected-component'.
   (let ((from (list node)) (seen (list node)))
     (loop :until (null from) :do
-       (let ((next (remove-duplicates (mapcan {neighbors graph} from))))
+       (let ((next (remove-duplicates (mapcan neighbor-fn from))))
          (setf from (set-difference next seen))
          (setf seen (union next seen))))
     (reverse seen)))
 
-(defgeneric connectedp (graph)
-  (:documentation "Return true if the graph is connected."))
+(defmethod connected-component ((graph graph) node &key type)
+  (declare (ignorable type))
+  (connected-component- node {neighbors graph}))
 
-(defmethod connectedp ((graph graph))
+(defmethod connected-component ((digraph digraph) node &key type)
+  (ecase (or type :strong)
+    (:strong (connected-component- node {neighbors digraph}))
+    (:weak   (connected-component- node {neighbors (graph-of digraph)}))
+    (:unilateral
+     (let ((weakly   (connected-component- node {neighbors (graph-of digraph)}))
+           (strongly (connected-component- node {neighbors digraph})))
+       ;; keep weakly connected components which are strongly
+       ;; connected to NODE in digraph or to which NODE is strongly
+       ;; connected in the directional compliment of digraph
+       (union strongly
+              (remove-if-not
+               [{member node} {connected-component (reverse-edges digraph)}]
+               (set-difference weakly strongly)))))))
+
+(defgeneric connectedp (graph &key type)
+  (:documentation "Return true if the graph is connected.
+TYPE keyword argument is passed to `connected-components'."))
+
+(defmethod connectedp ((graph graph) &key type)
+  (declare (ignorable type))
   (let ((nodes (nodes graph)))
     (subsetp (nodes graph) (connected-component graph (car nodes)))))
 
-(defmethod connectedp ((digraph digraph))
-  (every [{subsetp (nodes digraph)} {connected-component digraph}]
+(defmethod connectedp ((digraph digraph) &key type)
+  (every [{subsetp (nodes digraph)}
+          (lambda (n) (connected-component digraph n :type type))]
          (nodes digraph)))
 
-(defgeneric connected-components (graph)
-  (:documentation "Return a list of the connected components of GRAPH."))
+(defgeneric connected-components (graph &key type)
+  (:documentation "Return a list of the connected components of GRAPH.
+Keyword TYPE is passed to `connected-component' and only has effect
+for directed graphs. Returns strongly connected components of a
+directed graph by default."))
 
-(defmethod connected-components ((graph graph))
-  (let ((nodes (sort (nodes graph) #'< :key {degree graph})) ccs)
-    (loop :until (null nodes) :do
-       (let ((cc (connected-component graph (car nodes))))
-         (setf nodes (set-difference nodes cc))
-         (push cc ccs)))
-    ccs))
+(defmethod connected-components ((graph graph) &key type)
+  (flet ((cc-helper ()
+           (let ((nodes (sort (nodes graph) #'< :key {degree graph})) ccs)
+             (loop :until (null nodes) :do
+                (let ((cc (connected-component graph (car nodes) :type type)))
+                  (setf nodes (set-difference nodes cc))
+                  (push cc ccs)))
+             ccs)))
+    (cond
+      ((and type (eq (type-of graph) 'graph))
+       (warn "type parameter has no effect for undirected graphs")
+       (cc-helper))
+      ((eq type :unilateral)
+       (warn "unilateral connected component partition may not be well defined")
+       (cc-helper))
+      ((or (eq type :strong)
+           (and (null type)
+                (eq (type-of graph) 'digraph)))
+       (strongly-connected-components graph))
+      (t (cc-helper)))))
 
 (defgeneric topological-sort (digraph)
   (:documentation
