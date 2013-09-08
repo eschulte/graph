@@ -8,6 +8,26 @@
 
 ;; Functions for reading/writing graphs from/to the
 ;; [graphviz](http://www.graphviz.org/) DOT format.
+;;
+;; Many graphviz properties and exposed as keyword arguments to the
+;; `to-dot` function.
+;;
+;;     (defvar *graph* (populate (make-instance 'digraph)
+;;                              :nodes '(a b c d e f)
+;;                              :edges-w-values '(((a b) . 3)
+;;                                                ((b c) . 2)
+;;                                                ((c d) . 1)
+;;                                                ((d b) . 2)
+;;                                                ((b e) . 3))))
+;;
+;;     (let ((ccs (mapcar #'cons (connected-components *graph*)
+;;                               '("red" "yellow" "blue" "green"))))
+;;              (graph-dot:to-dot-file
+;;               *graph* "dot-graph.dot"
+;;               :node-fill-color (lambda (n) (cdr (assoc-if {member n} ccs)))
+;;               :node-style (constantly "filled")))
+;;
+;; <img src="dot-graph.png"/>
 
 ;;; Code:
 (in-package :graph-dot)

@@ -13,5 +13,8 @@ all: index.html $(PACKAGES:=.html)
 index.html: graph.html
 	cp $< $@
 
+%.png: %.dot
+	dot -Tpng $^ > $@
+
 clean:
 	rm -f index.html $(PACKAGES:=.html)

@@ -63,6 +63,27 @@ href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 <p>Functions for reading/writing graphs from/to the
 <a href="http://www.graphviz.org/">graphviz</a> DOT format.</p>
 
+<p>Many graphviz properties and exposed as keyword arguments to the
+<code>to-dot</code> function.</p>
+
+<pre><code>(defvar *graph* (populate (make-instance 'digraph)
+                         :nodes '(a b c d e f)
+                         :edges-w-values '(((a b) . 3)
+                                           ((b c) . 2)
+                                           ((c d) . 1)
+                                           ((d b) . 2)
+                                           ((b e) . 3))))
+
+(let ((ccs (mapcar #'cons (connected-components *graph*)
+                          '("red" "yellow" "blue" "green"))))
+         (graph-dot:to-dot-file
+          *graph* "dot-graph.dot"
+          :node-fill-color (lambda (n) (cdr (assoc-if {member n} ccs)))
+          :node-style (constantly "filled")))
+</code></pre>
+
+<p><img src="dot-graph.png"/></p>
+
 <br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH-DOT dictionary</a></h3>
 
 

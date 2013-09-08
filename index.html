@@ -113,10 +113,10 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
       <li><a href="#precedents"><code>precedents</code></a></li>
       <li><a href="#preferential-attachment-populate"><code>preferential-attachment-populate</code></a></li>
       <li><a href="#residual"><code>residual</code></a></li>
+      <li><a href="#reverse-edges"><code>reverse-edges</code></a></li>
       <li><a href="#shortest-path"><code>shortest-path</code></a></li>
       <li><a href="#strongly-connected-components"><code>strongly-connected-components</code></a></li>
       <li><a href="#subgraph"><code>subgraph</code></a></li>
-      <li><a href="#to-adjacency-matrix"><code>to-adjacency-matrix</code></a></li>
       <li><a href="#to-plist"><code>to-plist</code></a></li>
       <li><a href="#to-value-matrix"><code>to-value-matrix</code></a></li>
       <li><a href="#topological-sort"><code>topological-sort</code></a></li>
@@ -240,7 +240,8 @@ Starting with the original graph above we get the following.</p>
 <p><br>[Generic function]<br><a class=none name='add-edge'><b>add-edge</b> <i>graph edge <tt>&amp;optional</tt> value</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
-Add EDGE to GRAPH with optional VALUE.
+Add EDGE to GRAPH with optional VALUE. The nodes of
+  EDGE are also added to GRAPH.
 
 
 
@@ -376,12 +377,26 @@ Fraction of connected triples which are closed.
 
 <!-- Entry for CONNECTED-COMPONENT -->
 
-<p><br>[Generic function]<br><a class=none name='connected-component'><b>connected-component</b> <i>graph node</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='connected-component'><b>connected-component</b> <i>graph node <tt>&amp;key</tt> type</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Return the connected component of NODE in GRAPH.
+The TYPE keyword argument only has an effect for directed graphs in
+which it may be set to one of the following with :STRONG being the
+default value.
 
-
+:STRONG ..... connections only traverse edges along the direction of
+<pre>
+              the edge
+</pre>
+:WEAK ....... connections may traverse edges in any direction
+<pre>
+              regardless of the edge direction
+</pre>
+:UNILATERAL . two nodes a and b connected iff a is strongly connected
+<pre>
+              to b or b is strongly connected to a
+</pre>
 
 
 </blockquote>
@@ -391,10 +406,13 @@ Return the connected component of NODE in GRAPH.
 
 <!-- Entry for CONNECTED-COMPONENTS -->
 
-<p><br>[Generic function]<br><a class=none name='connected-components'><b>connected-components</b> <i>graph</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='connected-components'><b>connected-components</b> <i>graph <tt>&amp;key</tt> type</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Return a list of the connected components of GRAPH.
+Keyword TYPE is passed to <code>connected-component</code> and only has effect
+for directed graphs. Returns strongly connected components of a
+directed graph by default.
 
 
 
@@ -421,10 +439,11 @@ Return all connected node groups of SIZE in GRAPH.
 
 <!-- Entry for CONNECTEDP -->
 
-<p><br>[Generic function]<br><a class=none name='connectedp'><b>connectedp</b> <i>graph</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='connectedp'><b>connectedp</b> <i>graph <tt>&amp;key</tt> type</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Return true if the graph is connected.
+TYPE keyword argument is passed to <code>connected-components</code>.
 
 
 
@@ -1116,6 +1135,21 @@ minus the current flow, or equal to the negative of the current flow.
 <!-- End of entry for RESIDUAL -->
 
 
+<!-- Entry for REVERSE-EDGES -->
+
+<p><br>[Generic function]<br><a class=none name='reverse-edges'><b>reverse-edges</b> <i>graph</i> =&gt; <i>result</i></a>
+<blockquote><br>
+
+Return a copy of GRAPH with all edges reversed.
+
+
+
+
+</blockquote>
+
+<!-- End of entry for REVERSE-EDGES -->
+
+
 <!-- Entry for SHORTEST-PATH -->
 
 <p><br>[Generic function]<br><a class=none name='shortest-path'><b>shortest-path</b> <i>graph a b</i> =&gt; <i>result</i></a>
@@ -1163,30 +1197,15 @@ Return the subgraph of GRAPH restricted to NODES.
 <!-- End of entry for SUBGRAPH -->
 
 
-<!-- Entry for TO-ADJACENCY-MATRIX -->
-
-<p><br>[Generic function]<br><a class=none name='to-adjacency-matrix'><b>to-adjacency-matrix</b> <i>graph</i> =&gt; <i>result</i></a>
-<blockquote><br>
-
-Return the adjacency matrix of GRAPH.
-
-
-
-
-</blockquote>
-
-<!-- End of entry for TO-ADJACENCY-MATRIX -->
-
-
 <!-- Entry for TO-PLIST -->
 
-<p><br>[Generic function]<br><a class=none name='to-plist'><b>to-plist</b> <i>graph <tt>&amp;key</tt> node-fun edge-fun</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-plist'><b>to-plist</b> <i>graph <tt>&amp;key</tt> node-fn edge-fn</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Serialize GRAPH as a plist.
-Keyword arguments NODE-FUN and EDGE-FUN will be called on a node or
-edge and should return a plist of data to associate with the given
-node or edge in the results.
+Keyword arguments NODE-FN and EDGE-FN will be called on a node or edge
+and should return a plist of data to associate with the given node or
+edge in the results.
 
 
 
