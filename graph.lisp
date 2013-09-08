@@ -675,7 +675,8 @@ default value.
 (defgeneric connected-components (graph &key type)
   (:documentation "Return a list of the connected components of GRAPH.
 Keyword TYPE is passed to `connected-component' and only has effect
-for directed graphs."))
+for directed graphs. Returns strongly connected components of a
+directed graph by default."))
 
 (defmethod connected-components ((graph graph) &key type)
   (flet ((cc-helper ()
