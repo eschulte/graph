@@ -692,7 +692,7 @@ for directed graphs."))
       ((eq type :unilateral)
        (warn "unilateral connected component partition may not be well defined")
        (cc-helper))
-      ((and (eq type :strong))
+      ((or (eq type :strong) (eq (type-of graph) 'digraph))
        (strongly-connected-components graph))
       (t (cc-helper)))))
 
