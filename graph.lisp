@@ -661,15 +661,18 @@ default value.
                [{member node} {connected-component (reverse-edges digraph)}]
                (set-difference weakly strongly)))))))
 
-(defgeneric connectedp (graph)
-  (:documentation "Return true if the graph is connected."))
+(defgeneric connectedp (graph &key type)
+  (:documentation "Return true if the graph is connected.
+TYPE keyword argument is passed to `connected-components'."))
 
-(defmethod connectedp ((graph graph))
+(defmethod connectedp ((graph graph) &key type)
+  (declare (ignorable type))
   (let ((nodes (nodes graph)))
     (subsetp (nodes graph) (connected-component graph (car nodes)))))
 
-(defmethod connectedp ((digraph digraph))
-  (every [{subsetp (nodes digraph)} {connected-component digraph}]
+(defmethod connectedp ((digraph digraph) &key type)
+  (every [{subsetp (nodes digraph)}
+          (lambda (n) (connected-component digraph n :type type))]
          (nodes digraph)))
 
 (defgeneric connected-components (graph &key type)
