@@ -63,7 +63,9 @@
 
 ;;; Visualization
 (defstruct subgraph
-  "The information needed to specify a DOT subgraph."
+  "The information needed to specify a DOT subgraph. UNIQUE-NAME
+expects a string, NODE-ATTRIBUTES, EDGE-ATTRIBUTES, and ATTRIBUTES
+expect assoc lists, and NODE-LIST expects a list."
   unique-name
   node-attributes
   edge-attributes
@@ -90,7 +92,7 @@ SUBGRAPH structure."
         (format out "];~%"))
       (when (subgraph-attributes s)
         (mapc (lambda (pair)
-                (format out "  ~a=~a;~%" (car pair) (cdr pair)))
+                (format out "  ~a=\"~a\";~%" (car pair) (cdr pair)))
               (subgraph-attributes s)))
       (when (subgraph-node-list s)
         (mapc (lambda (n)
