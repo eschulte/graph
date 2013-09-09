@@ -1,5 +1,6 @@
 (defsystem :graph-dot
   :description "Serialize graphs to and from DOT format"
+  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
   :depends-on

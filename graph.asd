@@ -1,6 +1,7 @@
 (defsystem :graph
   :description "simple library for building and manipulating graphs"
   :version "0.0.0"
+  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :licence "GPL V3"
   :depends-on (alexandria metabang-bind curry-compose-reader-macros)
   :components
@@ -10,6 +11,7 @@
 
 (defsystem :graph-test
   :description "Test the graph library."
+  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
   :depends-on
