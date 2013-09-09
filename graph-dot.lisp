@@ -22,12 +22,34 @@
 ;;
 ;;     (let ((ccs (mapcar #'cons (connected-components *graph*)
 ;;                               '("red" "yellow" "blue" "green"))))
-;;              (graph-dot:to-dot-file
+;;              (to-dot-file
 ;;               *graph* "dot-graph.dot"
 ;;               :node-fill-color (lambda (n) (cdr (assoc-if {member n} ccs)))
 ;;               :node-style (constantly "filled")))
 ;;
 ;; <img src="dot-graph.png"/>
+;;
+;; Or less colorfully.
+;;
+;;     (setf *graph* (populate (make-instance 'digraph)
+;;                     :edges '((A T2) (T1 B) (T2 B) (T2 C) (T1 D))))
+;;
+;;     (let ((s1 (make-subgraph :unique-name "one"
+;;                              :attributes '(("color" . "lightgrey")
+;;                                            ("label" . "One" ))
+;;                              :node-list (first
+;;                                          (connected-components
+;;                                           *graph*
+;;                                           :type :unilateral))))
+;;           (s2 (make-subgraph :unique-name "two"
+;;                              :attributes '(("color" . "lightgrey")
+;;                                            ("label" . "Two" ))
+;;                              :node-list (second
+;;                                          (connected-components
+;;                                           it
+;;                                           :type :unilateral)))))
+;;       (to-dot-file it "/tmp/it.dot"
+;;                    :subgraphs (list s1 s2)))
 
 ;;; Code:
 (in-package :graph-dot)
