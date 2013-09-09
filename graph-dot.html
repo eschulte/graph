@@ -75,14 +75,41 @@ href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
                                            ((b e) . 3))))
 
 (let ((ccs (mapcar #'cons (connected-components *graph*)
-                          '("red" "yellow" "blue" "green"))))
-         (graph-dot:to-dot-file
-          *graph* "dot-graph.dot"
-          :node-fill-color (lambda (n) (cdr (assoc-if {member n} ccs)))
-          :node-style (constantly "filled")))
+                   '("red" "yellow" "blue" "green"))))
+  (to-dot-file *graph* "dot-graph-1.dot"
+               :node-attrs
+               (list (cons :fillcolor
+                           (lambda (n) (cdr (assoc-if {member n} ccs))))
+                     (cons :style
+                           (constantly "filled")))))
 </code></pre>
 
-<p><img src="dot-graph.png"/></p>
+<p><img src="dot-graph-1.png"/></p>
+
+<p>Or less colorfully.</p>
+
+<pre><code>(setf *graph* (populate (make-instance 'digraph)
+                :edges '((A T2) (T1 B) (T2 B) (T2 C) (T1 D))))
+
+(let ((s1 (make-subgraph :unique-name "one"
+                         :attributes '(("color" . "lightgrey")
+                                       ("label" . "One" ))
+                         :node-list (first
+                                     (connected-components
+                                      *graph*
+                                      :type :unilateral))))
+      (s2 (make-subgraph :unique-name "two"
+                         :attributes '(("color" . "lightgrey")
+                                       ("label" . "Two" ))
+                         :node-list (second
+                                     (connected-components
+                                      *graph*
+                                      :type :unilateral)))))
+  (to-dot-file *graph* "dot-graph-2.dot"
+               :subgraphs (list s1 s2)))
+</code></pre>
+
+<p><img src="dot-graph-2.png"/></p>
 
 <br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH-DOT dictionary</a></h3>
 
@@ -118,17 +145,14 @@ dot executable.
 
 <!-- Entry for TO-DOT -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream attributes node-label edge-label node-color-scheme node-shape node-fill-color node-color node-font-color node-comment node-group node-label-loc node-pen-width node-style node-ext-label edge-arrow-head edge-arrow-size edge-arrow-tail edge-color edge-color-scheme edge-comment edge-constraint edge-decorate edge-dir edge-fill-color edge-font-color edge-head-clip edge-head-label edge-head-port edge-label-angle edge-label-float edge-label-font-color edge-pen-width edge-same-head edge-same-tail edge-tail-clip edge-tail-label edge-tail-port edge-weight edge-ext-label subgraphs stream edge-label node-ordering</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream attributes node-attrs edge-attrs subgraphs stream</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Print the dot code representing GRAPH. The keyword
 argument ATTRIBUTES takes an assoc list with DOT graph attribute (name
-. value) pairs. The various NODE-* and EDGE-* keyword arguments take
-functions, which when called on a node or edge return a value for that
-attribute of the corresponding element of the dot graph. The names of
-the NODE-* and EDGE-* keyword argments are based on the DOT attribute,
-with the addition of a hyphen between words of multi-word DOT
-attribute names. The DOT graph, node, and edge attributes are
+. value) pairs. NODE-ATTRS and EDGE-ATTRS also take assoc lists of DOT
+graph attributes and functions taking nodes or edges respectively and
+returning values. The DOT graph, node, and edge attributes are
 described at http://www.graphviz.org/doc/info/attrs.html. SUBGRAPHS is
 a list of SUBGRAPH structures.
 
@@ -142,7 +166,7 @@ a list of SUBGRAPH structures.
 
 <!-- Entry for TO-DOT-FILE -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> attributes node-label edge-label node-color-scheme node-shape node-fill-color node-color node-font-color node-comment node-group node-label-loc node-ordering node-pen-width node-style node-ext-label edge-arrow-head edge-arrow-size edge-arrow-tail edge-color edge-color-scheme edge-comment edge-constraint edge-decorate edge-dir edge-fill-color edge-font-color edge-head-clip edge-head-label edge-head-port edge-label-angle edge-label-float edge-label-font-color edge-pen-width edge-same-head edge-same-tail edge-tail-clip edge-tail-label edge-tail-port edge-weight edge-ext-label subgraphs</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> attributes node-attrs edge-attrs subgraphs</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write a dot representation of GRAPH to PATH.

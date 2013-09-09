@@ -1,0 +1,28 @@
+digraph to_dot {
+  "A" ;
+  "T2" ;
+  "T1" ;
+  "B" ;
+  "C" ;
+  "D" ;
+ "A" -> "T2" ;
+ "T1" -> "B" ;
+ "T2" -> "B" ;
+ "T2" -> "C" ;
+ "T1" -> "D" ;
+subgraph clusterone {
+  color=lightgrey;
+  label=One;
+  T1;
+  D;
+  B;
+  }
+subgraph clustertwo {
+  color=lightgrey;
+  label=Two;
+  A;
+  T2;
+  C;
+  B;
+  }
+}
