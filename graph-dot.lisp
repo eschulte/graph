@@ -64,7 +64,7 @@ SUBGRAPH structure."
         (format out "];~%"))
       (when (subgraph-attributes s)
         (mapc (lambda (pair)
-                (format out "  ~a=~a;~%" (car pair) (cdr pair)))
+                (format out "  ~a=\"~a\";~%" (car pair) (cdr pair)))
               (subgraph-attributes s)))
       (when (subgraph-node-list s)
         (mapc (lambda (n)
