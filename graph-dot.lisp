@@ -37,7 +37,9 @@
 
 ;;; Visualization
 (defstruct subgraph
-  "The information needed to specify a DOT subgraph."
+  "The information needed to specify a DOT subgraph. UNIQUE-NAME
+expects a string, NODE-ATTRIBUTES, EDGE-ATTRIBUTES, and ATTRIBUTES
+expect assoc lists, and NODE-LIST expects a list."
   unique-name
   node-attributes
   edge-attributes
