@@ -20,14 +20,16 @@
 ;;                                                ((d b) . 2)
 ;;                                                ((b e) . 3))))
 ;;
-;;     (let ((ccs (mapcar #'cons (connected-components *graph*)
-;;                        '("red" "yellow" "blue" "green"))))
-;;       (to-dot-file *graph* "dot-graph-1.dot"
-;;                    :node-attrs
-;;                    (list (cons :fillcolor
-;;                                (lambda (n) (cdr (assoc-if {member n} ccs))))
-;;                          (cons :style
-;;                                (constantly "filled")))))
+;; (let ((ccs (mapcar #'cons (connected-components *graph*)
+;;                    '(1 2 3 4))))
+;;   (to-dot-file *graph* "dot-graph-1.dot"
+;;                :node-attrs
+;;                (list (cons :fillcolor
+;;                            (lambda (n) (cdr (assoc-if {member n} ccs))))
+;;                      (cons :style
+;;                            (constantly "filled"))
+;;                      (cons :colorscheme
+;;                            (constantly "set34")))))
 ;;
 ;; <img src="dot-graph-1.png"/>
 ;;
