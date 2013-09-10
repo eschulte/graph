@@ -36,15 +36,13 @@
 ;;     (setf *graph* (populate (make-instance 'digraph)
 ;;                     :edges '((A T2) (T1 B) (T2 B) (T2 C) (T1 D))))
 ;;     
-;;     (let ((s1 (make-subgraph :unique-name "one"
-;;                              :attributes '(("color" . "lightgrey")
+;;     (let ((s1 (make-subgraph :attributes '(("color" . "lightgrey")
 ;;                                            ("label" . "One" ))
 ;;                              :node-list (first
 ;;                                          (connected-components
 ;;                                           *graph*
 ;;                                           :type :unilateral))))
-;;           (s2 (make-subgraph :unique-name "two"
-;;                              :attributes '(("color" . "lightgrey")
+;;           (s2 (make-subgraph :attributes '(("color" . "lightgrey")
 ;;                                            ("label" . "Two" ))
 ;;                              :node-list (second
 ;;                                          (connected-components
@@ -63,10 +61,9 @@
 
 ;;; Visualization
 (defstruct subgraph
-  "The information needed to specify a DOT subgraph. UNIQUE-NAME
-expects a string, NODE-ATTRIBUTES, EDGE-ATTRIBUTES, and ATTRIBUTES
-expect assoc lists, and NODE-LIST expects a list."
-  unique-name
+  "The information needed to specify a DOT subgraph. NODE-ATTRIBUTES,
+EDGE-ATTRIBUTES, and ATTRIBUTES expect assoc lists, and NODE-LIST
+expects a list."
   node-attributes
   edge-attributes
   attributes
@@ -77,7 +74,7 @@ expect assoc lists, and NODE-LIST expects a list."
 SUBGRAPH structure."
   (when (subgraph-p s)
     (with-output-to-string (out)
-      (format out "subgraph cluster~a {~%" (subgraph-unique-name s))
+      (format out "subgraph ~a {~%" (string (gensym "cluster_")))
       (when (subgraph-node-attributes s)
         (format out "  node [")
         (mapc (lambda (pair)
