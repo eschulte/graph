@@ -20,14 +20,16 @@
 ;;                                                ((d b) . 2)
 ;;                                                ((b e) . 3))))
 ;;
-;;     (let ((ccs (mapcar #'cons (connected-components *graph*)
-;;                        '("red" "yellow" "blue" "green"))))
-;;       (to-dot-file *graph* "dot-graph-1.dot"
-;;                    :node-attrs
-;;                    (list (cons :fillcolor
-;;                                (lambda (n) (cdr (assoc-if {member n} ccs))))
-;;                          (cons :style
-;;                                (constantly "filled")))))
+;; (let ((ccs (mapcar #'cons (connected-components *graph*)
+;;                    '(1 2 3 4))))
+;;   (to-dot-file *graph* "dot-graph-1.dot"
+;;                :node-attrs
+;;                (list (cons :fillcolor
+;;                            (lambda (n) (cdr (assoc-if {member n} ccs))))
+;;                      (cons :style
+;;                            (constantly "filled"))
+;;                      (cons :colorscheme
+;;                            (constantly "set34")))))
 ;;
 ;; <img src="dot-graph-1.png"/>
 ;;
@@ -36,15 +38,13 @@
 ;;     (setf *graph* (populate (make-instance 'digraph)
 ;;                     :edges '((A T2) (T1 B) (T2 B) (T2 C) (T1 D))))
 ;;     
-;;     (let ((s1 (make-subgraph :unique-name "one"
-;;                              :attributes '(("color" . "lightgrey")
+;;     (let ((s1 (make-subgraph :attributes '(("color" . "lightgrey")
 ;;                                            ("label" . "One" ))
 ;;                              :node-list (first
 ;;                                          (connected-components
 ;;                                           *graph*
 ;;                                           :type :unilateral))))
-;;           (s2 (make-subgraph :unique-name "two"
-;;                              :attributes '(("color" . "lightgrey")
+;;           (s2 (make-subgraph :attributes '(("color" . "lightgrey")
 ;;                                            ("label" . "Two" ))
 ;;                              :node-list (second
 ;;                                          (connected-components
@@ -63,10 +63,9 @@
 
 ;;; Visualization
 (defstruct subgraph
-  "The information needed to specify a DOT subgraph. UNIQUE-NAME
-expects a string, NODE-ATTRIBUTES, EDGE-ATTRIBUTES, and ATTRIBUTES
-expect assoc lists, and NODE-LIST expects a list."
-  unique-name
+  "The information needed to specify a DOT subgraph. NODE-ATTRIBUTES,
+EDGE-ATTRIBUTES, and ATTRIBUTES expect assoc lists, and NODE-LIST
+expects a list."
   node-attributes
   edge-attributes
   attributes
@@ -77,19 +76,17 @@ expect assoc lists, and NODE-LIST expects a list."
 SUBGRAPH structure."
   (when (subgraph-p s)
     (with-output-to-string (out)
-      (format out "subgraph cluster~a {~%" (subgraph-unique-name s))
+      (format out "subgraph ~a {~%" (string (gensym "cluster_")))
       (when (subgraph-node-attributes s)
-        (format out "  node [")
-        (mapc (lambda (pair)
-                (format out "~a=~a, " (car pair) (cdr pair)))
-              (subgraph-node-attributes s))
-        (format out "];~%"))
+        (format out "  node [~a];~%"
+                (mapc (lambda (pair)
+                        (format out "~a=~a, " (car pair) (cdr pair)))
+                      (subgraph-node-attributes s))))
       (when (subgraph-edge-attributes s)
-        (format out "  edge [")
-        (mapc (lambda (pair)
-                (format out "~a=~a, " (car pair) (cdr pair)))
-              (subgraph-edge-attributes s))
-        (format out "];~%"))
+        (format out "  edge [~a];~%"
+                (mapc (lambda (pair)
+                        (format out "~a=~a, " (car pair) (cdr pair)))
+                      (subgraph-edge-attributes s))))
       (when (subgraph-attributes s)
         (mapc (lambda (pair)
                 (format out "  ~a=\"~a\";~%" (car pair) (cdr pair)))
