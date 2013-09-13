@@ -135,7 +135,7 @@ a list of SUBGRAPH structures."))
   (format stream "~a to_dot {~%~{~a~}}~%"
           (intern (string-downcase (type-of graph)))
           (append
-           (mapcar {apply {format nil "  ~(~a~)=~a;~%"}} attributes)
+           (mapcar (lambda-bind ((a . b)) (format nil "  ~(~a~)=~a;~%" a b)) attributes)
            (mapcar {node-to-dot _ node-attrs} (nodes graph))
            (mapcar {edge-to-dot _ (type-of graph) edge-attrs} (edges graph))
            (mapcar #'subgraph-print subgraphs))))
