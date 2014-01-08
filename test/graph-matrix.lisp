@@ -126,7 +126,157 @@
                                      (222 33)))))
   (:teardown (setf *graph* nil)))
 
+(defixture relation
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a c)
+                                   (b b)
+                                   (c c)
+                                   (c b)
+                                   (c a)
+                                   (d a)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
 
+(defixture digraph
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a c)
+                                   (a d)
+                                   (c b)
+                                   (c a)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture graph
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a c)
+                                   (a d)
+                                   (b c)
+                                   (c b)
+                                   (c a)
+                                   (c d)
+                                   (d c)
+                                   (d a)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture oriented-graph
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a d)
+                                   (b c)
+                                   (c a)
+                                   (c d)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture similarity-relation
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a a)
+                                   (a c)
+                                   (a d)
+                                   (b b)
+                                   (b c)
+                                   (c c)
+                                   (c a)
+                                   (c b)
+                                   (c d)
+                                   (d d)
+                                   (d a)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture equivalence-relation
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a a)
+                                   (a c)
+                                   (a d)
+                                   (b b)
+                                   (c c)
+                                   (c a)
+                                   (c d)
+                                   (d d)
+                                   (d c)
+                                   (d a)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture partial-order
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a c)
+                                   (a d)
+                                   (b c)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture complete-order
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a b)
+                                   (a c)
+                                   (a d)
+                                   (b c)
+                                   (d b)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture tournament
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a c)
+                                   (a d)
+                                   (b a)
+                                   (c b)
+                                   (d b)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture parity-relation
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a c)
+                                   (a d)
+                                   (c a)
+                                   (c d)
+                                   (d a)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture antiequivalence-relation
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a d)
+                                   (b a)
+                                   (c b)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
+
+(defixture antiparity-relation
+  (:setup (setf *graph* 
+                (populate (make-instance 'digraph)
+                          :nodes '(a b c d)
+                          :edges '((a a)
+                                   (a d)
+                                   (b b)
+                                   (b a)
+                                   (c c)
+                                   (c b)
+                                   (d d)
+                                   (d c)))))
+  (:teardown (setf *graph* nil)))
 
 
 ;;; Tests
@@ -250,3 +400,58 @@
                 (to-strong-component-matrix
                  (to-reachability-matrix *graph* (make-instance 'matrix)))
                 m))))))
+
+(deftest relation ()
+  (with-fixture relation
+    (is (relational-structure *graph* (make-instance 'matrix)) nil)))
+
+(deftest digraph ()
+  (with-fixture digraph
+    (is (relational-structure *graph* (make-instance 'matrix)) "digraph")))
+
+(deftest graph ()
+  (with-fixture graph
+    (is (relational-structure *graph* (make-instance 'matrix)) "graph")))
+
+(deftest oriented-graph ()
+  (with-fixture oriented-graph
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "oriented graph")))
+
+(deftest similarity-relation ()
+  (with-fixture similarity-relation
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "similarity relation")))
+
+(deftest equivalence-relation ()
+  (with-fixture equivalence-relation
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "equivalence relation")))
+
+(deftest complete-order ()
+  (with-fixture complete-order
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "complete order")))
+
+(deftest tournament ()
+  (with-fixture tournament
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "tournament")))
+
+(deftest parity-relation ()
+  (with-fixture parity-relation
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "parity relation")))
+
+(deftest antiequivalence-relation ()
+  (with-fixture antiequivalence-relation
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "antiequivalence relation")))
+
+(deftest antiparity-relation ()
+  (with-fixture antiparity-relation
+    (is (relational-structure *graph* (make-instance 'matrix))
+        "antiparity relation")))
+
+
+

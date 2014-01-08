@@ -28,4 +28,12 @@
    :to-strong-component-matrix
    :strong-component-of
    :to-distance-matrix
-   :distance-from-to))
+   :distance-from-to
+   :reflexivep
+   :irreflexivep
+   :symmetricp
+   :asymmetricp
+   :transitivep
+   :intransitivep
+   :completep
+   :relational-structure))
