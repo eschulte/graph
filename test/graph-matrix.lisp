@@ -401,54 +401,54 @@
                  (to-reachability-matrix *graph* (make-instance 'matrix)))
                 m))))))
 
-(deftest relation ()
+(deftest relation-test ()
   (with-fixture relation
-    (is (relational-structure *graph* (make-instance 'matrix)) nil)))
+    (is (not (relational-structure *graph* (make-instance 'matrix))))))
 
-(deftest digraph ()
+(deftest digraph-test ()
   (with-fixture digraph
     (is (relational-structure *graph* (make-instance 'matrix)) "digraph")))
 
-(deftest graph ()
+(deftest graph-test ()
   (with-fixture graph
     (is (relational-structure *graph* (make-instance 'matrix)) "graph")))
 
-(deftest oriented-graph ()
+(deftest oriented-graph-test ()
   (with-fixture oriented-graph
     (is (relational-structure *graph* (make-instance 'matrix))
         "oriented graph")))
 
-(deftest similarity-relation ()
+(deftest similarity-relation-test ()
   (with-fixture similarity-relation
     (is (relational-structure *graph* (make-instance 'matrix))
         "similarity relation")))
 
-(deftest equivalence-relation ()
+(deftest equivalence-relation-test ()
   (with-fixture equivalence-relation
     (is (relational-structure *graph* (make-instance 'matrix))
         "equivalence relation")))
 
-(deftest complete-order ()
+(deftest complete-order-test ()
   (with-fixture complete-order
     (is (relational-structure *graph* (make-instance 'matrix))
         "complete order")))
 
-(deftest tournament ()
+(deftest tournament-test ()
   (with-fixture tournament
     (is (relational-structure *graph* (make-instance 'matrix))
         "tournament")))
 
-(deftest parity-relation ()
+(deftest parity-relation-test ()
   (with-fixture parity-relation
     (is (relational-structure *graph* (make-instance 'matrix))
         "parity relation")))
 
-(deftest antiequivalence-relation ()
+(deftest antiequivalence-relation-test ()
   (with-fixture antiequivalence-relation
     (is (relational-structure *graph* (make-instance 'matrix))
         "antiequivalence relation")))
 
-(deftest antiparity-relation ()
+(deftest antiparity-relation-test ()
   (with-fixture antiparity-relation
     (is (relational-structure *graph* (make-instance 'matrix))
         "antiparity relation")))
