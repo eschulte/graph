@@ -75,7 +75,7 @@
     (when (and (rank-value r) (rank-node-list r))
       (format out "{rank=~a;" (rank-value r))
       (mapc (lambda (n)
-              (format out " ~a;" n))
+              (format out " ~s;" n))
             (rank-node-list r))
        (format out " }~%"))))
 
