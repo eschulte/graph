@@ -91,15 +91,13 @@ href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 <pre><code>(setf *graph* (populate (make-instance 'digraph)
                 :edges '((A T2) (T1 B) (T2 B) (T2 C) (T1 D))))
 
-(let ((s1 (make-subgraph :unique-name "one"
-                         :attributes '(("color" . "lightgrey")
+(let ((s1 (make-subgraph :attributes '(("color" . "lightgrey")
                                        ("label" . "One" ))
                          :node-list (first
                                      (connected-components
                                       *graph*
                                       :type :unilateral))))
-      (s2 (make-subgraph :unique-name "two"
-                         :attributes '(("color" . "lightgrey")
+      (s2 (make-subgraph :attributes '(("color" . "lightgrey")
                                        ("label" . "Two" ))
                          :node-list (second
                                      (connected-components
@@ -133,7 +131,7 @@ dot executable.
 
 <!-- Entry for MAKE-SUBGRAPH -->
 
-<p><br>[Function]<br><a class=none name='make-subgraph'><b>make-subgraph</b> <i><tt>&amp;key</tt> (unique-name dum0) (node-attributes dum1) (edge-attributes dum2) (attributes dum3) (node-list dum4)</i> =&gt; <i>result</i></a>
+<p><br>[Function]<br><a class=none name='make-subgraph'><b>make-subgraph</b> <i><tt>&amp;key</tt> (node-attributes dum148) (edge-attributes dum149) (attributes dum150) (ranks dum151) (node-list dum152)</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 
@@ -145,7 +143,7 @@ dot executable.
 
 <!-- Entry for TO-DOT -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream attributes node-attrs edge-attrs subgraphs stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream attributes node-attrs edge-attrs subgraphs ranks stream</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Print the dot code representing GRAPH. The keyword
@@ -154,7 +152,7 @@ argument ATTRIBUTES takes an assoc list with DOT graph attribute (name
 graph attributes and functions taking nodes or edges respectively and
 returning values. The DOT graph, node, and edge attributes are
 described at http://www.graphviz.org/doc/info/attrs.html. SUBGRAPHS is
-a list of SUBGRAPH structures.
+a list of SUBGRAPH structures.  RANKS is a list of RANK structures.
 
 
 
@@ -166,7 +164,7 @@ a list of SUBGRAPH structures.
 
 <!-- Entry for TO-DOT-FILE -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> attributes node-attrs edge-attrs subgraphs</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot-file'><b>to-dot-file</b> <i>graph path <tt>&amp;key</tt> attributes node-attrs edge-attrs subgraphs ranks</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write a dot representation of GRAPH to PATH.
