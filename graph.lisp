@@ -564,7 +564,7 @@ Return the old value of EDGE."))
 (defgeneric merge-nodes (graph node1 node2 &key new)
   (:documentation "Combine NODE1 and NODE2 in GRAPH into the node NEW.
 All edges of NODE1 and NODE2 in GRAPH will be combined into a new node
-holding VALUE.  Edges between only NODE1 and NODE2 will be removed."))
+of value NEW.  Edges between only NODE1 and NODE2 will be removed."))
 
 (defmethod merge-nodes ((graph graph) node1 node2 &key (new node1))
   ;; replace all removed edges with NEW instead of NODE1 or NODE2
