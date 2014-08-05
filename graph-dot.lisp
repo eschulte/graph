@@ -20,14 +20,16 @@
 ;;                                                ((d b) . 2)
 ;;                                                ((b e) . 3))))
 ;;
-;;     (let ((ccs (mapcar #'cons (connected-components *graph*)
-;;                        '("red" "yellow" "blue" "green"))))
-;;       (to-dot-file *graph* "dot-graph-1.dot"
-;;                    :node-attrs
-;;                    (list (cons :fillcolor
-;;                                (lambda (n) (cdr (assoc-if {member n} ccs))))
-;;                          (cons :style
-;;                                (constantly "filled")))))
+;; (let ((ccs (mapcar #'cons (connected-components *graph*)
+;;                    '(1 2 3 4))))
+;;   (to-dot-file *graph* "dot-graph-1.dot"
+;;                :node-attrs
+;;                (list (cons :fillcolor
+;;                            (lambda (n) (cdr (assoc-if {member n} ccs))))
+;;                      (cons :style
+;;                            (constantly "filled"))
+;;                      (cons :colorscheme
+;;                            (constantly "set34")))))
 ;;
 ;; <img src="dot-graph-1.png"/>
 ;;
@@ -36,15 +38,13 @@
 ;;     (setf *graph* (populate (make-instance 'digraph)
 ;;                     :edges '((A T2) (T1 B) (T2 B) (T2 C) (T1 D))))
 ;;     
-;;     (let ((s1 (make-subgraph :unique-name "one"
-;;                              :attributes '(("color" . "lightgrey")
+;;     (let ((s1 (make-subgraph :attributes '(("color" . "lightgrey")
 ;;                                            ("label" . "One" ))
 ;;                              :node-list (first
 ;;                                          (connected-components
 ;;                                           *graph*
 ;;                                           :type :unilateral))))
-;;           (s2 (make-subgraph :unique-name "two"
-;;                              :attributes '(("color" . "lightgrey")
+;;           (s2 (make-subgraph :attributes '(("color" . "lightgrey")
 ;;                                            ("label" . "Two" ))
 ;;                              :node-list (second
 ;;                                          (connected-components
@@ -62,14 +62,31 @@
 
 
 ;;; Visualization
+(defstruct rank
+  "The information needed to specify a DOT rank statement. VALUE
+  expects a string and NODE-LIST expects a list."
+  value
+  node-list)
+
+(defun rank-print (r)
+  "Returns a string containing a DOT rank statement. R is a RANK structure."
+  (when (rank-p r))
+  (with-output-to-string (out)
+    (when (and (rank-value r) (rank-node-list r))
+      (format out "{rank=~a;" (rank-value r))
+      (mapc (lambda (n)
+              (format out " ~s;" n))
+            (rank-node-list r))
+       (format out " }~%"))))
+
 (defstruct subgraph
-  "The information needed to specify a DOT subgraph. UNIQUE-NAME
-expects a string, NODE-ATTRIBUTES, EDGE-ATTRIBUTES, and ATTRIBUTES
-expect assoc lists, and NODE-LIST expects a list."
-  unique-name
+  "The information needed to specify a DOT subgraph. NODE-ATTRIBUTES,
+EDGE-ATTRIBUTES, and ATTRIBUTES expect assoc lists, and NODE-LIST
+expects a list."
   node-attributes
   edge-attributes
   attributes
+  ranks
   node-list)
 
 (defun subgraph-print (s)
@@ -77,23 +94,23 @@ expect assoc lists, and NODE-LIST expects a list."
 SUBGRAPH structure."
   (when (subgraph-p s)
     (with-output-to-string (out)
-      (format out "subgraph cluster~a {~%" (subgraph-unique-name s))
+      (format out "subgraph ~a {~%" (string (gensym "cluster_")))
       (when (subgraph-node-attributes s)
-        (format out "  node [")
-        (mapc (lambda (pair)
-                (format out "~a=~a, " (car pair) (cdr pair)))
-              (subgraph-node-attributes s))
-        (format out "];~%"))
+        (format out "  node [~a];~%"
+                (mapc (lambda (pair)
+                        (format out "~a=~a, " (car pair) (cdr pair)))
+                      (subgraph-node-attributes s))))
       (when (subgraph-edge-attributes s)
-        (format out "  edge [")
-        (mapc (lambda (pair)
-                (format out "~a=~a, " (car pair) (cdr pair)))
-              (subgraph-edge-attributes s))
-        (format out "];~%"))
+        (format out "  edge [~a];~%"
+                (mapc (lambda (pair)
+                        (format out "~a=~a, " (car pair) (cdr pair)))
+                      (subgraph-edge-attributes s))))
       (when (subgraph-attributes s)
         (mapc (lambda (pair)
                 (format out "  ~a=\"~a\";~%" (car pair) (cdr pair)))
               (subgraph-attributes s)))
+      (when (subgraph-ranks s)
+        (mapcar #'rank-print (subgraph-ranks s)))
       (when (subgraph-node-list s)
         (mapc (lambda (n)
                 (format out "  ~a;~%" n))
@@ -107,47 +124,65 @@ SUBGRAPH structure."
           (second edge)
           (mapcar (lambda-bind ((attr . fn))
                     (let ((val (funcall fn edge)))
-                      (if val (format nil "[~(~a~)=~a]" attr val) "")))
+                      (if val
+                          (if (search "URL" (string attr))
+                                    (format nil "[~a=~a]"
+                                            (string-downcase
+                                             (string attr)
+                                             :end (- (length (string attr)) 3))
+                                            val)
+                                    (format nil "[~(~a~)=~a]" attr val)) "")))
                   attrs)))
 
 (defun node-to-dot (node attrs &optional stream)
   (format stream "  \"~a\" ~{~a~^ ~};~%" node
           (mapcar (lambda-bind ((attr . fn))
                     (let ((val (funcall fn node)))
-                      (if val (format nil "[~(~a~)=~a]" attr val) "")))
+                      (if val (if (search "URL" (string attr))
+                                  (format nil "[~a=~a]" attr val)
+                                  (format nil "[~(~a~)=~a]" attr val)) "")))
                   attrs)))
 
 (defgeneric to-dot (graph
-                    &key stream attributes node-attrs edge-attrs subgraphs)
+                    &key stream attributes node-attrs edge-attrs
+                      subgraphs ranks)
   (:documentation "Print the dot code representing GRAPH. The keyword
 argument ATTRIBUTES takes an assoc list with DOT graph attribute (name
 . value) pairs. NODE-ATTRS and EDGE-ATTRS also take assoc lists of DOT
 graph attributes and functions taking nodes or edges respectively and
 returning values. The DOT graph, node, and edge attributes are
 described at http://www.graphviz.org/doc/info/attrs.html. SUBGRAPHS is
-a list of SUBGRAPH structures."))
+a list of SUBGRAPH structures.  RANKS is a list of RANK structures."))
 
 (defmethod to-dot ((graph graph)
-                   &key (stream t) attributes node-attrs edge-attrs subgraphs)
+                   &key (stream t) attributes node-attrs edge-attrs
+                     subgraphs ranks)
   ;; by default edges are labeled with their values
   (unless (assoc :label edge-attrs)
     (push (cons :label {edge-value graph}) edge-attrs))
   (format stream "~a to_dot {~%~{~a~}}~%"
           (intern (string-downcase (type-of graph)))
           (append
-           (mapcar {apply {format nil "  ~(~a~)=~a;~%"}} attributes)
+           (mapcar (lambda-bind ((a . b))
+                                (if (search "URL" (string a))
+                                    (format nil "  ~a=~a;~%" a b)
+                                    (format nil "  ~(~a~)=~a;~%" a b)))
+                   attributes)
            (mapcar {node-to-dot _ node-attrs} (nodes graph))
            (mapcar {edge-to-dot _ (type-of graph) edge-attrs} (edges graph))
-           (mapcar #'subgraph-print subgraphs))))
+           (mapcar #'subgraph-print subgraphs)
+           (mapcar #'rank-print ranks))))
 
-(defgeneric to-dot-file (graph path &key attributes node-attrs edge-attrs)
+(defgeneric to-dot-file (graph path &key attributes node-attrs edge-attrs
+                                      subgraphs ranks)
   (:documentation "Write a dot representation of GRAPH to PATH."))
 
 (defmethod to-dot-file
-    ((graph graph) path &key attributes node-attrs edge-attrs subgraphs)
+    ((graph graph) path &key attributes node-attrs edge-attrs
+                          subgraphs ranks)
   (with-open-file (out path :direction :output :if-exists :supersede)
     (to-dot graph :stream out :attributes attributes :node-attrs node-attrs
-            :edge-attrs edge-attrs :subgraphs subgraphs)))
+            :edge-attrs edge-attrs :subgraphs subgraphs :ranks ranks)))
 
 (defun from-dot (dot-string)
   "Parse the DOT format string DOT-STRING into a graph.

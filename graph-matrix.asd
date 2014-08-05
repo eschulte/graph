@@ -1,5 +1,6 @@
 (defsystem :graph-matrix
   :description "build and manipulate matrix graph representations"
+  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
   :depends-on
@@ -11,6 +12,7 @@
 
 (defsystem :graph-matrix-test
   :description "test the matrix graph representations"
+  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
   :depends-on

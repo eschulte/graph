@@ -177,10 +177,10 @@
   (with-fixture small-graph
     (let ((c (copy *graph*)))
       (is (set-equal (nodes *graph*) (nodes c)))
-      (is (tree-equal (edges *graph*) (edges c) :test #'tree-equal))
+      (is (set-equal (edges *graph*) (edges c) :test #'tree-equal))
       (delete-node c :foo)
       (is (not (set-equal (nodes *graph*) (nodes c))))
-      (is (not (tree-equal (edges *graph*) (edges c) :test #'tree-equal))))))
+      (is (not (set-equal (edges *graph*) (edges c) :test #'tree-equal))))))
 
 (deftest copy-of-a-graph-w-graph-equal ()
   (with-fixture less-small-graph
@@ -449,7 +449,7 @@
     (is (= 1 (betweenness *star* :s)))
     (is (= 0 (betweenness *star* :a)))))
 
-(deftest conversion-to-adjacency-and-value-matrix ()
+(deftest conversion-to-value-matrix ()
   (flet ((sum (array)
            (let ((dims (array-dimensions array)))
              (reduce #'+
@@ -461,20 +461,7 @@
                                        ((numberp val) val)
                                        ((null val)    0)
                                        (t             1))))))))))
-    (with-fixture normal-graph
-      (is (= (sum (to-adjacency-matrix *graph*))
-             (sum #2A((0 1 0 0 0 0)
-                      (0 0 1 0 0 0)
-                      (0 0 0 1 0 0)
-                      (0 0 0 0 1 0)
-                      (0 0 1 0 0 1)
-                      (0 1 0 0 0 0))))))
     (with-fixture small-network
-      (is (= (sum (to-adjacency-matrix *network*))
-             (sum #2A((0 1 0 1)
-                      (0 0 0 1)
-                      (1 1 0 0)
-                      (0 0 0 0)))))
       (is (= (sum (to-value-matrix *network*))
              (reduce #'+ (mapcar #'cdr (edges-w-values *network*))))))
     (with-fixture halfs
