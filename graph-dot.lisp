@@ -131,7 +131,7 @@ SUBGRAPH structure."
                                              (string attr)
                                              :end (- (length (string attr)) 3))
                                             val)
-                                    (format nil "[~(~a~)=~a]" attr val)) "")))
+                                    (format nil "[~(~a~)=\"~a\"]" attr val)) "")))
                   attrs)))
 
 (defun node-to-dot (node attrs &optional stream)
