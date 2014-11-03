@@ -388,6 +388,14 @@ edge in the results."))
   (:documentation "Add NODE to GRAPH."))
 
 (defmethod add-node ((graph graph) node)
+  ;; NOTE: This limitation on the types of node simplifies the
+  ;;       equality tests, and the use of nodes as hash keys
+  ;;       throughout the remainder of this library.  In fact the
+  ;;       addition of type-annotations around node quality operations
+  ;;       may improve performance.  The desire for more complex node
+  ;;       structures, may often be met by maintaining a hash table
+  ;;       outside of the graph which maps graph nodes to the more
+  ;;       complex object related to the node.
   (assert (or (numberp node) (symbolp node)) (node)
           "Nodes must be numbers, symbols or keywords, not ~S.~%Invalid node:~S"
    (type-of node) node)
