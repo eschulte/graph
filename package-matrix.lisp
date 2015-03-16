@@ -37,4 +37,5 @@
    :intransitivep
    :completep
    :relational-structure
-   :infinity))
+   :infinite
+   :infinitep))
