@@ -126,12 +126,12 @@ SUBGRAPH structure."
                     (let ((val (funcall fn edge)))
                       (if val
                           (if (search "URL" (string attr))
-                                    (format nil "[~a=\"~a\"]"
+                                    (format nil "[~a=~a]"
                                             (string-downcase
                                              (string attr)
                                              :end (- (length (string attr)) 3))
                                             val)
-                                    (format nil "[~(~a~)=\"~a\"]" attr val)) "")))
+                                    (format nil "[~(~a~)=~a]" attr val)) "")))
                   attrs)))
 
 (defun node-to-dot (node attrs &optional stream)
@@ -139,8 +139,8 @@ SUBGRAPH structure."
           (mapcar (lambda-bind ((attr . fn))
                     (let ((val (funcall fn node)))
                       (if val (if (search "URL" (string attr))
-                                  (format nil "[~a=\"~a\"]" attr val)
-                                  (format nil "[~(~a~)=\"~a\"]" attr val)) "")))
+                                  (format nil "[~a=~a]" attr val)
+                                  (format nil "[~(~a~)=~a]" attr val)) "")))
                   attrs)))
 
 (defgeneric to-dot (graph
@@ -165,8 +165,8 @@ a list of SUBGRAPH structures.  RANKS is a list of RANK structures."))
           (append
            (mapcar (lambda-bind ((a . b))
                                 (if (search "URL" (string a))
-                                    (format nil "  ~a=\"~a\";~%" a b)
-                                    (format nil "  ~(~a~)=\"~a\";~%" a b)))
+                                    (format nil "  ~a=~a;~%" a b)
+                                    (format nil "  ~(~a~)=~a;~%" a b)))
                    attributes)
            (mapcar {node-to-dot _ node-attrs} (nodes graph))
            (mapcar {edge-to-dot _ (type-of graph) edge-attrs} (edges graph))
