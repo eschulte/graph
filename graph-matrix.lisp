@@ -162,7 +162,7 @@ matrix M2, nil otherwise."
 (defmethod matrix-sum ((m1 fast-matrix) (m2 fast-matrix) &key boolean)
   (when (matrix-same-size-p m1 m2)
     (let ((result (fl.function::m+ (self m1) (self m2)))
-          (one 1))
+          (one 1.0s0))
       (declare (type single-float one))
       (when boolean
         (let ((m (matrix-n-rows m1))
