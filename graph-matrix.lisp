@@ -167,7 +167,6 @@ matrix M2, nil otherwise."
               (n (matrix-n-cols result))
               (one 1.0s0))
           (declare (type single-float one))
-          (declare (type single-float zero))
           (loop :for i :from 0 :below m :do
              (loop :for j :from 0 :below n :do
                 (if (> (matrix-ref result i j) 0)
