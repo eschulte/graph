@@ -13,7 +13,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (enable-curry-compose-reader-macros))
 
-; (defconstant infinity most-positive-fixnum)
+                                        ; (defconstant infinity most-positive-fixnum)
 
 (defclass matrix ()
   ((self :initarg :self :accessor self :initform nil)))
@@ -161,12 +161,13 @@ matrix M2, nil otherwise."
 
 (defmethod matrix-sum ((m1 fast-matrix) (m2 fast-matrix) &key boolean)
   (when (matrix-same-size-p m1 m2)
-    (let ((result (fl.function::m+ (self m1) (self m2)))
-          (one 1.0s0))
-      (declare (type single-float one))
+    (let ((result (fl.function::m+ (self m1) (self m2))))
       (when boolean
-        (let ((m (matrix-n-rows m1))
-              (n (matrix-n-cols m1)))
+        (let ((m (matrix-n-rows result))
+              (n (matrix-n-cols result))
+              (one 1.0s0))
+          (declare (type single-float one))
+          (declare (type single-float zero))
           (loop :for i :from 0 :below m :do
              (loop :for j :from 0 :below n :do
                 (if (> (matrix-ref result i j) 0)
@@ -324,14 +325,14 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                  (setf (matrix-ref matrix
-                                    (gethash a node-index-hash)
-                                    (gethash b node-index-hash))
-                        1)
-                  (setf (matrix-ref matrix
-                                    (gethash b node-index-hash)
-                                    (gethash a node-index-hash))
-                        1))
+                       (setf (matrix-ref matrix
+                                         (gethash a node-index-hash)
+                                         (gethash b node-index-hash))
+                             1)
+                       (setf (matrix-ref matrix
+                                         (gethash b node-index-hash)
+                                         (gethash a node-index-hash))
+                             1))
           (edges graph))
     matrix))
 
@@ -342,10 +343,10 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                  (setf (matrix-ref matrix
-                                    (gethash a node-index-hash)
-                                    (gethash b node-index-hash))
-                        1))
+                       (setf (matrix-ref matrix
+                                         (gethash a node-index-hash)
+                                         (gethash b node-index-hash))
+                             1))
           (edges graph))
     matrix))
 
@@ -358,14 +359,14 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                  (setf (matrix-ref matrix
-                                    (gethash a node-index-hash)
-                                    (gethash b node-index-hash))
-                        one)
-                  (setf (matrix-ref matrix
-                                    (gethash b node-index-hash)
-                                    (gethash a node-index-hash))
-                        one))
+                       (setf (matrix-ref matrix
+                                         (gethash a node-index-hash)
+                                         (gethash b node-index-hash))
+                             one)
+                       (setf (matrix-ref matrix
+                                         (gethash b node-index-hash)
+                                         (gethash a node-index-hash))
+                             one))
           (edges graph))
     matrix))
 
@@ -378,10 +379,10 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                  (setf (matrix-ref matrix
-                                    (gethash a node-index-hash)
-                                    (gethash b node-index-hash))
-                        one))
+                       (setf (matrix-ref matrix
+                                         (gethash a node-index-hash)
+                                         (gethash b node-index-hash))
+                             one))
           (edges graph))
     matrix))
 
