@@ -841,15 +841,17 @@ Uses Tarjan's algorithm."))
                (remove-if-not {intersection cycle} basic-cycles)))
       cycles)))
 
-(defgeneric minimum-spanning-tree (graph)
+(defgeneric minimum-spanning-tree (graph &optional tree)
   (:documentation "Return a minimum spanning tree of GRAPH.
-Prim's algorithm is used."))
+Prim's algorithm is used.  Optional argument TREE may be used to
+specify an initial tree, otherwise a random node is used."))
 
-(defmethod minimum-spanning-tree ((graph graph))
+(defmethod minimum-spanning-tree
+    ((graph graph) &optional (tree
+                              (populate (make-instance 'graph)
+                                :nodes (list (random-elt (nodes graph))))))
   (assert (connectedp graph) (graph) "~S is not connected" graph)
   (let ((copy (copy graph))
-        (tree (populate (make-instance 'graph)
-                :nodes (list (random-elt (nodes graph)))))
         (total-nodes (length (nodes graph))))
     (loop :until (= (length (nodes tree)) total-nodes) :do
        (let ((e (car (sort
