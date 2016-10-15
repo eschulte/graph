@@ -112,10 +112,10 @@ matrix M2, nil otherwise."
   (let* ((m (matrix-n-rows matrix))
          (n (matrix-n-cols matrix))
          (symmetric t)
-         (mt (and (eql m n) (matrix-transpose matrix))))
+         (mt (and (= m n) (matrix-transpose matrix))))
     (loop :for i :from 0 :below m :while symmetric :when mt :do
        (loop :for j :from 0 :below n :while symmetric :do
-          (unless (eql (matrix-ref matrix i j)
+          (unless (= (matrix-ref matrix i j)
                        (matrix-ref mt i j))
             (setf symmetric nil))))
     (and mt symmetric)))
