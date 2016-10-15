@@ -562,7 +562,7 @@ matrix M2, nil otherwise."
   (let ((a (to-adjacency-matrix graph matrix))
         (result))
     (loop :for j :from 0 :below (matrix-n-rows a) :unless result :do
-       (setf result (not (eql 1 (matrix-ref a j j)))))
+       (setf result (not (= 1 (matrix-ref a j j)))))
     (not result)))
 
 (defun irreflexivep (graph matrix)
@@ -570,7 +570,7 @@ matrix M2, nil otherwise."
   (let ((a (to-adjacency-matrix graph matrix))
         (result))
     (loop :for j :from 0 :below (matrix-n-rows a) :unless result :do
-       (setf result (not (eql 0 (matrix-ref a j j)))))
+       (setf result (not (= 0 (matrix-ref a j j)))))
     (not result)))
 
 (defun symmetricp (graph matrix)
