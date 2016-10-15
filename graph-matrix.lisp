@@ -124,9 +124,13 @@ matrix M2, nil otherwise."
   (:documentation "Return a copy of MATRIX."))
 
 (defmethod matrix-copy ((matrix matrix))
-  (let ((result (make-instance 'matrix)))
+  (let* ((m (matrix-n-rows matrix))
+         (n (matrix-n-cols matrix))
+         (result (make-zeros-matrix (make-instance 'matrix) m n)))
     (when (self matrix)
-      (setf result (copy-array (self matrix))))
+      (loop :for i :from 0 :below m :do
+         (loop :for j :from 0 :below n :do
+            (setf (matrix-ref result i j) (matrix-ref matrix i j)))))
     result))
 
 (defmethod matrix-copy ((fm fast-matrix))
@@ -313,6 +317,24 @@ matrix M2, nil otherwise."
 (defmethod make-identity-matrix ((fm fast-matrix) order)
   (setf (self fm) (fl.function::eye order order 'single-float))
   fm)
+
+;; Adapted from
+;; https://rosettacode.org/wiki/Matrix-exponentiation_operator#Common_Lisp
+
+(defgeneric matrix-power (matrix exp)
+  (:documentation "Raise MATRIX to the power EXP and return the result."))
+
+(defmethod matrix-power ((matrix matrix) exp)
+  (let ((m-rows (matrix-n-rows matrix))
+        (m-cols (matrix-n-cols matrix)))
+    (cond
+      ((/= m-rows m-cols) (error "Non-square matrix"))
+      ((zerop exp) (make-identity-matrix matrix m-rows))
+      ((= 1 exp) (matrix-copy matrix))
+      ((zerop (mod exp 2)) (let ((me2 (matrix-power matrix (/ exp 2))))
+                             (matrix-product me2 me2)))
+      (t (let ((me2 (matrix-power matrix (/ (1- exp) 2))))
+           (matrix-product matrix (matrix-product me2 me2)))))))
 
 (defgeneric to-adjacency-matrix (graph matrix)
   (:documentation "Return the adjacency matrix of GRAPH."))
