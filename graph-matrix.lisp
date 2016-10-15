@@ -13,7 +13,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (enable-curry-compose-reader-macros))
 
-                                        ; (defconstant infinity most-positive-fixnum)
+;; (defconstant infinity most-positive-fixnum)
 
 (defclass matrix ()
   ((self :initarg :self :accessor self :initform nil)))
@@ -35,7 +35,7 @@
   can be held in MATRIX."))
 
 (defmethod infinitep (value (matrix matrix))
-  (eql value (infinite matrix)))
+  (= value (infinite matrix)))
 
 (defgeneric matrix-ref (matrix row col)
   (:documentation "Return the value at ROW and COL in MATRIX."))
