@@ -298,6 +298,11 @@
         (u (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (eql 1 (matrix-entries-different-p u z)))))
 
+(deftest lisp-and-fast-matrix-entries-are-not-different ()
+  (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (l (make-zeros-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p f l)))))
+
 ;;; Tests comparing matrix and fast-matrix results
 
 (deftest adjacency-matrix-vs-fast-matrix ()
