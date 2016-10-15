@@ -84,8 +84,8 @@
 (defun matrix-same-size-p (m1 m2)
   "Return t if matrix M1 has the same number of rows and columns as
 matrix M2, nil otherwise."
-  (and (eql (matrix-n-rows m1) (matrix-n-rows m2))
-       (eql (matrix-n-cols m1) (matrix-n-cols m2))))
+  (and (= (matrix-n-rows m1) (matrix-n-rows m2))
+       (= (matrix-n-cols m1) (matrix-n-cols m2))))
 
 (defgeneric matrix-entries-different-p (m1 m2)
   (:documentation "Return nil if all the entries in matrix M1 are =
