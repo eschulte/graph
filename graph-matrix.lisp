@@ -413,7 +413,7 @@ matrix M2, nil otherwise."
   two less than the number of nodes in GRAPH, produces a limited
   reachability matrix with paths of length LIMIT or less."))
 
-(defmethod to-reachability-matrix ((graph graph) (adjacency matrix) &key limit)
+(defmethod to-reachability-matrix ((graph graph) (matrix matrix) &key limit)
   (let ((n (length (nodes graph))))
     (assert (or (not limit)
                 (and (integerp limit) (> limit 1) (< limit (- n 1))))
@@ -422,6 +422,7 @@ matrix M2, nil otherwise."
             limit (- n 2))
     (let* ((result (make-identity-matrix (make-instance 'matrix) n))
            (max-power (or limit (- n 1)))
+           (adjacency (to-adjacency-matrix graph (make-instance 'matrix)))
            (adjacency-powers (matrix-copy adjacency)))
       (setf result (matrix-sum adjacency result :boolean t))
       (loop :for i :from 2 :to max-power :do
