@@ -214,7 +214,7 @@ matrix M2, nil otherwise."
   of M2."))
 
 (defmethod matrix-product ((m1 matrix) (m2 matrix))
-  (and (eql (matrix-n-cols m1) (matrix-n-rows m2))
+  (and (= (matrix-n-cols m1) (matrix-n-rows m2))
        (loop
           :with m = (matrix-n-rows m1)
           :with n = (matrix-n-cols m1)
@@ -229,7 +229,7 @@ matrix M2, nil otherwise."
           :finally (return c)))  )
 
 (defmethod matrix-product ((m1 fast-matrix) (m2 fast-matrix))
-  (and (eql (matrix-n-cols m1) (matrix-n-rows m2))
+  (and (= (matrix-n-cols m1) (matrix-n-rows m2))
        (let ((result (make-instance 'fast-matrix)))
          (setf (self result) (fl.function::m* (self m1) (self m2)))
          result)))
