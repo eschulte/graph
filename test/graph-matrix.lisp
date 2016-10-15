@@ -18,52 +18,52 @@
 (defixture basic-graph
   (:setup (setf *graph*
                 (populate (make-instance 'graph)
-                  :nodes '(a b c d e f)
-                  :edges '((a b)
-                           (b c)
-                           (c d)
-                           (d e)
-                           (e c)
-                           (e f)
-                           (f b)))))
+                          :nodes '(a b c d e f)
+                          :edges '((a b)
+                                   (b c)
+                                   (c d)
+                                   (d e)
+                                   (e c)
+                                   (e f)
+                                   (f b)))))
   (:teardown (setf *graph* nil)))
 
 ;;; Hage and Harary 1983, Figure 5.2
 (defixture hh-5-2
-    (:setup (setf *graph*
-                  (populate (make-instance 'graph)
-                            :nodes '(1 2 3 4)
-                            :edges '((1 2)
-                                     (1 3)
-                                     (1 4)
-                                     (2 3)
-                                     (3 4)))))
+  (:setup (setf *graph*
+                (populate (make-instance 'graph)
+                          :nodes '(1 2 3 4)
+                          :edges '((1 2)
+                                   (1 3)
+                                   (1 4)
+                                   (2 3)
+                                   (3 4)))))
   (:teardown (setf *graph* nil)))
 
 ;;; Hage and Harary 1983, Figure 5.3, p. 97
 (defixture hh-5-3
-    (:setup (setf *graph*
-                  (populate (make-instance 'digraph)
-                            :nodes '(1 2 3 4)
-                            :edges '((1 3)
-                                     (1 4)
-                                     (2 1)
-                                     (2 3)
-                                     (3 2)
-                                     (4 3)
-                                     (4 1)))))
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(1 2 3 4)
+                          :edges '((1 3)
+                                   (1 4)
+                                   (2 1)
+                                   (2 3)
+                                   (3 2)
+                                   (4 3)
+                                   (4 1)))))
   (:teardown (setf *graph* nil)))
 
 ;;; Hage and Harary 1983, Figure 5.10, p. 107
 (defixture hh-5-10
-    (:setup (setf *graph*
-                  (populate (make-instance 'digraph)
-                            :nodes '(1 2 3 4)
-                            :edges '((1 2)
-                                     (2 3)
-                                     (2 4)
-                                     (3 2)
-                                     (3 4)))))
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(1 2 3 4)
+                          :edges '((1 2)
+                                   (2 3)
+                                   (2 4)
+                                   (3 2)
+                                   (3 4)))))
   (:teardown (setf *graph* nil)))
 
 
@@ -82,48 +82,48 @@
 
 ;;; Hage and Harary 1983, Figure 5.11, p. 110
 (defixture hh-5-11
-    (:setup (setf *graph*
-                  (populate (make-instance 'digraph)
-                            :nodes '(1 2 3 4 5)
-                            :edges '((1 2)
-                                     (1 3)
-                                     (2 3)
-                                     (3 1)
-                                     (4 3)
-                                     (5 4)
-                                     (5 1)))))
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(1 2 3 4 5)
+                          :edges '((1 2)
+                                   (1 3)
+                                   (2 3)
+                                   (3 1)
+                                   (4 3)
+                                   (5 4)
+                                   (5 1)))))
   (:teardown (setf *graph* nil)))
 
 ;;; Hage and Harary 1983, Figure 4.18
 ;;; 2' -> 22, 2" -> 222, etc.
 (defixture hh-4-18
-    (:setup (setf *graph*
-                  (populate (make-instance 'digraph)
-                            :nodes '(0 1 11 2 22 222 3 33)
-                            :edges '((0 1)
-                                     (0 11)
-                                     (1 2)
-                                     (1 22)
-                                     (1 222)
-                                     (1 3)
-                                     (1 33)
-                                     (11 2)
-                                     (11 22)
-                                     (11 222)
-                                     (11 3)
-                                     (11 33)
-                                     (2 22)
-                                     (2 222)
-                                     (2 3)
-                                     (2 33)
-                                     (22 2)
-                                     (22 222)
-                                     (22 3)
-                                     (22 33)
-                                     (222 2)
-                                     (222 22)
-                                     (222 3)
-                                     (222 33)))))
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                          :nodes '(0 1 11 2 22 222 3 33)
+                          :edges '((0 1)
+                                   (0 11)
+                                   (1 2)
+                                   (1 22)
+                                   (1 222)
+                                   (1 3)
+                                   (1 33)
+                                   (11 2)
+                                   (11 22)
+                                   (11 222)
+                                   (11 3)
+                                   (11 33)
+                                   (2 22)
+                                   (2 222)
+                                   (2 3)
+                                   (2 33)
+                                   (22 2)
+                                   (22 222)
+                                   (22 3)
+                                   (22 33)
+                                   (222 2)
+                                   (222 22)
+                                   (222 3)
+                                   (222 33)))))
   (:teardown (setf *graph* nil)))
 
 (defixture relation
@@ -265,7 +265,7 @@
   (:teardown (setf *graph* nil)))
 
 (defixture antiparity-relation
-  (:setup (setf *graph* 
+  (:setup (setf *graph*
                 (populate (make-instance 'digraph)
                           :nodes '(a b c d)
                           :edges '((a a)
@@ -302,6 +302,16 @@
   (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
         (l (make-zeros-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p f l)))))
+
+;;; Tests for comparability of lisp and fast matrix operations
+
+(deftest lisp-vs-fast-sum ()
+  (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
+        (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
+        (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p (graph-matrix::matrix-sum l0 l1)
+                                         (graph-matrix::matrix-sum l0 l1))))))
 
 ;;; Tests comparing matrix and fast-matrix results
 
@@ -373,7 +383,7 @@
 
 (deftest digraph-and-distance-matrix ()
   (let* ((m (make-instance 'matrix))
-        (i (graph-matrix::infinite m)))
+         (i (graph-matrix::infinite m)))
     (setf (graph-matrix::self m)
           (make-array
            '(5 5)
@@ -458,6 +468,3 @@
   (with-fixture antiparity-relation
     (is (relational-structure *graph* (make-instance 'matrix))
         "antiparity relation")))
-
-
-
