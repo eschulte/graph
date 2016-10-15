@@ -502,7 +502,7 @@ matrix M2, nil otherwise."
        (setf (matrix-ref nd i i) zero))
     (loop :for i :from 0 :below m :do
        (loop :for j :from 0 :below m :do
-          (when (eql (matrix-ref a i j) one)
+          (when (= (matrix-ref a i j) one)
             (setf (matrix-ref nd i j) one))))
     (loop :for i :from 2 :to m :unless finished :do
        (setf a-power (matrix-product a a-power))
@@ -529,7 +529,7 @@ matrix M2, nil otherwise."
        (setf (matrix-ref nd i i) zero))
     (loop :for i :from 0 :below m :do
        (loop :for j :from 0 :below m :do
-          (when (eql (matrix-ref a i j) one)
+          (when (= (matrix-ref a i j) one)
             (setf (matrix-ref nd i j) one))))
     (loop :for i :from 2 :to m :unless finished :do
        (setf a-power (matrix-product a a-power))
