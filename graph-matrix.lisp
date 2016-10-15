@@ -88,10 +88,10 @@ matrix M2, nil otherwise."
        (eql (matrix-n-cols m1) (matrix-n-cols m2))))
 
 (defgeneric matrix-entries-different-p (m1 m2)
-  (:documentation "Return nil if all the entries in matrix M1 are eql
+  (:documentation "Return nil if all the entries in matrix M1 are =
   to the corresponding entries in matrix M2, 1 if matrix M1 is not the
   same size as matrix M2, and otherwise a list of cells that are not
-  eql."))
+  /=."))
 
 (defmethod matrix-entries-different-p ((m1 matrix) (m2 matrix))
   (let ((result))
@@ -100,7 +100,7 @@ matrix M2, nil otherwise."
               (n (matrix-n-cols m1)))
           (loop :for i :from 0 :below m :do
              (loop :for j :from 0 :below n :do
-                (unless (eql (matrix-ref m1 i j)
+                (unless (= (matrix-ref m1 i j)
                              (matrix-ref m2 i j))
                   (push (list i j) result))))
           (when result (reverse result)))
