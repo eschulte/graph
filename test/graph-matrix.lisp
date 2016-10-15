@@ -372,15 +372,16 @@
                 m))))))
 
 (deftest digraph-and-distance-matrix ()
-  (let ((m (make-instance 'matrix)))
+  (let* ((m (make-instance 'matrix))
+        (i (graph-matrix::infinite m)))
     (setf (graph-matrix::self m)
           (make-array
            '(5 5)
            :initial-contents
-           `((0 1 1 ,graph-matrix::infinity ,graph-matrix::infinity)
-             (2 0 1 ,graph-matrix::infinity ,graph-matrix::infinity)
-             (1 2 0 ,graph-matrix::infinity ,graph-matrix::infinity)
-             (2 3 1 0 ,graph-matrix::infinity)
+           `((0 1 1 ,i ,i)
+             (2 0 1 ,i ,i)
+             (1 2 0 ,i ,i)
+             (2 3 1 0 ,i)
              (1 2 2 1 0))))
     (with-fixture hh-5-11
       (let ((d (to-distance-matrix *graph* (make-instance 'matrix))))
