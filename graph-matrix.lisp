@@ -101,7 +101,7 @@ matrix M2, nil otherwise."
           (loop :for i :from 0 :below m :do
              (loop :for j :from 0 :below n :do
                 (unless (= (matrix-ref m1 i j)
-                             (matrix-ref m2 i j))
+                           (matrix-ref m2 i j))
                   (push (list i j) result))))
           (when result (reverse result)))
         (setf result 1))
@@ -116,7 +116,7 @@ matrix M2, nil otherwise."
     (loop :for i :from 0 :below m :while symmetric :when mt :do
        (loop :for j :from 0 :below n :while symmetric :do
           (unless (= (matrix-ref matrix i j)
-                       (matrix-ref mt i j))
+                     (matrix-ref mt i j))
             (setf symmetric nil))))
     (and mt symmetric)))
 
@@ -324,14 +324,14 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                       (setf (matrix-ref matrix
-                                         (gethash a node-index-hash)
-                                         (gethash b node-index-hash))
-                             1)
-                       (setf (matrix-ref matrix
-                                         (gethash b node-index-hash)
-                                         (gethash a node-index-hash))
-                             1))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        1)
+                  (setf (matrix-ref matrix
+                                    (gethash b node-index-hash)
+                                    (gethash a node-index-hash))
+                        1))
           (edges graph))
     matrix))
 
@@ -342,10 +342,10 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                       (setf (matrix-ref matrix
-                                         (gethash a node-index-hash)
-                                         (gethash b node-index-hash))
-                             1))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        1))
           (edges graph))
     matrix))
 
@@ -358,14 +358,14 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                       (setf (matrix-ref matrix
-                                         (gethash a node-index-hash)
-                                         (gethash b node-index-hash))
-                             one)
-                       (setf (matrix-ref matrix
-                                         (gethash b node-index-hash)
-                                         (gethash a node-index-hash))
-                             one))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        one)
+                  (setf (matrix-ref matrix
+                                    (gethash b node-index-hash)
+                                    (gethash a node-index-hash))
+                        one))
           (edges graph))
     matrix))
 
@@ -378,10 +378,10 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                       (setf (matrix-ref matrix
-                                         (gethash a node-index-hash)
-                                         (gethash b node-index-hash))
-                             one))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        one))
           (edges graph))
     matrix))
 
@@ -434,9 +434,9 @@ matrix M2, nil otherwise."
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
-    (eql 1 (matrix-ref rd
-                       (gethash from node-index-hash)
-                       (gethash to node-index-hash)))))
+    (= 1 (matrix-ref rd
+                     (gethash from node-index-hash)
+                     (gethash to node-index-hash)))))
 
 (defgeneric reachable-from (graph rd from)
   (:documentation "Given a reachability matrix RD, return a list of
