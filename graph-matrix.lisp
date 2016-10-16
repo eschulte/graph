@@ -506,10 +506,7 @@ matrix M2, nil otherwise."
           (nodes graph))
     (maphash #'(lambda (k v)
                  (unless
-                     (equal 0
-                            (matrix-ref rd
-                                        (gethash from node-index-hash)
-                                        v))
+                     (= 0 (matrix-ref rd (gethash from node-index-hash) v))
                    (push k result)))
              node-index-hash)
     (reverse result)))
