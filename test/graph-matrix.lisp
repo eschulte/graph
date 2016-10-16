@@ -501,6 +501,21 @@
           (f (to-distance-matrix *graph* (make-instance 'fast-matrix))))
       (is (not (matrix-entries-different-p m f))))))
 
+(deftest distance-from-to-lisp-vs-fast-matrix ()
+  (with-fixture basic-graph
+    (let ((m (to-distance-matrix *graph* (make-instance 'matrix)))
+          (f (to-distance-matrix *graph* (make-instance 'fast-matrix))))
+      (is (= (distance-from-to *graph* m 'a 'b)
+             (distance-from-to *graph* f 'a 'b)))
+      (is (= (distance-from-to *graph* m 'a 'c)
+             (distance-from-to *graph* f 'a 'c)))
+      (is (= (distance-from-to *graph* m 'a 'd)
+             (distance-from-to *graph* f 'a 'd)))
+      (is (= (distance-from-to *graph* m 'a 'e)
+             (distance-from-to *graph* f 'a 'e)))
+      (is (= (distance-from-to *graph* m 'a 'f)
+             (distance-from-to *graph* f 'a 'f))))))
+
 ;;; Tests comparing results of lisp matrix routines to Hage and Harary's book
 
 (deftest digraph-and-adjacency-matrix ()
