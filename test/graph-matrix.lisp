@@ -281,11 +281,18 @@
 
 ;;; Tests
 
-;;; Test whether matrix comparison works as expected
+;;; Test simple functions
+
+;;; Test whether matrix entry comparisons work as expected
 
 (deftest matrix-entries-are-not-different ()
   (with-fixture basic-graph
     (let ((m (to-adjacency-matrix *graph* (make-instance 'matrix))))
+      (is (not (matrix-entries-different-p m m))))))
+
+(deftest fast-matrix-entries-are-not-different ()
+  (with-fixture basic-graph
+    (let ((m (to-adjacency-matrix *graph* (make-instance 'fast-matrix))))
       (is (not (matrix-entries-different-p m m))))))
 
 (deftest matrix-entries-are-different ()
@@ -293,9 +300,19 @@
         (u (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (matrix-entries-different-p u z))))
 
+(deftest fast-matrix-entries-are-different ()
+  (let ((z (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (u (make-universal-matrix (make-instance 'fast-matrix) 3 3)))
+    (is (matrix-entries-different-p u z))))
+
 (deftest matrix-entries-are-different-sizes ()
   (let ((z (make-zeros-matrix (make-instance 'matrix) 3 4))
         (u (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (eql 1 (matrix-entries-different-p u z)))))
+
+(deftest fast-matrix-entries-are-different-sizes ()
+  (let ((z (make-zeros-matrix (make-instance 'fast-matrix) 3 4))
+        (u (make-universal-matrix (make-instance 'fast-matrix) 3 3)))
     (is (eql 1 (matrix-entries-different-p u z)))))
 
 (deftest lisp-and-fast-matrix-entries-are-not-different ()
@@ -321,6 +338,11 @@
     (is (not (matrix-entries-different-p
               (graph-matrix::matrix-sum f0 f1 :boolean t)
               (graph-matrix::matrix-sum l0 l1 :boolean t))))))
+
+(deftest lisp-vs-fast-copy ()
+  (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (l (make-zeros-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p (matrix-copy f) (matrix-copy l))))))
 
 ;;; Tests comparing matrix and fast-matrix results
 
