@@ -357,6 +357,15 @@
               (graph-matrix::matrix-sum f0 f1 :boolean t)
               (graph-matrix::matrix-sum l0 l1 :boolean t))))))
 
+(deftest lisp-vs-fast-product ()
+  (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
+        (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
+        (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p
+              (graph-matrix::matrix-product f0 f1)
+              (graph-matrix::matrix-product l0 l1))))))
+
 (deftest lisp-vs-fast-copy ()
   (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
         (l (make-zeros-matrix (make-instance 'matrix) 3 3)))
