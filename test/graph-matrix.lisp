@@ -473,12 +473,27 @@
       (is (equal (reachable-from *graph* m 4) '(4))))))
 
 (deftest strong-component-matrix-vs-fast-matrix ()
-  (with-fixture basic-graph
+  (with-fixture hh-5-10
     (let ((m (to-reachability-matrix *graph* (make-instance 'matrix)))
           (f (to-reachability-matrix *graph* (make-instance 'fast-matrix))))
       (is (not (matrix-entries-different-p
                 (to-strong-component-matrix m)
                 (to-strong-component-matrix f)))))))
+
+(deftest strong-component-of-lisp-vs-fast-matrix ()
+  (with-fixture hh-5-10
+    (let ((m (to-strong-component-matrix
+              (to-reachability-matrix *graph* (make-instance 'matrix))))
+          (f (to-strong-component-matrix
+              (to-reachability-matrix *graph* (make-instance 'fast-matrix)))))
+      (is (equal (strong-component-of 1 *graph* m)
+                 (strong-component-of 1 *graph* f)))
+      (is (equal (strong-component-of 2 *graph* m)
+                 (strong-component-of 2 *graph* f)))
+      (is (equal (strong-component-of 3 *graph* m)
+                 (strong-component-of 3 *graph* f)))
+      (is (equal (strong-component-of 4 *graph* m)
+                 (strong-component-of 4 *graph* f))))))
 
 (deftest distance-matrix-vs-fast-matrix ()
   (with-fixture basic-graph
