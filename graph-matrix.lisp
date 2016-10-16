@@ -531,7 +531,7 @@ matrix M2, nil otherwise."
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
     (maphash #'(lambda (k v)
-                 (unless (equal 0 (matrix-ref
+                 (unless (= 0 (matrix-ref
                                    strong-components
                                    (gethash node node-index-hash) v))
                    (push k result)))
