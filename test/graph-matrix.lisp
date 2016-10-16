@@ -454,7 +454,7 @@
           (f (to-distance-matrix *graph* (make-instance 'fast-matrix))))
       (is (not (matrix-entries-different-p m f))))))
 
-;;; Tests comparing results to Hage and Harary's book
+;;; Tests comparing results of lisp matrix routines to Hage and Harary's book
 
 (deftest digraph-and-adjacency-matrix ()
   (let ((m (make-instance 'matrix)))
@@ -529,6 +529,9 @@
                 (to-strong-component-matrix
                  (to-reachability-matrix *graph* (make-instance 'matrix)))
                 m))))))
+
+
+;;; Tests of Peirce relations
 
 (deftest relation-test ()
   (with-fixture relation
