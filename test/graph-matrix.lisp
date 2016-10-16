@@ -28,7 +28,9 @@
                                    (f b)))))
   (:teardown (setf *graph* nil)))
 
-;;; Hage and Harary 1983, Figure 5.2
+;;; Structural Models in Anthropology, Hage and Harary 1983, Figure
+;;; 5.2, p. 96
+
 (defixture hh-5-2
   (:setup (setf *graph*
                 (populate (make-instance 'graph)
@@ -40,7 +42,9 @@
                                    (3 4)))))
   (:teardown (setf *graph* nil)))
 
-;;; Hage and Harary 1983, Figure 5.3, p. 97
+;;; Structural Models in Anthropology, Hage and Harary 1983, Figure
+;;; 5.3, p. 97
+
 (defixture hh-5-3
   (:setup (setf *graph*
                 (populate (make-instance 'digraph)
@@ -54,7 +58,9 @@
                                    (4 1)))))
   (:teardown (setf *graph* nil)))
 
-;;; Hage and Harary 1983, Figure 5.10, p. 107
+;;; Structural Models in Anthropology, Hage and Harary 1983, Figure
+;;; 5.10, p. 107
+
 (defixture hh-5-10
   (:setup (setf *graph*
                 (populate (make-instance 'digraph)
@@ -67,7 +73,9 @@
   (:teardown (setf *graph* nil)))
 
 
-;;; Hage and Harary 1991, Figure 4.5, p. 121
+;;; Exchange in Oceania: A Graph Theoretic Analysis, Hage and Harary
+;;; 1991, Figure 4.5, p. 121
+
 (defixture hh-4-5
   (:setup (setf *graph*
                 (populate (make-instance 'digraph)
@@ -80,7 +88,9 @@
                                    (4 3)))))
   (:teardown (setf *graph* nil)))
 
-;;; Hage and Harary 1983, Figure 5.11, p. 110
+;;; Structural Models in Anthropology, Hage and Harary 1983, Figure
+;;; 5.11, p. 110
+
 (defixture hh-5-11
   (:setup (setf *graph*
                 (populate (make-instance 'digraph)
@@ -94,8 +104,9 @@
                                    (5 1)))))
   (:teardown (setf *graph* nil)))
 
-;;; Hage and Harary 1983, Figure 4.18
-;;; 2' -> 22, 2" -> 222, etc.
+;;; Structural Models in Anthropology, Hage and Harary 1983, Figure
+;;; 4.18, p. 86. 2' -> 22, 2" -> 222, etc.
+
 (defixture hh-4-18
   (:setup (setf *graph*
                 (populate (make-instance 'digraph)
@@ -480,7 +491,9 @@
                 (to-reachability-matrix *graph* (make-instance 'matrix))
                 m))))))
 
-;;; This is the matrix R2 on p. 126
+;;; This is the matrix R2 on p. 126 of Exchange in Oceania: A Graph
+;;; Theoretic Analysis by Per Hage and Frank Harary
+
 (deftest digraph-and-reachability-matrix-with-limit-2 ()
   (let ((m (make-instance 'matrix)))
     (setf (graph-matrix::self m)
