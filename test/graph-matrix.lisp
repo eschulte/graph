@@ -319,12 +319,12 @@
 (deftest matrix-entries-are-different-sizes ()
   (let ((z (make-zeros-matrix (make-instance 'matrix) 3 4))
         (u (make-universal-matrix (make-instance 'matrix) 3 3)))
-    (is (eql 1 (matrix-entries-different-p u z)))))
+    (is (= 1 (matrix-entries-different-p u z)))))
 
 (deftest fast-matrix-entries-are-different-sizes ()
   (let ((z (make-zeros-matrix (make-instance 'fast-matrix) 3 4))
         (u (make-universal-matrix (make-instance 'fast-matrix) 3 3)))
-    (is (eql 1 (matrix-entries-different-p u z)))))
+    (is (= 1 (matrix-entries-different-p u z)))))
 
 (deftest lisp-and-fast-matrix-entries-are-not-different ()
   (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -450,6 +450,27 @@
     (let ((m (to-reachability-matrix *graph* (make-instance 'matrix)))
           (f (to-reachability-matrix *graph* (make-instance 'fast-matrix))))
       (is (not (matrix-entries-different-p m f))))))
+
+(deftest reachablep-lisp-vs-fast ()
+  (with-fixture hh-5-10
+    (let ((m (to-reachability-matrix *graph* (make-instance 'matrix)))
+          (f (to-reachability-matrix *graph* (make-instance 'fast-matrix))))
+      (is (and (reachablep *graph* m 1 2) (reachablep *graph* f 1 2)))
+      (is (and (reachablep *graph* m 2 3) (reachablep *graph* f 2 3)))
+      (is (not (or (reachablep *graph* f 2 1) (reachablep *graph* f 2 1)))))))
+
+(deftest reachable-from-lisp-vs-fast ()
+  (with-fixture hh-5-10
+    (let ((m (to-reachability-matrix *graph* (make-instance 'matrix)))
+          (f (to-reachability-matrix *graph* (make-instance 'fast-matrix))))
+      (is (equal (reachable-from *graph* m 1) (reachable-from *graph* f 1)))
+      (is (equal (reachable-from *graph* m 2) (reachable-from *graph* f 2)))
+      (is (equal (reachable-from *graph* m 3) (reachable-from *graph* f 3)))
+      (is (equal (reachable-from *graph* m 4) (reachable-from *graph* f 4)))
+      (is (equal (reachable-from *graph* m 1) '(1 2 3 4)))
+      (is (equal (reachable-from *graph* m 2) '(2 3 4)))
+      (is (equal (reachable-from *graph* m 3) '(2 3 4)))
+      (is (equal (reachable-from *graph* m 4) '(4))))))
 
 (deftest strong-component-matrix-vs-fast-matrix ()
   (with-fixture basic-graph
