@@ -322,6 +322,15 @@
 
 ;;; Tests for comparability of lisp and fast matrix operations
 
+(deftest lisp-vs-fast-difference ()
+  (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
+        (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
+        (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p
+              (graph-matrix::matrix-difference f0 f1)
+              (graph-matrix::matrix-difference l0 l1))))))
+
 (deftest lisp-vs-fast-sum ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
         (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
@@ -343,6 +352,7 @@
   (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
         (l (make-zeros-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p (matrix-copy f) (matrix-copy l))))))
+
 
 ;;; Tests comparing matrix and fast-matrix results
 
