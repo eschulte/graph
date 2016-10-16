@@ -376,6 +376,50 @@
               (matrix-transpose
                (graph-matrix::matrix-elementwise-product l0 l1)))))))
 
+(deftest lisp-vs-fast-power-0 ()
+  (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
+        (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
+        (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product f0 f1) 0)
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product l0 l1) 0))))))
+
+(deftest lisp-vs-fast-power-1 ()
+  (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
+        (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
+        (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product f0 f1) 1)
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product l0 l1) 1))))))
+
+(deftest lisp-vs-fast-power-2 ()
+  (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
+        (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
+        (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product f0 f1) 2)
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product l0 l1) 2))))))
+
+(deftest lisp-vs-fast-power-3 ()
+  (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
+        (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
+        (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
+        (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
+    (is (not (matrix-entries-different-p
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product f0 f1) 3)
+              (graph-matrix::matrix-power
+               (graph-matrix::matrix-elementwise-product l0 l1) 3))))))
+
 (deftest lisp-vs-fast-copy ()
   (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
         (l (make-zeros-matrix (make-instance 'matrix) 3 3)))
