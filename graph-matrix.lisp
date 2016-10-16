@@ -63,9 +63,9 @@
       (array-dimension (self matrix) 0)
       0))
 
-(defmethod matrix-n-rows ((fm fast-matrix))
-  (if (self fm)
-      (fl.function::nrows (self fm))
+(defmethod matrix-n-rows ((matrix fast-matrix))
+  (if (self matrix)
+      (fl.function::nrows (self matrix))
       0))
 
 (defgeneric matrix-n-cols (matrix)
@@ -76,10 +76,30 @@
       (array-dimension (self matrix) 1)
       0))
 
-(defmethod matrix-n-cols ((fm fast-matrix))
-  (if (self fm)
-      (fl.function::ncols (self fm))
+(defmethod matrix-n-cols ((matrix fast-matrix))
+  (if (self matrix)
+      (fl.function::ncols (self matrix))
       0))
+
+;; (defgeneric matrix-same-size-p (m1 m2)
+;;   (:documentation "Return t if matrix M1 has the same number of rows
+;; and columns as matrix M2, nil otherwise."))
+
+;; (defmethod matrix-same-size-p ((m1 matrix) (m2 fast-matrix))
+;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
+;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
+
+;; (defmethod matrix-same-size-p ((m1 fast-matrix) (m2 matrix))
+;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
+;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
+
+;; (defmethod matrix-same-size-p ((m1 matrix) (m2 matrix))
+;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
+;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
+
+;; (defmethod matrix-same-size-p ((m1 fast-matrix) (m2 fast-matrix))
+;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
+;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
 
 (defun matrix-same-size-p (m1 m2)
   "Return t if matrix M1 has the same number of rows and columns as
@@ -87,13 +107,27 @@ matrix M2, nil otherwise."
   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
        (= (matrix-n-cols m1) (matrix-n-cols m2))))
 
-(defgeneric matrix-entries-different-p (m1 m2)
-  (:documentation "Return nil if all the entries in matrix M1 are =
-  to the corresponding entries in matrix M2, 1 if matrix M1 is not the
-  same size as matrix M2, and otherwise a list of cells that are not
-  /=."))
+;; (defgeneric matrix-entries-different-p (m1 m2)
+;;   (:documentation "Return nil if all the entries in matrix M1 are =
+;;   to the corresponding entries in matrix M2, 1 if matrix M1 is not the
+;;   same size as matrix M2, and otherwise a list of cells that are not
+;;   /=."))
 
-(defmethod matrix-entries-different-p ((m1 matrix) (m2 matrix))
+;; (defmethod matrix-entries-different-p ((m1 matrix) (m2 matrix))
+;;   (let ((result))
+;;     (if (matrix-same-size-p m1 m2)
+;;         (let ((m (matrix-n-rows m1))
+;;               (n (matrix-n-cols m1)))
+;;           (loop :for i :from 0 :below m :do
+;;              (loop :for j :from 0 :below n :do
+;;                 (unless (= (matrix-ref m1 i j)
+;;                            (matrix-ref m2 i j))
+;;                   (push (list i j) result))))
+;;           (when result (reverse result)))
+;;         (setf result 1))
+;;     result))
+
+(defun matrix-entries-different-p (m1 m2)
   (let ((result))
     (if (matrix-same-size-p m1 m2)
         (let ((m (matrix-n-rows m1))
@@ -136,7 +170,7 @@ matrix M2, nil otherwise."
 (defmethod matrix-copy ((fm fast-matrix))
   (let ((result (make-instance 'fast-matrix)))
     (when (self fm)
-      (setf result (fl.function::copy (self fm))))
+      (setf (self result) (fl.function::copy (self fm))))
     result))
 
 (defgeneric matrix-sum (m1 m2 &key boolean)
