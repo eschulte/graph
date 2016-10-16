@@ -445,6 +445,12 @@
           (f (to-adjacency-matrix *graph* (make-instance 'fast-matrix))))
       (is (not (matrix-entries-different-p m f))))))
 
+(deftest adjacency-matrix-vs-fast-matrix-digraph ()
+  (with-fixture hh-4-18
+    (let ((m (to-adjacency-matrix *graph* (make-instance 'matrix)))
+          (f (to-adjacency-matrix *graph* (make-instance 'fast-matrix))))
+      (is (not (matrix-entries-different-p m f))))))
+
 (deftest reachability-matrix-vs-fast-matrix ()
   (with-fixture basic-graph
     (let ((m (to-reachability-matrix *graph* (make-instance 'matrix)))
