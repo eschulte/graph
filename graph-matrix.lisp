@@ -483,17 +483,15 @@ matrix M2, nil otherwise."
       result)))
 
 (defgeneric reachablep (graph rd from to)
-  (:documentation "Given a graph GRAPH and a reachability matrix
-  RD, returns t if TO is reachable from FROM, nil
-  otherwise."))
+  (:documentation "Given a graph GRAPH and a reachability matrix RD,
+  returns t if node TO is reachable from node FROM, nil otherwise."))
 
 (defmethod reachablep ((graph graph) (rd matrix) from to)
   (let ((node-index-hash (make-hash-table))
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
-    (= 1 (matrix-ref rd
-                     (gethash from node-index-hash)
+    (= 1 (matrix-ref rd (gethash from node-index-hash)
                      (gethash to node-index-hash)))))
 
 (defgeneric reachable-from (graph rd from)
