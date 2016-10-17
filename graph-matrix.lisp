@@ -86,6 +86,10 @@ matrix M2, nil otherwise."
        (= (matrix-n-cols m1) (matrix-n-cols m2))))
 
 (defun matrix-entries-different-p (m1 m2)
+  "Returns nil if the entries in matrix M1 and matrix M2 do not differ
+from one another.  Returns 1 if the sizes of matrix M1 and matrix M2
+differ.  Otherwise, returns a list of lists containing discrepant
+entries. "
   (let ((result))
     (if (matrix-same-size-p m1 m2)
         (let ((m (matrix-n-rows m1))
@@ -101,16 +105,7 @@ matrix M2, nil otherwise."
 
 (defun matrix-symmetric-p (matrix)
   "Return t if matrix MATRIX is symmetric, nil otherwise."
-  (let* ((m (matrix-n-rows matrix))
-         (n (matrix-n-cols matrix))
-         (symmetric t)
-         (mt (and (= m n) (matrix-transpose matrix))))
-    (loop :for i :from 0 :below m :while symmetric :when mt :do
-       (loop :for j :from 0 :below n :while symmetric :do
-          (unless (= (matrix-ref matrix i j)
-                     (matrix-ref mt i j))
-            (setf symmetric nil))))
-    (and mt symmetric)))
+  (not (matrix-entries-different-p matrix (matrix-transpose matrix))))
 
 (defgeneric matrix-copy (matrix)
   (:documentation "Return a copy of MATRIX."))
