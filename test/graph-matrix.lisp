@@ -309,6 +309,18 @@
    (is (matrix-same-size-p l1 f1))
    (is (matrix-same-size-p f1 l3))))
 
+(deftest symmetric-p ()
+  (with-fixture hh-5-10
+    (let ((m1 (make-identity-matrix (make-instance 'matrix) 3))
+          (f1 (make-identity-matrix (make-instance 'fast-matrix) 3))
+          (m2 (to-adjacency-matrix *graph* (make-instance 'matrix)))
+          (f2 (to-adjacency-matrix *graph* (make-instance 'fast-matrix))))
+      (is (matrix-symmetric-p m1))
+      (is (matrix-symmetric-p f1))
+      (is (not (matrix-symmetric-p m2)))
+      (is (not (matrix-symmetric-p f2))))))
+
+
 ;;; Test whether matrix entry comparisons work as expected
 
 (deftest matrix-entries-are-not-different ()
