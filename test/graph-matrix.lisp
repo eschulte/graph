@@ -294,6 +294,21 @@
 
 ;;; Test simple functions
 
+(deftest same-size-p ()
+ (let ((f1 (make-zeros-matrix (make-instance 'fast-matrix) 2 4))
+       (l1 (make-zeros-matrix (make-instance 'matrix) 2 4))
+       (f2 (make-zeros-matrix (make-instance 'fast-matrix) 4 2))
+       (l2 (make-zeros-matrix (make-instance 'matrix) 4 2))
+       (l3 (make-zeros-matrix (make-instance 'matrix) 2 4))
+       (f3 (make-zeros-matrix (make-instance 'fast-matrix) 2 4)))
+   (is (not (matrix-same-size-p f1 f2)))
+   (is (not (matrix-same-size-p l1 l2)))
+   (is (not (matrix-same-size-p f1 l2)))
+   (is (matrix-same-size-p f1 f3))
+   (is (matrix-same-size-p l1 l3))
+   (is (matrix-same-size-p l1 f1))
+   (is (matrix-same-size-p f1 l3))))
+
 ;;; Test whether matrix entry comparisons work as expected
 
 (deftest matrix-entries-are-not-different ()
