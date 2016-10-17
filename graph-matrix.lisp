@@ -313,10 +313,9 @@ entries. "
   (:documentation "Raise MATRIX to the power EXP and return the result."))
 
 (defmethod matrix-power ((matrix matrix) exp)
-  (let ((m-rows (matrix-n-rows matrix))
-        (m-cols (matrix-n-cols matrix)))
+  (let ((m-rows (matrix-n-rows matrix)))
     (cond
-      ((/= m-rows m-cols) (error "Non-square matrix"))
+      ((/= m-rows (matrix-n-cols matrix)) (error "Non-square matrix"))
       ((zerop exp) (make-identity-matrix matrix m-rows))
       ((= 1 exp) (matrix-copy matrix))
       ((zerop (mod exp 2)) (let ((me2 (matrix-power matrix (/ exp 2))))
