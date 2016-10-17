@@ -13,8 +13,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (enable-curry-compose-reader-macros))
 
-;; (defconstant infinity most-positive-fixnum)
-
 (defclass matrix ()
   ((self :initarg :self :accessor self :initform nil)))
 
@@ -81,51 +79,11 @@
       (fl.function::ncols (self matrix))
       0))
 
-;; (defgeneric matrix-same-size-p (m1 m2)
-;;   (:documentation "Return t if matrix M1 has the same number of rows
-;; and columns as matrix M2, nil otherwise."))
-
-;; (defmethod matrix-same-size-p ((m1 matrix) (m2 fast-matrix))
-;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
-;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
-
-;; (defmethod matrix-same-size-p ((m1 fast-matrix) (m2 matrix))
-;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
-;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
-
-;; (defmethod matrix-same-size-p ((m1 matrix) (m2 matrix))
-;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
-;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
-
-;; (defmethod matrix-same-size-p ((m1 fast-matrix) (m2 fast-matrix))
-;;   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
-;;        (= (matrix-n-cols m1) (matrix-n-cols m2))))
-
 (defun matrix-same-size-p (m1 m2)
   "Return t if matrix M1 has the same number of rows and columns as
 matrix M2, nil otherwise."
   (and (= (matrix-n-rows m1) (matrix-n-rows m2))
        (= (matrix-n-cols m1) (matrix-n-cols m2))))
-
-;; (defgeneric matrix-entries-different-p (m1 m2)
-;;   (:documentation "Return nil if all the entries in matrix M1 are =
-;;   to the corresponding entries in matrix M2, 1 if matrix M1 is not the
-;;   same size as matrix M2, and otherwise a list of cells that are not
-;;   /=."))
-
-;; (defmethod matrix-entries-different-p ((m1 matrix) (m2 matrix))
-;;   (let ((result))
-;;     (if (matrix-same-size-p m1 m2)
-;;         (let ((m (matrix-n-rows m1))
-;;               (n (matrix-n-cols m1)))
-;;           (loop :for i :from 0 :below m :do
-;;              (loop :for j :from 0 :below n :do
-;;                 (unless (= (matrix-ref m1 i j)
-;;                            (matrix-ref m2 i j))
-;;                   (push (list i j) result))))
-;;           (when result (reverse result)))
-;;         (setf result 1))
-;;     result))
 
 (defun matrix-entries-different-p (m1 m2)
   (let ((result))
