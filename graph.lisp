@@ -102,7 +102,8 @@
 ;;     ((G) (A) (B) (D E C) (F))
 
 ;;; Code:
-(defpackage #:graph
+(uiop/package:define-package :graph/graph
+  (:nicknames :graph)
   (:use :common-lisp :alexandria :metabang-bind
         :named-readtables :curry-compose-reader-macros)
   (:export
