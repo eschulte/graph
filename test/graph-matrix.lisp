@@ -5,9 +5,18 @@
 ;; Licensed under the Gnu Public License Version 3 or later
 
 ;;; Code:
-(in-package :graph-matrix-test)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(defpackage #:graph-matrix/test
+  (:use :common-lisp
+        :alexandria
+        :metabang-bind
+        :graph
+        :graph/matrix
+        :stefil
+        :named-readtables
+        :curry-compose-reader-macros)
+  (:export :test))
+(in-package :graph/matrix-test)
+(in-readtable :curry-compose-reader-macros)
 
 (defsuite test)
 (in-suite test)

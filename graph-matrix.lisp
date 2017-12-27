@@ -9,9 +9,50 @@
 ;; Functions for manipulating matrix graph representations.
 
 ;;; Code:
-(in-package :graph-matrix)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(defpackage #:graph/matrix
+  (:use :common-lisp
+        :alexandria
+        :metabang-bind
+        :named-readtables
+        :curry-compose-reader-macros
+        :graph
+        :fl.function)
+  ;; shadow functions defined in alexandria, fl.function, and graph
+  (:shadow :copy :factorial :standard-deviation :variance :median :mean :degree)
+  (:export
+   :matrix
+   :fast-matrix
+   :matrix-ref
+   :matrix-n-rows
+   :matrix-n-cols
+   :matrix-same-size-p
+   :matrix-symmetric-p
+   :matrix-entries-different-p
+   :matrix-copy
+   :matrix-transpose
+   :make-universal-matrix
+   :make-identity-matrix
+   :make-zeros-matrix
+   :to-adjacency-matrix
+   :to-reachability-matrix
+   :reachablep
+   :reachable-from
+   :to-strong-component-matrix
+   :strong-component-of
+   :to-distance-matrix
+   :distance-from-to
+   :reflexivep
+   :irreflexivep
+   :symmetricp
+   :asymmetricp
+   :transitivep
+   :intransitivep
+   :completep
+   :relational-structure
+   :infinite
+   :infinitep))
+(in-package :graph/matrix)
+(in-readtable :curry-compose-reader-macros)
 
 (defclass matrix ()
   ((self :initarg :self :accessor self :initform nil)))

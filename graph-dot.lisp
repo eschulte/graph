@@ -56,9 +56,17 @@
 ;; <img src="dot-graph-2.png"/>
 
 ;;; Code:
-(in-package :graph-dot)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(defpackage #:graph/dot
+  (:use :common-lisp
+        :alexandria
+        :metabang-bind
+        :named-readtables
+        :curry-compose-reader-macros
+        :graph
+        :cl-ppcre)
+  (:export :to-dot :to-dot-file :from-dot :make-subgraph))
+(in-package :graph/dot)
+(in-readtable :curry-compose-reader-macros)
 
 
 ;;; Visualization

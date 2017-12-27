@@ -5,9 +5,17 @@
 ;; Licensed under the Gnu Public License Version 3 or later
 
 ;;; Code:
-(in-package :graph-test)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(defpackage #:graph/test
+  (:use :common-lisp
+        :alexandria
+        :metabang-bind
+        :graph
+        :stefil
+        :named-readtables
+        :curry-compose-reader-macros)
+  (:export :test))
+(in-package :graph/test)
+(in-readtable :curry-compose-reader-macros)
 
 (defsuite test)
 (in-suite test)
