@@ -1,8 +1,8 @@
-PACKAGES=graph graph-dot graph-json
+PACKAGES=graph dot json
 
 all: index.html $(PACKAGES:=.html)
 
-%.pre: %.lisp %.asd document
+%.pre: %.lisp graph.asd document
 	./document $*
 
 %.html: %.lisp %.pre

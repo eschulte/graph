@@ -2,7 +2,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>GRAPH-DOT - dot serialization of graphs</title>
+  <title>GRAPH/DOT - dot serialization of graphs</title>
   <style type="text/css">
   pre { padding:5px; background-color:#e0e0e0 }
   h3, h4 { text-decoration: underline; }
@@ -24,7 +24,7 @@
 
 <body bgcolor=white>
 
-<h2> GRAPH-DOT - dot serialization of graphs</h2>
+<h2> GRAPH/DOT - dot serialization of graphs</h2>
 
 <br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
 
@@ -43,7 +43,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 <ol>
   <li><a href="#source">Source</a></li>
   <li><a href="#introduction">Introduction</a></li>
-  <li><a href="#dictionary">The GRAPH-DOT dictionary</a></li>
+  <li><a href="#dictionary">The GRAPH/DOT dictionary</a></li>
     <ol>
       <li><a href="#from-dot"><code>from-dot</code></a></li>
       <li><a href="#make-subgraph"><code>make-subgraph</code></a></li>
@@ -55,7 +55,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 
 <br>&nbsp;<br><h3><a class=none name="source">Source</a></h3>
 
-GRAPH-DOT together with this documentation can be found at <a
+GRAPH/DOT together with this documentation can be found at <a
 href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 
 <br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
@@ -73,16 +73,18 @@ href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
                                            ((c d) . 1)
                                            ((d b) . 2)
                                            ((b e) . 3))))
+</code></pre>
 
-(let ((ccs (mapcar #'cons (connected-components *graph*)
-                   '("red" "yellow" "blue" "green"))))
-  (to-dot-file *graph* "dot-graph-1.dot"
+<p>(let ((ccs (mapcar #&lsquo;cons (connected-components <em>graph</em>)
+                   &rsquo;(1 2 3 4))))
+  (to-dot-file <em>graph</em> &ldquo;dot-graph-1.dot&rdquo;
                :node-attrs
                (list (cons :fillcolor
                            (lambda (n) (cdr (assoc-if {member n} ccs))))
                      (cons :style
-                           (constantly "filled")))))
-</code></pre>
+                           (constantly &ldquo;filled&rdquo;))
+                     (cons :colorscheme
+                           (constantly &ldquo;set34&rdquo;)))))</p>
 
 <p><img src="dot-graph-1.png"/></p>
 
@@ -109,7 +111,7 @@ href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 
 <p><img src="dot-graph-2.png"/></p>
 
-<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH-DOT dictionary</a></h3>
+<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH/DOT dictionary</a></h3>
 
 
 <!-- Entry for FROM-DOT -->
@@ -131,7 +133,7 @@ dot executable.
 
 <!-- Entry for MAKE-SUBGRAPH -->
 
-<p><br>[Function]<br><a class=none name='make-subgraph'><b>make-subgraph</b> <i><tt>&amp;key</tt> (node-attributes dum148) (edge-attributes dum149) (attributes dum150) (ranks dum151) (node-list dum152)</i> =&gt; <i>result</i></a>
+<p><br>[Function]<br><a class=none name='make-subgraph'><b>make-subgraph</b> <i><tt>&amp;key</tt> (node-attributes node-attributes) (edge-attributes edge-attributes) (attributes attributes) (ranks ranks) (node-list node-list)</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 
@@ -143,7 +145,7 @@ dot executable.
 
 <!-- Entry for TO-DOT -->
 
-<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream attributes node-attrs edge-attrs subgraphs ranks stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-dot'><b>to-dot</b> <i>graph <tt>&amp;key</tt> stream attributes node-attrs edge-attrs subgraphs ranks</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Print the dot code representing GRAPH. The keyword

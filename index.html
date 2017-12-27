@@ -2,7 +2,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>GRAPH - simple graph data structure and algorithms</title>
+  <title>GRAPH/GRAPH - simple graph data structure and algorithms</title>
   <style type="text/css">
   pre { padding:5px; background-color:#e0e0e0 }
   h3, h4 { text-decoration: underline; }
@@ -24,7 +24,7 @@
 
 <body bgcolor=white>
 
-<h2> GRAPH - simple graph data structure and algorithms</h2>
+<h2> GRAPH/GRAPH - simple graph data structure and algorithms</h2>
 
 <br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
 
@@ -33,8 +33,8 @@
        as CLOS objects with methods and algorithms provided for graph
        manipulation and analysis.
 
-       </p><p>See the <a href="graph-json.html">GRAPH-JSON</a> and
-       <a href="graph-dot.html">GRAPH-DOT</a> libraries for
+       </p><p>See the <a href="json.html">GRAPH/JSON</a> and
+       <a href="dot.html">GRAPH/DOT</a> libraries for
        serialization and visualization of graphs.
 
        </p><p><em>Note</em>: currently this
@@ -54,7 +54,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 <ol>
   <li><a href="#source">Source</a></li>
   <li><a href="#introduction">Introduction</a></li>
-  <li><a href="#dictionary">The GRAPH dictionary</a></li>
+  <li><a href="#dictionary">The GRAPH/GRAPH dictionary</a></li>
     <ol>
       <li><a href="#add-edge"><code>add-edge</code></a></li>
       <li><a href="#add-node"><code>add-node</code></a></li>
@@ -126,7 +126,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 
 <br>&nbsp;<br><h3><a class=none name="source">Source</a></h3>
 
-GRAPH together with this documentation can be found at <a
+GRAPH/GRAPH together with this documentation can be found at <a
 href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 
 <br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
@@ -232,7 +232,7 @@ Starting with the original graph above we get the following.</p>
 ((G) (A) (B) (D E C) (F))
 </code></pre>
 
-<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH dictionary</a></h3>
+<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH/GRAPH dictionary</a></h3>
 
 
 <!-- Entry for ADD-EDGE -->
@@ -880,7 +880,7 @@ Return the k-cores of GRAPH.
 
 <!-- Entry for KATZ-CENTRALITY -->
 
-<p><br>[Generic function]<br><a class=none name='katz-centrality'><b>katz-centrality</b> <i>graph node <tt>&amp;key</tt> attenuation attenuation</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='katz-centrality'><b>katz-centrality</b> <i>graph node <tt>&amp;key</tt> attenuation</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Combined measure of number and nearness of nodes to NODE.
@@ -949,7 +949,7 @@ EDGE2 will be combined.
 
 <!-- Entry for MERGE-NODES -->
 
-<p><br>[Generic function]<br><a class=none name='merge-nodes'><b>merge-nodes</b> <i>graph node1 node2 <tt>&amp;key</tt> new new</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='merge-nodes'><b>merge-nodes</b> <i>graph node1 node2 <tt>&amp;key</tt> new</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Combine NODE1 and NODE2 in GRAPH into the node NEW.
@@ -981,11 +981,12 @@ Return both the global min-cut of GRAPH and the weight of the cut.
 
 <!-- Entry for MINIMUM-SPANNING-TREE -->
 
-<p><br>[Generic function]<br><a class=none name='minimum-spanning-tree'><b>minimum-spanning-tree</b> <i>graph</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='minimum-spanning-tree'><b>minimum-spanning-tree</b> <i>graph <tt>&amp;optional</tt> tree</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Return a minimum spanning tree of GRAPH.
-Prim's algorithm is used.
+Prim's algorithm is used.  Optional argument TREE may be used to
+specify an initial tree, otherwise a random node is used.
 
 
 

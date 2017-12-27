@@ -2,7 +2,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>GRAPH-JSON - json serialization of graphs</title>
+  <title>GRAPH/JSON - json serialization of graphs</title>
   <style type="text/css">
   pre { padding:5px; background-color:#e0e0e0 }
   h3, h4 { text-decoration: underline; }
@@ -24,7 +24,7 @@
 
 <body bgcolor=white>
 
-<h2> GRAPH-JSON - json serialization of graphs</h2>
+<h2> GRAPH/JSON - json serialization of graphs</h2>
 
 <br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
 
@@ -43,7 +43,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 <ol>
   <li><a href="#source">Source</a></li>
   <li><a href="#introduction">Introduction</a></li>
-  <li><a href="#dictionary">The GRAPH-JSON dictionary</a></li>
+  <li><a href="#dictionary">The GRAPH/JSON dictionary</a></li>
     <ol>
       <li><a href="#from-d3"><code>from-d3</code></a></li>
       <li><a href="#from-json"><code>from-json</code></a></li>
@@ -56,7 +56,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 
 <br>&nbsp;<br><h3><a class=none name="source">Source</a></h3>
 
-GRAPH-JSON together with this documentation can be found at <a
+GRAPH/JSON together with this documentation can be found at <a
 href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 
 <br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
@@ -69,7 +69,7 @@ for interactive viewing of graphs in the browser.</p>
 <p>See <a href="http://d3js.org/">d3</a>
 (specifically <a href="http://bl.ocks.org/4062045">d3-force</a>) for more.</p>
 
-<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH-JSON dictionary</a></h3>
+<br>&nbsp;<br><h3><a class=none name="dictionary">The GRAPH/JSON dictionary</a></h3>
 
 
 <!-- Entry for FROM-D3 -->
@@ -116,7 +116,7 @@ Parse string or stream INPUT into GRAPH.
 
 <!-- Entry for TO-D3 -->
 
-<p><br>[Generic function]<br><a class=none name='to-d3'><b>to-d3</b> <i>graph <tt>&amp;key</tt> stream group-fn stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-d3'><b>to-d3</b> <i>graph <tt>&amp;key</tt> stream group-fn</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Return a JSON encoding of GRAPH formatted for D3.
@@ -134,7 +134,7 @@ nodes to group numbers.
 
 <!-- Entry for TO-HTML -->
 
-<p><br>[Generic function]<br><a class=none name='to-html'><b>to-html</b> <i>graph <tt>&amp;key</tt> stream group-fn stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-html'><b>to-html</b> <i>graph <tt>&amp;key</tt> stream group-fn</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write GRAPH to an HTML file.
@@ -152,7 +152,7 @@ the HTML page.
 
 <!-- Entry for TO-JSON -->
 
-<p><br>[Generic function]<br><a class=none name='to-json'><b>to-json</b> <i>graph <tt>&amp;key</tt> stream node-fn edge-fn stream</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='to-json'><b>to-json</b> <i>graph <tt>&amp;key</tt> stream node-fn edge-fn</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Write a JSON encoding of GRAPH to STREAM.
