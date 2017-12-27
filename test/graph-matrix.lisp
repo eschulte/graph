@@ -5,7 +5,7 @@
 ;; Licensed under the Gnu Public License Version 3 or later
 
 ;;; Code:
-(defpackage #:graph-matrix/test
+(defpackage #:graph/matrix-test
   (:use :common-lisp
         :alexandria
         :metabang-bind
@@ -375,16 +375,16 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-difference f0 f1)
-              (graph-matrix::matrix-difference l0 l1))))))
+              (graph/matrix::matrix-difference f0 f1)
+              (graph/matrix::matrix-difference l0 l1))))))
 
 (deftest lisp-vs-fast-sum ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
         (f1 (make-universal-matrix (make-instance 'fast-matrix) 3 3))
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
-    (is (not (matrix-entries-different-p (graph-matrix::matrix-sum f0 f1)
-                                         (graph-matrix::matrix-sum l0 l1))))))
+    (is (not (matrix-entries-different-p (graph/matrix::matrix-sum f0 f1)
+                                         (graph/matrix::matrix-sum l0 l1))))))
 
 (deftest lisp-vs-fast-elementwise-product ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -392,8 +392,8 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-elementwise-product f0 f1)
-              (graph-matrix::matrix-elementwise-product l0 l1))))))
+              (graph/matrix::matrix-elementwise-product f0 f1)
+              (graph/matrix::matrix-elementwise-product l0 l1))))))
 
 (deftest lisp-vs-fast-sum-boolean ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -401,8 +401,8 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-sum f0 f1 :boolean t)
-              (graph-matrix::matrix-sum l0 l1 :boolean t))))))
+              (graph/matrix::matrix-sum f0 f1 :boolean t)
+              (graph/matrix::matrix-sum l0 l1 :boolean t))))))
 
 (deftest lisp-vs-fast-product ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -410,8 +410,8 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-product f0 f1)
-              (graph-matrix::matrix-product l0 l1))))))
+              (graph/matrix::matrix-product f0 f1)
+              (graph/matrix::matrix-product l0 l1))))))
 
 (deftest lisp-vs-fast-transpose ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -419,9 +419,9 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (matrix-transpose (graph-matrix::matrix-elementwise-product f0 f1))
+              (matrix-transpose (graph/matrix::matrix-elementwise-product f0 f1))
               (matrix-transpose
-               (graph-matrix::matrix-elementwise-product l0 l1)))))))
+               (graph/matrix::matrix-elementwise-product l0 l1)))))))
 
 (deftest lisp-vs-fast-power-0 ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -429,10 +429,10 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product f0 f1) 0)
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product l0 l1) 0))))))
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product f0 f1) 0)
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product l0 l1) 0))))))
 
 (deftest lisp-vs-fast-power-1 ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -440,10 +440,10 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product f0 f1) 1)
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product l0 l1) 1))))))
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product f0 f1) 1)
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product l0 l1) 1))))))
 
 (deftest lisp-vs-fast-power-2 ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -451,10 +451,10 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product f0 f1) 2)
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product l0 l1) 2))))))
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product f0 f1) 2)
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product l0 l1) 2))))))
 
 (deftest lisp-vs-fast-power-3 ()
   (let ((f0 (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -462,10 +462,10 @@
         (l0 (make-zeros-matrix (make-instance 'matrix) 3 3))
         (l1 (make-universal-matrix (make-instance 'matrix) 3 3)))
     (is (not (matrix-entries-different-p
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product f0 f1) 3)
-              (graph-matrix::matrix-power
-               (graph-matrix::matrix-elementwise-product l0 l1) 3))))))
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product f0 f1) 3)
+              (graph/matrix::matrix-power
+               (graph/matrix::matrix-elementwise-product l0 l1) 3))))))
 
 (deftest lisp-vs-fast-copy ()
   (let ((f (make-zeros-matrix (make-instance 'fast-matrix) 3 3))
@@ -562,7 +562,7 @@
 
 (deftest digraph-and-adjacency-matrix ()
   (let ((m (make-instance 'matrix)))
-    (setf (graph-matrix::self m)
+    (setf (graph/matrix::self m)
           (make-array '(4 4)
                       :element-type 'fixnum
                       :initial-contents
@@ -574,7 +574,7 @@
 
 (deftest digraph-and-reachability-matrix ()
   (let ((m (make-instance 'matrix)))
-    (setf (graph-matrix::self m)
+    (setf (graph/matrix::self m)
           (make-array '(4 4)
                       :element-type 'fixnum
                       :initial-contents
@@ -589,7 +589,7 @@
 
 (deftest digraph-and-reachability-matrix-with-limit-2 ()
   (let ((m (make-instance 'matrix)))
-    (setf (graph-matrix::self m)
+    (setf (graph/matrix::self m)
           (make-array '(4 4)
                       :element-type 'fixnum
                       :initial-contents
@@ -602,8 +602,8 @@
 
 (deftest digraph-and-distance-matrix ()
   (let* ((m (make-instance 'matrix))
-         (i (graph-matrix::infinite m)))
-    (setf (graph-matrix::self m)
+         (i (graph/matrix::infinite m)))
+    (setf (graph/matrix::self m)
           (make-array
            '(5 5)
            :initial-contents
@@ -618,7 +618,7 @@
 
 (deftest digraph-and-strong-component-matrix ()
   (let ((m (make-instance 'matrix)))
-    (setf (graph-matrix::self m)
+    (setf (graph/matrix::self m)
           (make-array '(8 8)
                       :element-type 'fixnum
                       :initial-contents

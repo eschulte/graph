@@ -676,8 +676,8 @@ entries. "
     (loop :for j :from 0 :below (matrix-n-rows a) :unless result :do
        (loop :for k :from 0 :below (matrix-n-rows a)
           :unless (or result (eq j k)) :do
-          (setf result (and (eq (graph-matrix::matrix-ref a j k) 0)
-                            (eq (graph-matrix::matrix-ref at j k) 0)))))
+          (setf result (and (eq (graph/matrix::matrix-ref a j k) 0)
+                            (eq (graph/matrix::matrix-ref at j k) 0)))))
     (not result)))
 
 (defun relational-structure (graph matrix)

@@ -31,8 +31,12 @@
   :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
-  :depends-on
-  (alexandria metabang-bind curry-compose-reader-macros graph cl-ppcre)
+  :depends-on (alexandria
+               metabang-bind
+               named-readtables
+               curry-compose-reader-macros
+               graph
+               cl-ppcre)
   :components
   ((:static-file "COPYING")
    (:file "graph-dot")))
@@ -42,7 +46,12 @@
   :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
-  :depends-on (alexandria metabang-bind curry-compose-reader-macros graph yason)
+  :depends-on (alexandria
+               metabang-bind
+               named-readtables
+               curry-compose-reader-macros
+               graph
+               yason)
   :components
   ((:static-file "COPYING")
    (:file "graph-json")))
@@ -52,8 +61,12 @@
   :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
-  :depends-on
-  (alexandria metabang-bind curry-compose-reader-macros graph femlisp)
+  :depends-on (alexandria
+               metabang-bind
+               named-readtables
+               curry-compose-reader-macros
+               graph
+               femlisp)
   :components
   ((:static-file "COPYING")
    (:file "graph-matrix")))
@@ -63,10 +76,14 @@
   :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :version "0.0.0"
   :licence "GPL V3"
-  :depends-on
-  (alexandria metabang-bind stefil curry-compose-reader-macros
-   graph graph-matrix)
+  :depends-on (alexandria
+               metabang-bind
+               stefil
+               named-readtables
+               curry-compose-reader-macros
+               graph
+               graph/matrix)
   :components
   ((:static-file "COPYING")
    (:module "test"
-    :components ((:file "graph-matrix")))))
+            :components ((:file "graph-matrix")))))
