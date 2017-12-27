@@ -15,9 +15,23 @@
 ;; (specifically [d3-force](http://bl.ocks.org/4062045)) for more.
 
 ;;; Code:
-(in-package :graph-json)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(defpackage #:graph/json
+  (:use
+   :common-lisp
+   :alexandria
+   :metabang-bind
+   :named-readtables
+   :curry-compose-reader-macros
+   :graph
+   :yason)
+  (:export
+   :to-json
+   :from-json
+   :to-d3
+   :from-d3
+   :to-html))
+(in-package :graph/json)
+(in-readtable :curry-compose-reader-macros)
 
 (defun json-to-plist (input)
   "Parse string or stream INPUT into a plist."

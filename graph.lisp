@@ -102,9 +102,88 @@
 ;;     ((G) (A) (B) (D E C) (F))
 
 ;;; Code:
+(uiop/package:define-package :graph/graph
+  (:nicknames :graph)
+  (:use :common-lisp :alexandria :metabang-bind
+        :named-readtables :curry-compose-reader-macros)
+  (:export
+   :graph
+   :digraph
+   :copy
+   :digraph-of
+   :graph-of
+   :populate
+   :graph-equal
+   ;; Serialization
+   :to-plist
+   :from-plist
+   :to-adjacency-matrix
+   :to-value-matrix
+   :from-value-matrix
+   ;; Simple Graph Methods
+   :edges
+   :edges-w-values
+   :nodes
+   :nodes-w-values
+   :has-node-p
+   :has-edge-p
+   :subgraph
+   :add-node
+   :add-edge
+   :node-edges
+   :degree
+   :indegree
+   :outdegree
+   :delete-node
+   :edge-value
+   :delete-edge
+   :reverse-edges
+   ;; Complex Graph Methods
+   :merge-nodes
+   :merge-edges
+   :edge-neighbors
+   :neighbors
+   :precedents
+   :connected-component
+   :connectedp
+   :connected-components
+   :topological-sort
+   :levels
+   ;; Cycles and strongly connected components
+   :strongly-connected-components
+   :basic-cycles
+   :cycles
+   :minimum-spanning-tree
+   :connected-groups-of-size
+   :closedp
+   :clustering-coefficient
+   :cliques
+   ;; Shortest Path
+   :shortest-path
+   ;; Max Flow
+   :residual
+   :add-paths
+   :max-flow
+   ;; Min Cut
+   :min-cut
+   ;; Random Graph generation
+   :preferential-attachment-populate
+   :erdos-renyi-populate
+   :erdos-renyi-graph
+   :erdos-renyi-digraph
+   :edgar-gilbert-populate
+   :edgar-gilbert-graph
+   :edgar-gilbert-digraph
+   ;; Centrality
+   :farness
+   :closeness
+   :betweenness
+   :katz-centrality
+   ;; Degeneracy
+   :degeneracy
+   :k-cores))
 (in-package :graph)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
+(in-readtable :curry-compose-reader-macros)
 
 
 ;;; Special hashes keyed for edges
@@ -388,6 +467,14 @@ edge in the results."))
   (:documentation "Add NODE to GRAPH."))
 
 (defmethod add-node ((graph graph) node)
+  ;; NOTE: This limitation on the types of node simplifies the
+  ;;       equality tests, and the use of nodes as hash keys
+  ;;       throughout the remainder of this library.  In fact the
+  ;;       addition of type-annotations around node quality operations
+  ;;       may improve performance.  The desire for more complex node
+  ;;       structures, may often be met by maintaining a hash table
+  ;;       outside of the graph which maps graph nodes to the more
+  ;;       complex object related to the node.
   (assert (or (numberp node) (symbolp node)) (node)
           "Nodes must be numbers, symbols or keywords, not ~S.~%Invalid node:~S"
    (type-of node) node)
@@ -833,15 +920,17 @@ Uses Tarjan's algorithm."))
                (remove-if-not {intersection cycle} basic-cycles)))
       cycles)))
 
-(defgeneric minimum-spanning-tree (graph)
+(defgeneric minimum-spanning-tree (graph &optional tree)
   (:documentation "Return a minimum spanning tree of GRAPH.
-Prim's algorithm is used."))
+Prim's algorithm is used.  Optional argument TREE may be used to
+specify an initial tree, otherwise a random node is used."))
 
-(defmethod minimum-spanning-tree ((graph graph))
+(defmethod minimum-spanning-tree
+    ((graph graph) &optional (tree
+                              (populate (make-instance 'graph)
+                                :nodes (list (random-elt (nodes graph))))))
   (assert (connectedp graph) (graph) "~S is not connected" graph)
   (let ((copy (copy graph))
-        (tree (populate (make-instance 'graph)
-                :nodes (list (random-elt (nodes graph)))))
         (total-nodes (length (nodes graph))))
     (loop :until (= (length (nodes tree)) total-nodes) :do
        (let ((e (car (sort

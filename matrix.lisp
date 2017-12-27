@@ -9,16 +9,72 @@
 ;; Functions for manipulating matrix graph representations.
 
 ;;; Code:
-(in-package :graph-matrix)
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-compose-reader-macros))
-
-(defconstant infinity most-positive-fixnum)
+(defpackage #:graph/matrix
+  (:use :common-lisp
+        :alexandria
+        :metabang-bind
+        :named-readtables
+        :curry-compose-reader-macros
+        :graph
+        :fl.function)
+  ;; shadow functions defined in alexandria, fl.function, and graph
+  (:shadow :copy :factorial :standard-deviation :variance :median :mean :degree)
+  (:export
+   :matrix
+   :fast-matrix
+   :matrix-ref
+   :matrix-n-rows
+   :matrix-n-cols
+   :matrix-same-size-p
+   :matrix-symmetric-p
+   :matrix-entries-different-p
+   :matrix-copy
+   :matrix-transpose
+   :make-universal-matrix
+   :make-identity-matrix
+   :make-zeros-matrix
+   :to-adjacency-matrix
+   :to-reachability-matrix
+   :reachablep
+   :reachable-from
+   :to-strong-component-matrix
+   :strong-component-of
+   :to-distance-matrix
+   :distance-from-to
+   :reflexivep
+   :irreflexivep
+   :symmetricp
+   :asymmetricp
+   :transitivep
+   :intransitivep
+   :completep
+   :relational-structure
+   :infinite
+   :infinitep))
+(in-package :graph/matrix)
+(in-readtable :curry-compose-reader-macros)
 
 (defclass matrix ()
   ((self :initarg :self :accessor self :initform nil)))
 
 (defclass fast-matrix (matrix) ())
+
+(defgeneric infinite (matrix)
+  (:documentation "Return the most-positive value for the element type
+  of MATRIX."))
+
+(defmethod infinite ((matrix matrix))
+  most-positive-fixnum)
+
+(defmethod infinite ((matrix fast-matrix))
+  most-positive-single-float)
+
+(defgeneric infinitep (value matrix)
+  (:documentation "Non-nil if VALUE is the most-positive value that
+  can be held in MATRIX."))
+
+(defmethod infinitep (value (matrix matrix))
+  (= value (infinite matrix)))
 
 (defgeneric matrix-ref (matrix row col)
   (:documentation "Return the value at ROW and COL in MATRIX."))
@@ -46,9 +102,9 @@
       (array-dimension (self matrix) 0)
       0))
 
-(defmethod matrix-n-rows ((fm fast-matrix))
-  (if (self fm)
-      (fl.function::nrows (self fm))
+(defmethod matrix-n-rows ((matrix fast-matrix))
+  (if (self matrix)
+      (fl.function::nrows (self matrix))
       0))
 
 (defgeneric matrix-n-cols (matrix)
@@ -59,32 +115,30 @@
       (array-dimension (self matrix) 1)
       0))
 
-(defmethod matrix-n-cols ((fm fast-matrix))
-  (if (self fm)
-      (fl.function::ncols (self fm))
+(defmethod matrix-n-cols ((matrix fast-matrix))
+  (if (self matrix)
+      (fl.function::ncols (self matrix))
       0))
 
 (defun matrix-same-size-p (m1 m2)
   "Return t if matrix M1 has the same number of rows and columns as
 matrix M2, nil otherwise."
-  (and (eql (matrix-n-rows m1) (matrix-n-rows m2))
-       (eql (matrix-n-cols m1) (matrix-n-cols m2))))
+  (and (= (matrix-n-rows m1) (matrix-n-rows m2))
+       (= (matrix-n-cols m1) (matrix-n-cols m2))))
 
-(defgeneric matrix-entries-different-p (m1 m2)
-  (:documentation "Return nil if all the entries in matrix M1 are eql
-  to the corresponding entries in matrix M2, 1 if matrix M1 is not the
-  same size as matrix M2, and otherwise a list of cells that are not
-  eql."))
-
-(defmethod matrix-entries-different-p ((m1 matrix) (m2 matrix))
+(defun matrix-entries-different-p (m1 m2)
+  "Returns nil if the entries in matrix M1 and matrix M2 do not differ
+from one another.  Returns 1 if the sizes of matrix M1 and matrix M2
+differ.  Otherwise, returns a list of lists containing discrepant
+entries. "
   (let ((result))
     (if (matrix-same-size-p m1 m2)
         (let ((m (matrix-n-rows m1))
               (n (matrix-n-cols m1)))
           (loop :for i :from 0 :below m :do
              (loop :for j :from 0 :below n :do
-                (unless (eql (matrix-ref m1 i j)
-                             (matrix-ref m2 i j))
+                (unless (= (matrix-ref m1 i j)
+                           (matrix-ref m2 i j))
                   (push (list i j) result))))
           (when result (reverse result)))
         (setf result 1))
@@ -92,25 +146,19 @@ matrix M2, nil otherwise."
 
 (defun matrix-symmetric-p (matrix)
   "Return t if matrix MATRIX is symmetric, nil otherwise."
-  (let* ((m (matrix-n-rows matrix))
-         (n (matrix-n-cols matrix))
-         (symmetric t)
-        (mt (and (eql m n) (matrix-transpose matrix))))
-    (loop :for i :from 0 :below m :while symmetric :when mt :do
-       (loop :for j :from 0 :below n :while symmetric :do
-          (unless (eql (matrix-ref matrix i j)
-                       (matrix-ref mt i j))
-            (setf symmetric nil))))
-    (and mt symmetric)))
+  (not (matrix-entries-different-p matrix (matrix-transpose matrix))))
 
 (defgeneric matrix-copy (matrix)
   (:documentation "Return a copy of MATRIX."))
 
 (defmethod matrix-copy ((matrix matrix))
-  (let ((result (make-instance 'matrix)))
+  (let* ((m (matrix-n-rows matrix))
+         (n (matrix-n-cols matrix))
+         (result (make-zeros-matrix (make-instance 'matrix) m n)))
     (when (self matrix)
-      (setf (self result)
-            (copy-array (self matrix))))
+      (loop :for i :from 0 :below m :do
+         (loop :for j :from 0 :below n :do
+            (setf (matrix-ref result i j) (matrix-ref matrix i j)))))
     result))
 
 (defmethod matrix-copy ((fm fast-matrix))
@@ -124,33 +172,39 @@ matrix M2, nil otherwise."
   M2. M1 and M2 must be the same size. If BOOLEAN is non-nil, then use
   boolean arithmetic, where 1+1=1."))
 
-(defmethod matrix-sum ((m1 matrix) (m2 matrix) &key boolean) 
+(defmethod matrix-sum ((m1 matrix) (m2 matrix) &key boolean)
   (and (matrix-same-size-p m1 m2)
-       (let ((result (matrix-copy m1))
-             (m (matrix-n-rows m1))
-             (n (matrix-n-cols m1)))
+       (let* ((m (matrix-n-rows m1))
+              (n (matrix-n-cols m1))
+              (result (make-zeros-matrix (make-instance 'matrix) m n))
+              (zero 0)
+              (one 1))
+         (declare (type fixnum zero))
+         (declare (type fixnum one))
          (loop :for i :from 0 :below m :do
             (loop :for j :from 0 :below n :do
                (setf (matrix-ref result i j)
                      (if boolean
-                         (if (> (+ (matrix-ref result i j)
-                                   (matrix-ref m2 i j)) 0) 1 0)
-                         (+ (matrix-ref result i j)
+                         (if (> (+ (matrix-ref m1 i j)
+                                   (matrix-ref m2 i j)) 0) one zero)
+                         (+ (matrix-ref m1 i j)
                             (matrix-ref m2 i j))))))
          result)))
 
 (defmethod matrix-sum ((m1 fast-matrix) (m2 fast-matrix) &key boolean)
-  (and (matrix-same-size-p m1 m2)
-       (let ((result (matrix-copy m1)))
-         (setf (self result) (fl.function::m+ (self result) (self m2)))
-         (when boolean
-           (let ((m (matrix-n-rows m1))
-                 (n (matrix-n-cols m1)))
-             (loop :for i :from 0 :below m :do
-                (loop :for j :from 0 :below n :do
-                   (if (> (matrix-ref result i j) 0)
-                       (setf (matrix-ref result i j) 1))))))
-         result)))
+  (when (matrix-same-size-p m1 m2)
+    (let ((result (make-instance 'fast-matrix)))
+      (setf (self result) (fl.function::m+ (self m1) (self m2)))
+      (when boolean
+        (let ((m (matrix-n-rows result))
+              (n (matrix-n-cols result))
+              (one 1.0s0))
+          (declare (type single-float one))
+          (loop :for i :from 0 :below m :do
+             (loop :for j :from 0 :below n :do
+                (if (> (matrix-ref result i j) 0)
+                    (setf (matrix-ref result i j) one))))))
+      result)))
 
 (defgeneric matrix-difference (m1 m2)
   (:documentation "Return the result of subtracting M2 from M1. M1 and
@@ -193,7 +247,7 @@ matrix M2, nil otherwise."
   of M2."))
 
 (defmethod matrix-product ((m1 matrix) (m2 matrix))
-  (and (eql (matrix-n-cols m1) (matrix-n-rows m2))
+  (and (= (matrix-n-cols m1) (matrix-n-rows m2))
        (loop
           :with m = (matrix-n-rows m1)
           :with n = (matrix-n-cols m1)
@@ -208,7 +262,7 @@ matrix M2, nil otherwise."
           :finally (return c)))  )
 
 (defmethod matrix-product ((m1 fast-matrix) (m2 fast-matrix))
-  (and (eql (matrix-n-cols m1) (matrix-n-rows m2))
+  (and (= (matrix-n-cols m1) (matrix-n-rows m2))
        (let ((result (make-instance 'fast-matrix)))
          (setf (self result) (fl.function::m* (self m1) (self m2)))
          result)))
@@ -244,7 +298,7 @@ matrix M2, nil otherwise."
   matrix)
 
 (defmethod make-zeros-matrix ((fm fast-matrix) rows cols)
-  (setf (self fm) (fl.function::zeros rows cols 'fixnum))
+  (setf (self fm) (fl.function::zeros rows cols 'single-float))
   fm)
 
 (defgeneric make-universal-matrix (matrix rows cols)
@@ -257,7 +311,7 @@ matrix M2, nil otherwise."
   matrix)
 
 (defmethod make-universal-matrix ((fm fast-matrix) rows cols)
-  (setf (self fm) (fl.function::ones rows cols 'fixnum))
+  (setf (self fm) (fl.function::ones rows cols 'single-float))
   fm)
 
 (defgeneric make-infinity-matrix (matrix rows cols)
@@ -268,16 +322,16 @@ matrix M2, nil otherwise."
   (progn
     (setf (self matrix) (make-array (list rows cols)
                                     :element-type 'fixnum
-                                    :initial-element infinity))
+                                    :initial-element (infinite matrix)))
     matrix))
 
-; Can't get a femlisp solution to work
 (defmethod make-infinity-matrix ((fm fast-matrix) rows cols)
   (progn
-    (setf (self fm) (fl.function::zeros rows cols 'fixnum))
-    (loop :for i :from 0 :below rows :do
-       (loop :for j :from 0 :below cols :do
-          (setf (matrix-ref fm i j) infinity)))
+    (setf (self fm) (fl.function::zeros rows cols 'single-float))
+    (fl.function::fill! (self fm) (infinite fm))
+    ;; (loop :for i :from 0 :below rows :do
+    ;;    (loop :for j :from 0 :below cols :do
+    ;;       (setf (matrix-ref fm i j) infinity)))
     fm))
 
 (defgeneric make-identity-matrix (matrix order)
@@ -290,8 +344,25 @@ matrix M2, nil otherwise."
   matrix)
 
 (defmethod make-identity-matrix ((fm fast-matrix) order)
-  (setf (self fm) (fl.function::eye order order 'fixnum))
+  (setf (self fm) (fl.function::eye order order 'single-float))
   fm)
+
+;; Adapted from
+;; https://rosettacode.org/wiki/Matrix-exponentiation_operator#Common_Lisp
+
+(defgeneric matrix-power (matrix exp)
+  (:documentation "Raise MATRIX to the power EXP and return the result."))
+
+(defmethod matrix-power ((matrix matrix) exp)
+  (let ((m-rows (matrix-n-rows matrix)))
+    (cond
+      ((/= m-rows (matrix-n-cols matrix)) (error "Non-square matrix"))
+      ((zerop exp) (make-identity-matrix matrix m-rows))
+      ((= 1 exp) (matrix-copy matrix))
+      ((zerop (mod exp 2)) (let ((me2 (matrix-power matrix (/ exp 2))))
+                             (matrix-product me2 me2)))
+      (t (let ((me2 (matrix-power matrix (/ (1- exp) 2))))
+           (matrix-product matrix (matrix-product me2 me2)))))))
 
 (defgeneric to-adjacency-matrix (graph matrix)
   (:documentation "Return the adjacency matrix of GRAPH."))
@@ -303,14 +374,14 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                       (setf (matrix-ref matrix
-                                         (gethash a node-index-hash)
-                                         (gethash b node-index-hash))
-                             1)
-                       (setf (matrix-ref matrix
-                                         (gethash b node-index-hash)
-                                         (gethash a node-index-hash))
-                             1))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        1)
+                  (setf (matrix-ref matrix
+                                    (gethash b node-index-hash)
+                                    (gethash a node-index-hash))
+                        1))
           (edges graph))
     matrix))
 
@@ -321,10 +392,46 @@ matrix M2, nil otherwise."
           (nodes graph))
     (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
     (mapc (lambda-bind ((a b))
-                       (setf (matrix-ref matrix
-                                         (gethash a node-index-hash)
-                                         (gethash b node-index-hash))
-                             1))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        1))
+          (edges graph))
+    matrix))
+
+(defmethod to-adjacency-matrix ((graph graph) (matrix fast-matrix))
+  (let ((node-index-hash (make-hash-table))
+        (counter -1)
+        (one 1.0s0))
+    (declare (type single-float one))
+    (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
+          (nodes graph))
+    (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
+    (mapc (lambda-bind ((a b))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        one)
+                  (setf (matrix-ref matrix
+                                    (gethash b node-index-hash)
+                                    (gethash a node-index-hash))
+                        one))
+          (edges graph))
+    matrix))
+
+(defmethod to-adjacency-matrix ((graph digraph) (matrix fast-matrix))
+  (let ((node-index-hash (make-hash-table))
+        (counter -1)
+        (one 1.0s0))
+    (declare (type single-float one))
+    (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
+          (nodes graph))
+    (setf matrix (make-zeros-matrix matrix (+ counter 1) (+ counter 1)))
+    (mapc (lambda-bind ((a b))
+                  (setf (matrix-ref matrix
+                                    (gethash a node-index-hash)
+                                    (gethash b node-index-hash))
+                        one))
           (edges graph))
     matrix))
 
@@ -335,35 +442,50 @@ matrix M2, nil otherwise."
   reachability matrix with paths of length LIMIT or less."))
 
 (defmethod to-reachability-matrix ((graph graph) (matrix matrix) &key limit)
-  (assert (or (not limit) (and (integerp limit) (> limit 1)
-                               (< limit (- (length (nodes graph)) 1))))
-          (limit)
-          "~S must be an integer between 2 and ~S"
-          limit (- (length (nodes graph)) 2))
-  (let* ((result (make-identity-matrix (matrix-copy matrix)
-                                       (length (nodes graph))))
-         (max-power (or limit (- (length (nodes graph)) 1)))
-         (adjacency (to-adjacency-matrix graph (matrix-copy matrix)))
-         (adjacency-powers (matrix-copy adjacency)))
-    (setf result (matrix-sum adjacency result :boolean t))
-    (loop :for i :from 2 :to max-power :do
-       (setf adjacency-powers (matrix-product adjacency-powers adjacency))
-       (setf result (matrix-sum adjacency-powers result :boolean t)))
-    result))
+  (let ((n (length (nodes graph))))
+    (assert (or (not limit)
+                (and (integerp limit) (> limit 1) (< limit (- n 1))))
+            (limit)
+            "~S must be an integer between 2 and ~S"
+            limit (- n 2))
+    (let* ((result (make-identity-matrix (make-instance 'matrix) n))
+           (max-power (or limit (- n 1)))
+           (adjacency (to-adjacency-matrix graph (make-instance 'matrix)))
+           (adjacency-powers (matrix-copy adjacency)))
+      (setf result (matrix-sum adjacency result :boolean t))
+      (loop :for i :from 2 :to max-power :do
+         (setf adjacency-powers (matrix-product adjacency-powers adjacency))
+         (setf result (matrix-sum adjacency-powers result :boolean t)))
+      result)))
+
+(defmethod to-reachability-matrix ((graph graph) (matrix fast-matrix) &key limit)
+  (let ((n (length (nodes graph))))
+    (assert (or (not limit)
+                (and (integerp limit) (> limit 1) (< limit (- n 1))))
+            (limit)
+            "~S must be an integer between 2 and ~S"
+            limit (- n 2))
+    (let* ((result (make-identity-matrix (make-instance 'fast-matrix) n))
+           (max-power (or limit (- n 1)))
+           (adjacency (to-adjacency-matrix graph (make-instance 'fast-matrix)))
+           (adjacency-powers (matrix-copy adjacency)))
+      (setf result (matrix-sum adjacency result :boolean t))
+      (loop :for i :from 2 :to max-power :do
+         (setf adjacency-powers (matrix-product adjacency-powers adjacency))
+         (setf result (matrix-sum adjacency-powers result :boolean t)))
+      result)))
 
 (defgeneric reachablep (graph rd from to)
-  (:documentation "Given a graph GRAPH and a reachability matrix
-  RD, returns t if TO is reachable from FROM, nil
-  otherwise."))
+  (:documentation "Given a graph GRAPH and a reachability matrix RD,
+  returns t if node TO is reachable from node FROM, nil otherwise."))
 
 (defmethod reachablep ((graph graph) (rd matrix) from to)
   (let ((node-index-hash (make-hash-table))
         (counter -1))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
-    (eql 1 (matrix-ref rd
-                       (gethash from node-index-hash)
-                       (gethash to node-index-hash)))))
+    (= 1 (matrix-ref rd (gethash from node-index-hash)
+                     (gethash to node-index-hash)))))
 
 (defgeneric reachable-from (graph rd from)
   (:documentation "Given a reachability matrix RD, return a list of
@@ -377,10 +499,7 @@ matrix M2, nil otherwise."
           (nodes graph))
     (maphash #'(lambda (k v)
                  (unless
-                     (equal 0
-                            (matrix-ref rd
-                                        (gethash from node-index-hash)
-                                        v))
+                     (= 0 (matrix-ref rd (gethash from node-index-hash) v))
                    (push k result)))
              node-index-hash)
     (reverse result)))
@@ -405,7 +524,7 @@ matrix M2, nil otherwise."
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
     (maphash #'(lambda (k v)
-                 (unless (equal 0 (matrix-ref
+                 (unless (= 0 (matrix-ref
                                    strong-components
                                    (gethash node node-index-hash) v))
                    (push k result)))
@@ -416,25 +535,56 @@ matrix M2, nil otherwise."
   (:documentation "Return the distance matrix ND of graph GRAPH."))
 
 (defmethod to-distance-matrix ((graph graph) (nd matrix))
-  (let* ((a (to-adjacency-matrix graph (matrix-copy nd)))
-         (a-power (to-adjacency-matrix graph (matrix-copy nd)))
+  (let* ((a (to-adjacency-matrix graph (make-instance 'matrix)))
+         (a-power (to-adjacency-matrix graph (make-instance 'matrix)))
          (m (matrix-n-rows a))
-         (finished))
+         (finished)
+         (zero 0)
+         (one 1))
+    (declare (type fixnum one))
+    (declare (type fixnum zero))
     (setf nd (make-infinity-matrix nd m m))
     (loop :for i :from 0 :below m :do
-       (setf (matrix-ref nd i i) 0))
+       (setf (matrix-ref nd i i) zero))
     (loop :for i :from 0 :below m :do
        (loop :for j :from 0 :below m :do
-          (when (eql (matrix-ref a i j) 1)
-            (setf (matrix-ref nd i j) 1))))
+          (when (= (matrix-ref a i j) one)
+            (setf (matrix-ref nd i j) one))))
     (loop :for i :from 2 :to m :unless finished :do
        (setf a-power (matrix-product a a-power))
        (setf finished t)
        (loop :for j :from 0 :below m :do
           (loop :for k :from 0 :below m :do
-             (when (and (eql (matrix-ref nd j k) infinity)
-                        (> (matrix-ref a-power j k) 0))
-               (setf (matrix-ref nd j k) i)
+             (when (and (infinitep (matrix-ref nd j k) nd)
+                        (> (matrix-ref a-power j k) zero))
+               (setf (matrix-ref nd j k) (coerce i 'fixnum))
+               (setf finished nil)))))
+    nd))
+
+(defmethod to-distance-matrix ((graph graph) (nd fast-matrix))
+  (let* ((a (to-adjacency-matrix graph (make-instance 'fast-matrix)))
+         (a-power (to-adjacency-matrix graph (make-instance 'fast-matrix)))
+         (m (matrix-n-rows a))
+         (finished)
+         (zero 0.0s0)
+         (one 1.0s0))
+    (declare (type single-float one))
+    (declare (type single-float zero))
+    (setf nd (make-infinity-matrix nd m m))
+    (loop :for i :from 0 :below m :do
+       (setf (matrix-ref nd i i) zero))
+    (loop :for i :from 0 :below m :do
+       (loop :for j :from 0 :below m :do
+          (when (= (matrix-ref a i j) one)
+            (setf (matrix-ref nd i j) one))))
+    (loop :for i :from 2 :to m :unless finished :do
+       (setf a-power (matrix-product a a-power))
+       (setf finished t)
+       (loop :for j :from 0 :below m :do
+          (loop :for k :from 0 :below m :do
+             (when (and (infinitep (matrix-ref nd j k) nd)
+                        (> (matrix-ref a-power j k) zero))
+               (setf (matrix-ref nd j k) (coerce i 'single-float))
                (setf finished nil)))))
     nd))
 
@@ -458,7 +608,7 @@ matrix M2, nil otherwise."
   (let ((a (to-adjacency-matrix graph matrix))
         (result))
     (loop :for j :from 0 :below (matrix-n-rows a) :unless result :do
-       (setf result (not (eql 1 (matrix-ref a j j)))))
+       (setf result (not (= 1 (matrix-ref a j j)))))
     (not result)))
 
 (defun irreflexivep (graph matrix)
@@ -466,7 +616,7 @@ matrix M2, nil otherwise."
   (let ((a (to-adjacency-matrix graph matrix))
         (result))
     (loop :for j :from 0 :below (matrix-n-rows a) :unless result :do
-       (setf result (not (eql 0 (matrix-ref a j j)))))
+       (setf result (not (= 0 (matrix-ref a j j)))))
     (not result)))
 
 (defun symmetricp (graph matrix)
@@ -478,13 +628,13 @@ matrix M2, nil otherwise."
 (defun asymmetricp (graph matrix)
   :documentation "Returns t if GRAPH is asymmetric, nil otherwise."
   (let* ((a (to-adjacency-matrix graph matrix))
-        (at (matrix-transpose a))
-        (result))
+         (at (matrix-transpose a))
+         (result))
     (loop :for j :from 0 :below (matrix-n-rows a) :unless result :do
        (loop :for k :from 0 :below (matrix-n-rows a) :unless result :do
           (setf result (and (not (eq j k))
-                        (eq (matrix-ref a j k) 1)
-                        (eq (matrix-ref at j k) 1)))))
+                            (eq (matrix-ref a j k) 1)
+                            (eq (matrix-ref at j k) 1)))))
     (not result)))
 
 (defun transitivep (graph matrix)
@@ -520,21 +670,21 @@ matrix M2, nil otherwise."
 
 (defun completep (graph matrix)
   :documentation "Returns t if GRAPH is complete, nil otherwise."
-  (let* ((a (to-adjacency-matrix graph matrix)) 
+  (let* ((a (to-adjacency-matrix graph matrix))
          (at (matrix-transpose a))
          (result))
     (loop :for j :from 0 :below (matrix-n-rows a) :unless result :do
        (loop :for k :from 0 :below (matrix-n-rows a)
           :unless (or result (eq j k)) :do
-          (setf result (and (eq (graph-matrix::matrix-ref a j k) 0)
-                            (eq (graph-matrix::matrix-ref at j k) 0)))))
+          (setf result (and (eq (graph/matrix::matrix-ref a j k) 0)
+                            (eq (graph/matrix::matrix-ref at j k) 0)))))
     (not result)))
 
 (defun relational-structure (graph matrix)
   :documentation "Returns a string with the name of a relational
   structure whose axiom system GRAPH satisfies, or nil if no
   relational structure axiom system is satisfied."
-    (let ((rnobar (reflexivep graph matrix))
+  (let ((rnobar (reflexivep graph matrix))
         (rbar (irreflexivep graph matrix))
         (snobar (symmetricp graph matrix))
         (sbar (asymmetricp graph matrix))

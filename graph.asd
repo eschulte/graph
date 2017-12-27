@@ -3,21 +3,12 @@
   :version "0.0.0"
   :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
   :licence "GPL V3"
-  :depends-on (alexandria metabang-bind curry-compose-reader-macros)
-  :components
-  ((:static-file "COPYING")
-   (:file "package")
-   (:file "graph" :depends-on ("package"))))
+  :class :package-inferred-system
+  :defsystem-depends-on (:asdf-package-system)
+  :depends-on (alexandria
+               metabang-bind
+               named-readtables
+               curry-compose-reader-macros
+               graph/graph))
 
-(defsystem :graph-test
-  :description "Test the graph library."
-  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
-  :version "0.0.0"
-  :licence "GPL V3"
-  :depends-on
-  (alexandria metabang-bind graph stefil curry-compose-reader-macros)
-  :components
-  ((:static-file "COPYING")
-   (:module "test"
-            :components ((:file "package")
-                         (:file "graph" :depends-on ("package"))))))
+(register-system-packages "femlisp" '(:fl.function))
