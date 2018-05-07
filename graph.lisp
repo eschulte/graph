@@ -213,7 +213,9 @@
   (make-hash-table :test 'edge-equalp)
   #+ccl
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
-  #-(or sbcl clisp ccl)
+  #+allegro
+  (make-hash-table :test 'edge-equalp)
+  #-(or sbcl clisp ccl allegro)
   (error "unsupport lisp distribution"))
 
 (defun make-diedge-hash-table ()
@@ -223,7 +225,9 @@
   (make-hash-table :test 'dir-edge-equalp)
   #+ccl
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
-  #-(or sbcl clisp ccl)
+  #+allegro
+  (make-hash-table :test 'dir-edge-equalp)
+  #-(or sbcl clisp ccl allegro)
   (error "unsupport lisp distribution"))
 
 
