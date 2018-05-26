@@ -11,4 +11,4 @@
                curry-compose-reader-macros
                graph/graph))
 
-(register-system-packages "femlisp" '(:fl.function))
+(register-system-packages "femlisp-matlisp" '(:fl.matlisp))
