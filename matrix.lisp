@@ -16,8 +16,8 @@
         :named-readtables
         :curry-compose-reader-macros
         :graph
-        :fl.function)
-  ;; shadow functions defined in alexandria, fl.function, and graph
+        :fl.matlisp)
+  ;; shadow functions defined in alexandria, fl.matlisp, and graph
   (:shadow :copy :factorial :standard-deviation :variance :median :mean :degree)
   (:export
    :matrix
@@ -83,7 +83,7 @@
   (aref (self matrix) row col))
 
 (defmethod matrix-ref ((fm fast-matrix) row col)
-  (fl.function::mref (self fm) row col))
+  (fl.matlisp::mref (self fm) row col))
 
 (defgeneric (setf matrix-ref) (new matrix row col)
   (:documentation "Make matrix-ref setf-able."))
@@ -92,7 +92,7 @@
   (setf (aref (self matrix) row col) new))
 
 (defmethod (setf matrix-ref) (new (fm fast-matrix) row col)
-  (setf (fl.function::mref (self fm) row col) new))
+  (setf (fl.matlisp::mref (self fm) row col) new))
 
 (defgeneric matrix-n-rows (matrix)
   (:documentation "Return the number of rows in MATRIX."))
@@ -104,7 +104,7 @@
 
 (defmethod matrix-n-rows ((matrix fast-matrix))
   (if (self matrix)
-      (fl.function::nrows (self matrix))
+      (fl.matlisp::nrows (self matrix))
       0))
 
 (defgeneric matrix-n-cols (matrix)
@@ -117,7 +117,7 @@
 
 (defmethod matrix-n-cols ((matrix fast-matrix))
   (if (self matrix)
-      (fl.function::ncols (self matrix))
+      (fl.matlisp::ncols (self matrix))
       0))
 
 (defun matrix-same-size-p (m1 m2)
@@ -164,7 +164,7 @@ entries. "
 (defmethod matrix-copy ((fm fast-matrix))
   (let ((result (make-instance 'fast-matrix)))
     (when (self fm)
-      (setf (self result) (fl.function::copy (self fm))))
+      (setf (self result) (fl.matlisp::copy (self fm))))
     result))
 
 (defgeneric matrix-sum (m1 m2 &key boolean)
@@ -194,7 +194,7 @@ entries. "
 (defmethod matrix-sum ((m1 fast-matrix) (m2 fast-matrix) &key boolean)
   (when (matrix-same-size-p m1 m2)
     (let ((result (make-instance 'fast-matrix)))
-      (setf (self result) (fl.function::m+ (self m1) (self m2)))
+      (setf (self result) (fl.matlisp::m+ (self m1) (self m2)))
       (when boolean
         (let ((m (matrix-n-rows result))
               (n (matrix-n-cols result))
@@ -264,7 +264,7 @@ entries. "
 (defmethod matrix-product ((m1 fast-matrix) (m2 fast-matrix))
   (and (= (matrix-n-cols m1) (matrix-n-rows m2))
        (let ((result (make-instance 'fast-matrix)))
-         (setf (self result) (fl.function::m* (self m1) (self m2)))
+         (setf (self result) (fl.matlisp::m* (self m1) (self m2)))
          result)))
 
 (defgeneric matrix-transpose (matrix)
@@ -284,7 +284,7 @@ entries. "
 
 (defmethod matrix-transpose ((fm fast-matrix))
   (let ((result (make-instance 'fast-matrix)))
-    (setf (self result) (fl.function::transpose (self fm)))
+    (setf (self result) (fl.matlisp::transpose (self fm)))
     result))
 
 (defgeneric make-zeros-matrix (matrix rows cols)
@@ -298,7 +298,7 @@ entries. "
   matrix)
 
 (defmethod make-zeros-matrix ((fm fast-matrix) rows cols)
-  (setf (self fm) (fl.function::zeros rows cols 'single-float))
+  (setf (self fm) (fl.matlisp::zeros rows cols 'single-float))
   fm)
 
 (defgeneric make-universal-matrix (matrix rows cols)
@@ -311,7 +311,7 @@ entries. "
   matrix)
 
 (defmethod make-universal-matrix ((fm fast-matrix) rows cols)
-  (setf (self fm) (fl.function::ones rows cols 'single-float))
+  (setf (self fm) (fl.matlisp::ones rows cols 'single-float))
   fm)
 
 (defgeneric make-infinity-matrix (matrix rows cols)
@@ -327,8 +327,8 @@ entries. "
 
 (defmethod make-infinity-matrix ((fm fast-matrix) rows cols)
   (progn
-    (setf (self fm) (fl.function::zeros rows cols 'single-float))
-    (fl.function::fill! (self fm) (infinite fm))
+    (setf (self fm) (fl.matlisp::zeros rows cols 'single-float))
+    (fl.matlisp::fill! (self fm) (infinite fm))
     ;; (loop :for i :from 0 :below rows :do
     ;;    (loop :for j :from 0 :below cols :do
     ;;       (setf (matrix-ref fm i j) infinity)))
@@ -344,7 +344,7 @@ entries. "
   matrix)
 
 (defmethod make-identity-matrix ((fm fast-matrix) order)
-  (setf (self fm) (fl.function::eye order order 'single-float))
+  (setf (self fm) (fl.matlisp::eye order order 'single-float))
   fm)
 
 ;; Adapted from
