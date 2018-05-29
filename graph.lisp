@@ -105,7 +105,7 @@
 (uiop/package:define-package :graph/graph
   (:nicknames :graph)
   (:use :common-lisp :alexandria :metabang-bind
-        :named-readtables :curry-compose-reader-macros)
+        :named-readtables :curry-compose-reader-macros :cl-heap)
   (:export
    :graph
    :digraph
@@ -999,33 +999,67 @@ The Bron-Kerbosh algorithm is used."))
 
 
 ;;; Shortest Path
-(defgeneric shortest-path (graph a b)
+(defgeneric shortest-path (graph a b &optional heuristic)
   (:documentation "Return the shortest path in GRAPH from A to B.
-GRAPH must be a directed graph.  Dijkstra's algorithm is used."))
+Implemented using A* search.  Optional argument HEURISTIC may be a
+function which returns an estimated heuristic cost from an node to the
+target B.  The default value for HEURISTIC is the constant function of
+0, reducing this implementation to Dijkstra's algorithm.  The
+HEURISTIC function must satisfy HEURITIC(x)≤d(x,y)+HEURITIC(y) ∀ x,y
+in GRAPH allowing the more efficient monotonic or \"consistent\"
+implementation of A*.")
+  (:method ((graph graph) a b
+            &optional
+              (heuristic (constantly 0))
+            &aux
+              (from (make-hash-table))
+              (fringe (make-instance 'priority-queue))
+              (open (make-hash-table))
+              (closed (make-hash-table))
+              (g (make-hash-table))
+              (f (make-hash-table)))
+    (labels ((reconstruct-path (current)
+               (destructuring-bind (node . edge) (gethash current from)
+                 (cons edge (unless (member a edge) (reconstruct-path node))))))
+      (setf (gethash a g) 0
+            (gethash a f) (funcall heuristic a)
+            (gethash a open) t)
 
-;; TODO: needs to work for un-directed edges
-(defmethod shortest-path ((graph graph) a b &aux seen)
-  (block nil ;; (car next) is leading node, (cdr next) is edge path
-    (let ((next (list (list a))))
-      (loop :until (null next) :do
-         (setf next
-               (mapcan
-                (lambda-bind ((from . rest))
-                  (mapcan
-                   (lambda (edge)
-                     (if (case (type-of graph)
-                           (graph   (member b edge))
-                           (digraph (member b (cdr (member from edge)))))
-                         (return (reverse (cons edge rest)))
-                         (unless (member edge seen :test (edge-eq graph))
-                           (push edge seen)
-                           (mapcar
-                            (lambda (n) (cons n (cons edge rest)))
-                            (case (type-of graph)
-                              (graph (remove from edge))
-                              (digraph (cdr (member from edge))))))))
-                   (node-edges graph from)))
-                next))))))
+      (enqueue fringe a (gethash a f))
+
+      (do ((current (dequeue fringe) (dequeue fringe)))
+          ((zerop (hash-table-count open))
+           (multiple-value-bind (value present-p) (gethash b f)
+             (when present-p
+               (values (nreverse (reconstruct-path b)) value))))
+
+        (when (eql current b)
+          (return-from shortest-path
+            (values (nreverse (reconstruct-path current))
+                    (gethash current f))))
+
+        (remhash current open)
+        (setf (gethash current closed) t)
+
+        (mapc (lambda (edge)
+                (let ((weight (or (edge-value graph edge) 1)))
+                  (mapc (lambda (next)
+                          (unless (gethash next closed)
+                            (setf (gethash next open) t)
+                            (let ((tentative (+ (gethash current g) weight)))
+                              (multiple-value-bind (value present-p)
+                                  (gethash next g)
+                                (when (or (not present-p)
+                                          (< tentative value))
+                                  (setf (gethash next from) (cons current edge)
+                                        (gethash next g) tentative
+                                        (gethash next f)
+                                        (+ tentative (funcall heuristic next)))
+                                  (enqueue fringe next (gethash next f)))))))
+                        (etypecase graph
+                          (digraph (cdr (member current edge)))
+                          (graph (remove current edge))))))
+              (node-edges graph current))))))
 
 
 ;;; Max Flow
@@ -1080,7 +1114,7 @@ Each element of path has the form (cons edge value)."
     comb))
 
 (defgeneric max-flow (graph from to)
-  (:documentation "Return the maximum flow from FROM and TO in GRAPH.
+  (:documentation "Return the maximum flow from FROM and to TO in GRAPH.
 GRAPHS must be a network with numeric values of all edges.
 The Ford-Fulkerson algorithm is used."))
 
