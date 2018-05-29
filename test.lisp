@@ -469,7 +469,7 @@
 
 (deftest farness-of-s-in-network ()
   (with-fixture small-network
-    (is (= 4 (farness *network* :s)))))
+    (is (= 6 (farness *network* :s)))))
 
 (deftest betweenness-of-center-of-a-star ()
   (with-fixture star
