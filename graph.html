@@ -2,7 +2,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>GRAPH/GRAPH - simple graph data structure and algorithms</title>
+  <title>GRAPH/GRAPH - NIL</title>
   <style type="text/css">
   pre { padding:5px; background-color:#e0e0e0 }
   h3, h4 { text-decoration: underline; }
@@ -24,31 +24,18 @@
 
 <body bgcolor=white>
 
-<h2> GRAPH/GRAPH - simple graph data structure and algorithms</h2>
+<h2> GRAPH/GRAPH - NIL</h2>
 
 <br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
 
-<p>The GRAPH library strives for simplicity both in backing data
-       structures and in usage.  Graphs and Digraphs are represented
-       as CLOS objects with methods and algorithms provided for graph
-       manipulation and analysis.
-
-       </p><p>See the <a href="json.html">GRAPH/JSON</a> and
-       <a href="dot.html">GRAPH/DOT</a> libraries for
-       serialization and visualization of graphs.
-
-       </p><p><em>Note</em>: currently this
-       library is only supported on SBCL and Clozure CL because of the
-       need to create hashes with custom equality tests, however
-       <em>many</em> other lisps support this so extending should be
-       simple.  Patches welcome.</p>
+<p>NIL</p>
 
 The code is available under the <a
 href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 
 <p>
 <font color=red>Source:</font>
-<a href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
+<a href="NIL">NIL</a>.
 
 <br>&nbsp;<br><h3><a class=none name="contents">Contents</a></h3>
 <ol>
@@ -127,7 +114,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 <br>&nbsp;<br><h3><a class=none name="source">Source</a></h3>
 
 GRAPH/GRAPH together with this documentation can be found at <a
-href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
+href="NIL">NIL</a>.
 
 <br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
 
@@ -299,7 +286,7 @@ Return all basic cycles in the GRAPH.
 
 <!-- Entry for BETWEENNESS -->
 
-<p><br>[Generic function]<br><a class=none name='betweenness'><b>betweenness</b> <i>graph node</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='betweenness'><b>betweenness</b> <i>graph node <tt>&amp;optional</tt> heuristic</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Fraction of shortest paths through GRAPH which pass through NODE.
@@ -386,17 +373,17 @@ which it may be set to one of the following with :STRONG being the
 default value.
 
 :STRONG ..... connections only traverse edges along the direction of
-<pre>
+@begin example
               the edge
-</pre>
+@end example
 :WEAK ....... connections may traverse edges in any direction
-<pre>
+@begin example
               regardless of the edge direction
-</pre>
+@end example
 :UNILATERAL . two nodes a and b connected iff a is strongly connected
-<pre>
+@begin example
               to b or b is strongly connected to a
-</pre>
+@end example
 
 
 </blockquote>
@@ -727,10 +714,12 @@ Populate GRAPH with M edges in an Erdős–Rényi random graph model.
 
 <!-- Entry for FARNESS -->
 
-<p><br>[Generic function]<br><a class=none name='farness'><b>farness</b> <i>graph node</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='farness'><b>farness</b> <i>graph node <tt>&amp;optional</tt> heuristic</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Sum of the distance from NODE to every other node in connected GRAPH.
+Optional argument HEURISTIC if supplied is passed through to guide the
+A* search used in <code>shortest-path</code>.
 
 
 
@@ -880,10 +869,12 @@ Return the k-cores of GRAPH.
 
 <!-- Entry for KATZ-CENTRALITY -->
 
-<p><br>[Generic function]<br><a class=none name='katz-centrality'><b>katz-centrality</b> <i>graph node <tt>&amp;key</tt> attenuation</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='katz-centrality'><b>katz-centrality</b> <i>graph node <tt>&amp;key</tt> attenuation heuristic</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Combined measure of number and nearness of nodes to NODE.
+Keyword argument HEURISTIC if supplied is passed through to guide the
+A* search used in <code>shortest-path</code>.
 
 
 
@@ -915,12 +906,14 @@ DIGRAPH.
 
 <!-- Entry for MAX-FLOW -->
 
-<p><br>[Generic function]<br><a class=none name='max-flow'><b>max-flow</b> <i>graph from to</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='max-flow'><b>max-flow</b> <i>graph from to <tt>&amp;optional</tt> heuristic</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
-Return the maximum flow from FROM and TO in GRAPH.
-GRAPHS must be a network with numeric values of all edges.
-The Ford-Fulkerson algorithm is used.
+Return the maximum flow from FROM and to TO in GRAPH.
+GRAPHS must be a network with numeric values of all edges (otherwise a
+default cost of 1 is used for every edge).  The Ford-Fulkerson
+algorithm is used.  Optional argument HEURISTIC if supplied is passed
+through to guide the A* search used in <code>shortest-path</code>.
 
 
 
@@ -1153,11 +1146,17 @@ Return a copy of GRAPH with all edges reversed.
 
 <!-- Entry for SHORTEST-PATH -->
 
-<p><br>[Generic function]<br><a class=none name='shortest-path'><b>shortest-path</b> <i>graph a b</i> =&gt; <i>result</i></a>
+<p><br>[Generic function]<br><a class=none name='shortest-path'><b>shortest-path</b> <i>graph a b <tt>&amp;optional</tt> heuristic</i> =&gt; <i>result</i></a>
 <blockquote><br>
 
 Return the shortest path in GRAPH from A to B.
-GRAPH must be a directed graph.  Dijkstra's algorithm is used.
+Implemented using A* search.  Optional argument HEURISTIC may be a
+function which returns an estimated heuristic cost from an node to the
+target B.  The default value for HEURISTIC is the constant function of
+0, reducing this implementation to Dijkstra's algorithm.  The
+HEURISTIC function must satisfy HEURITIC(x)≤d(x,y)+HEURITIC(y) ∀ x,y
+in GRAPH allowing the more efficient monotonic or "consistent"
+implementation of A*.
 
 
 
