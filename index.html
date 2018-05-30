@@ -2,7 +2,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-  <title>GRAPH/GRAPH - NIL</title>
+  <title>GRAPH/GRAPH - simple graph data structure and algorithms</title>
   <style type="text/css">
   pre { padding:5px; background-color:#e0e0e0 }
   h3, h4 { text-decoration: underline; }
@@ -24,18 +24,31 @@
 
 <body bgcolor=white>
 
-<h2> GRAPH/GRAPH - NIL</h2>
+<h2> GRAPH/GRAPH - simple graph data structure and algorithms</h2>
 
 <br>&nbsp;<br><h3><a name=abstract class=none>Abstract</a></h3>
 
-<p>NIL</p>
+<p>The GRAPH library strives for simplicity both in backing data
+       structures and in usage.  Graphs and Digraphs are represented
+       as CLOS objects with methods and algorithms provided for graph
+       manipulation and analysis.
+
+       </p><p>See the <a href="json.html">GRAPH/JSON</a> and
+       <a href="dot.html">GRAPH/DOT</a> libraries for
+       serialization and visualization of graphs.
+
+       </p><p><em>Note</em>: currently this
+       library is only supported on SBCL and Clozure CL because of the
+       need to create hashes with custom equality tests, however
+       <em>many</em> other lisps support this so extending should be
+       simple.  Patches welcome.</p>
 
 The code is available under the <a
 href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 
 <p>
 <font color=red>Source:</font>
-<a href="NIL">NIL</a>.
+<a href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 
 <br>&nbsp;<br><h3><a class=none name="contents">Contents</a></h3>
 <ol>
@@ -114,7 +127,7 @@ href="http://www.gnu.org/licenses/gpl-3.0.html">GNU General Public License</a>.
 <br>&nbsp;<br><h3><a class=none name="source">Source</a></h3>
 
 GRAPH/GRAPH together with this documentation can be found at <a
-href="NIL">NIL</a>.
+href="http://github.com/eschulte/graph">http://github.com/eschulte/graph</a>.
 
 <br>&nbsp;<br><h3><a class=none name="introduction">Introduction</a></h3>
 
