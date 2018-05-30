@@ -5,9 +5,10 @@ structures and in usage. Graphs and Digraphs are represented as CLOS
 objects with methods and algorithms provided for graph manipulation
 and analysis.
 
-Note: currently this library is only supported on SBCL and Clozure CL
-      because of the need to create hashes with custom equality tests,
-      however custom equality tests are commonly supported so
-      extending to other lisps should be simple. Patches welcome.
+Note: currently this library is only supported on SBCL, Clozure CL,
+      and Allegro CL because of the need to create hashes with custom
+      equality tests, however custom equality tests are commonly
+      supported so extending to other lisps should be simple. Patches
+      welcome.
 
 For more information see http://eschulte.github.com/graph.

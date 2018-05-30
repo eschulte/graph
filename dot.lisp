@@ -125,10 +125,12 @@ SUBGRAPH structure."
               (subgraph-node-list s)))
       (format out "  }~%"))))
 
-(defun edge-to-dot (edge type attrs &optional stream)
+(defun edge-to-dot (edge graph attrs &optional stream)
   (format stream " \"~a\" ~a \"~a\" ~{~a~^ ~};~%"
           (first edge)
-          (ecase type (graph "--") (digraph "->"))
+          (etypecase graph
+            (digraph "->")
+            (graph "--"))
           (second edge)
           (mapcar (lambda-bind ((attr . fn))
                     (let ((val (funcall fn edge)))
@@ -169,7 +171,9 @@ a list of SUBGRAPH structures.  RANKS is a list of RANK structures."))
   (unless (assoc :label edge-attrs)
     (push (cons :label {edge-value graph}) edge-attrs))
   (format stream "~a to_dot {~%~{~a~}}~%"
-          (intern (string-downcase (type-of graph)))
+          (etypecase graph
+            (digraph "digraph")
+            (graph "graph"))
           (append
            (mapcar (lambda-bind ((a . b))
                                 (if (search "URL" (string a))
@@ -177,7 +181,7 @@ a list of SUBGRAPH structures.  RANKS is a list of RANK structures."))
                                     (format nil "  ~(~a~)=~a;~%" a b)))
                    attributes)
            (mapcar {node-to-dot _ node-attrs} (nodes graph))
-           (mapcar {edge-to-dot _ (type-of graph) edge-attrs} (edges graph))
+           (mapcar {edge-to-dot _ graph edge-attrs} (edges graph))
            (mapcar #'subgraph-print subgraphs)
            (mapcar #'rank-print ranks))))
 

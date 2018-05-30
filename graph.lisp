@@ -105,7 +105,7 @@
 (uiop/package:define-package :graph/graph
   (:nicknames :graph)
   (:use :common-lisp :alexandria :metabang-bind
-        :named-readtables :curry-compose-reader-macros)
+        :named-readtables :curry-compose-reader-macros :cl-heap)
   (:export
    :graph
    :digraph
@@ -213,7 +213,9 @@
   (make-hash-table :test 'edge-equalp)
   #+ccl
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
-  #-(or sbcl clisp ccl)
+  #+allegro
+  (make-hash-table :test 'edge-equalp)
+  #-(or sbcl clisp ccl allegro)
   (error "unsupport lisp distribution"))
 
 (defun make-diedge-hash-table ()
@@ -223,7 +225,9 @@
   (make-hash-table :test 'dir-edge-equalp)
   #+ccl
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
-  #-(or sbcl clisp ccl)
+  #+allegro
+  (make-hash-table :test 'dir-edge-equalp)
+  #-(or sbcl clisp ccl allegro)
   (error "unsupport lisp distribution"))
 
 
@@ -995,33 +999,67 @@ The Bron-Kerbosh algorithm is used."))
 
 
 ;;; Shortest Path
-(defgeneric shortest-path (graph a b)
+(defgeneric shortest-path (graph a b &optional heuristic)
   (:documentation "Return the shortest path in GRAPH from A to B.
-GRAPH must be a directed graph.  Dijkstra's algorithm is used."))
+Implemented using A* search.  Optional argument HEURISTIC may be a
+function which returns an estimated heuristic cost from an node to the
+target B.  The default value for HEURISTIC is the constant function of
+0, reducing this implementation to Dijkstra's algorithm.  The
+HEURISTIC function must satisfy HEURITIC(x)≤d(x,y)+HEURITIC(y) ∀ x,y
+in GRAPH allowing the more efficient monotonic or \"consistent\"
+implementation of A*.")
+  (:method ((graph graph) a b
+            &optional
+              (heuristic (constantly 0))
+            &aux
+              (from (make-hash-table))
+              (fringe (make-instance 'priority-queue))
+              (open (make-hash-table))
+              (closed (make-hash-table))
+              (g (make-hash-table))
+              (f (make-hash-table)))
+    (labels ((reconstruct-path (current)
+               (destructuring-bind (node . edge) (gethash current from)
+                 (cons edge (unless (member a edge) (reconstruct-path node))))))
+      (setf (gethash a g) 0
+            (gethash a f) (funcall heuristic a)
+            (gethash a open) t)
 
-;; TODO: needs to work for un-directed edges
-(defmethod shortest-path ((graph graph) a b &aux seen)
-  (block nil ;; (car next) is leading node, (cdr next) is edge path
-    (let ((next (list (list a))))
-      (loop :until (null next) :do
-         (setf next
-               (mapcan
-                (lambda-bind ((from . rest))
-                  (mapcan
-                   (lambda (edge)
-                     (if (case (type-of graph)
-                           (graph   (member b edge))
-                           (digraph (member b (cdr (member from edge)))))
-                         (return (reverse (cons edge rest)))
-                         (unless (member edge seen :test (edge-eq graph))
-                           (push edge seen)
-                           (mapcar
-                            (lambda (n) (cons n (cons edge rest)))
-                            (case (type-of graph)
-                              (graph (remove from edge))
-                              (digraph (cdr (member from edge))))))))
-                   (node-edges graph from)))
-                next))))))
+      (enqueue fringe a (gethash a f))
+
+      (do ((current (dequeue fringe) (dequeue fringe)))
+          ((zerop (hash-table-count open))
+           (multiple-value-bind (value present-p) (gethash b f)
+             (when present-p
+               (values (nreverse (reconstruct-path b)) value))))
+
+        (when (eql current b)
+          (return-from shortest-path
+            (values (nreverse (reconstruct-path current))
+                    (gethash current f))))
+
+        (remhash current open)
+        (setf (gethash current closed) t)
+
+        (mapc (lambda (edge)
+                (let ((weight (or (edge-value graph edge) 1)))
+                  (mapc (lambda (next)
+                          (unless (gethash next closed)
+                            (setf (gethash next open) t)
+                            (let ((tentative (+ (gethash current g) weight)))
+                              (multiple-value-bind (value present-p)
+                                  (gethash next g)
+                                (when (or (not present-p)
+                                          (< tentative value))
+                                  (setf (gethash next from) (cons current edge)
+                                        (gethash next g) tentative
+                                        (gethash next f)
+                                        (+ tentative (funcall heuristic next)))
+                                  (enqueue fringe next (gethash next f)))))))
+                        (etypecase graph
+                          (digraph (cdr (member current edge)))
+                          (graph (remove current edge))))))
+              (node-edges graph current))))))
 
 
 ;;; Max Flow
@@ -1075,33 +1113,37 @@ Each element of path has the form (cons edge value)."
           path2)
     comb))
 
-(defgeneric max-flow (graph from to)
-  (:documentation "Return the maximum flow from FROM and TO in GRAPH.
-GRAPHS must be a network with numeric values of all edges.
-The Ford-Fulkerson algorithm is used."))
-
-(defmethod max-flow ((digraph digraph) from to)
-  (flet ((trim-path (path)
-           (when path
-             (let ((flow (apply #'min (mapcar #'cdr path))))
-               (mapcar (lambda (el) (cons (car el) flow)) path))))
-         (flow-value-into (flow node)
-           (reduce #'+ (remove-if-not (lambda (el) (equal (lastcar (car el)) node))
-                                      flow)
-                   :key #'cdr)))
-    (let ((from from) (to to) augment residual flow)
-      (loop :do
-         (setf residual (residual digraph flow))
-         ;; "augmenting path" is path through residual network in which each
-         ;; edge has positive capacity
-         (setf augment (trim-path
-                        (mapcar (lambda (edge)
-                                  (cons edge (edge-value residual edge)))
-                                (shortest-path residual from to))))
-         :while augment :do
-         ;; if ∃ an augmenting path, add it to the flow and repeat
-         (setf flow (add-paths digraph flow augment)))
-      (values flow (flow-value-into flow to)))))
+(defgeneric max-flow (graph from to &optional heuristic)
+  (:documentation
+   "Return the maximum flow from FROM and to TO in GRAPH.
+GRAPHS must be a network with numeric values of all edges (otherwise a
+default cost of 1 is used for every edge).  The Ford-Fulkerson
+algorithm is used.  Optional argument HEURISTIC if supplied is passed
+through to guide the A* search used in `shortest-path'.")
+  (:method ((digraph digraph) from to &optional (heuristic nil heuristic-p))
+    (flet ((trim-path (path)
+             (when path
+               (let ((flow (apply #'min (mapcar #'cdr path))))
+                 (mapcar (lambda (el) (cons (car el) flow)) path))))
+           (flow-value-into (flow node)
+             (reduce #'+ (remove-if-not (lambda (el) (equal (lastcar (car el)) node))
+                                        flow)
+                     :key #'cdr)))
+      (let ((from from) (to to) augment residual flow)
+        (loop :do
+           (setf residual (residual digraph flow))
+           ;; "augmenting path" is path through residual network in which each
+           ;; edge has positive capacity
+           (setf augment (trim-path
+                          (mapcar (lambda (edge)
+                                    (cons edge (edge-value residual edge)))
+                                  (if heuristic-p
+                                      (shortest-path residual from to heuristic)
+                                      (shortest-path residual from to)))))
+           :while augment :do
+           ;; if ∃ an augmenting path, add it to the flow and repeat
+           (setf flow (add-paths digraph flow augment)))
+        (values flow (flow-value-into flow to))))))
 
 
 ;;; Min Cut
@@ -1247,15 +1289,20 @@ Optionally assign edge values from those listed in EDGE-VALS."))
 
 
 ;;; Centrality
-(defgeneric farness (graph node)
+(defgeneric farness (graph node &optional heuristic)
   (:documentation
-   "Sum of the distance from NODE to every other node in connected GRAPH."))
-
-(defmethod farness ((graph graph) node)
-  (assert (connectedp graph) (graph)
-          "~S must be connected to calculate farness." graph)
-  (reduce #'+ (mapcar [#'length {shortest-path graph node}]
-                      (remove node (nodes graph)))))
+   "Sum of the distance from NODE to every other node in connected GRAPH.
+Optional argument HEURISTIC if supplied is passed through to guide the
+A* search used in `shortest-path'.")
+  (:method ((graph graph) node &optional (heuristic nil heuristic-p))
+    (assert (connectedp graph) (graph)
+            "~S must be connected to calculate farness." graph)
+    (reduce #'+ (mapcar (lambda (to)
+                          (nth-value 1
+                                     (if heuristic-p
+                                         (shortest-path graph node to heuristic)
+                                         (shortest-path graph node to))))
+                        (remove node (nodes graph))))))
 
 (defgeneric closeness (graph node)
   (:documentation "Inverse of the `farness' for NODE in GRAPH."))
@@ -1263,32 +1310,47 @@ Optionally assign edge values from those listed in EDGE-VALS."))
 (defmethod closeness ((graph graph) node)
   (/ 1 ) (farness graph node))
 
-(defgeneric betweenness (graph node)
+(defgeneric betweenness (graph node &optional heuristic)
   (:documentation
    "Fraction of shortest paths through GRAPH which pass through NODE.
 Fraction of node pairs (s,t) s.t. s and t ≠ NODE and the shortest path
-between s and t in GRAPH passes through NODE."))
-
-(defmethod betweenness ((graph graph) node)
-  (flet ((all-pairs (lst)
-           (case (type-of graph)
-             (graph (mapcan (lambda (n) (mapcar {list n} (cdr (member n lst)))) lst))
-             (digraph (mapcan (lambda (n) (mapcar {list n} (remove n lst))) lst)))))
-    (let ((num 0) (denom 0))
-      (mapc (lambda-bind ((a b))
-              (when (member node (apply #'append (shortest-path graph a b)))
-                (incf num))
-              (incf denom))
-            (all-pairs (remove node (nodes graph))))
-      (/ num denom))))
+between s and t in GRAPH passes through NODE.")
+  (:method ((graph graph) node &optional (heuristic nil heuristic-p))
+    (flet ((all-pairs (lst)
+             (case (type-of graph)
+               (graph
+                (mapcan (lambda (n) (mapcar {list n} (cdr (member n lst)))) lst))
+               (digraph
+                (mapcan (lambda (n) (mapcar {list n} (remove n lst))) lst)))))
+      (let ((num 0) (denom 0))
+        (mapc (lambda-bind ((a b))
+                (when (member node
+                              (apply #'append
+                                     (if heuristic-p
+                                         (shortest-path graph a b heuristic)
+                                         (shortest-path graph a b))))
+                  (incf num))
+                (incf denom))
+              (all-pairs (remove node (nodes graph))))
+        (/ num denom)))))
 
 (defgeneric katz-centrality (graph node &key attenuation)
-  (:documentation "Combined measure of number and nearness of nodes to NODE."))
-
-(defmethod katz-centrality ((graph graph) node &key (attenuation 0.8))
-  (let ((cc (connected-component graph node)))
-    (reduce #'+ (mapcar [{expt attenuation} #'length {shortest-path graph node}]
-                        (remove node cc)))))
+  (:documentation
+   "Combined measure of number and nearness of nodes to NODE.
+Keyword argument HEURISTIC if supplied is passed through to guide the
+A* search used in `shortest-path'.")
+  (:method ((graph graph) node
+            &key (attenuation 0.8) (heuristic nil heuristic-p))
+    (let ((cc (connected-component graph node)))
+      (reduce #'+
+              (mapcar
+               (lambda (to)
+                 (expt attenuation
+                       (nth-value 1
+                                  (if heuristic-p
+                                      (shortest-path graph node to heuristic)
+                                      (shortest-path graph node to)))))
+               (remove node cc))))))
 
 
 ;;; Degeneracy

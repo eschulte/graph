@@ -85,6 +85,19 @@
                     ((:b :t) . 2)))))
   (:teardown (setf *network* nil)))
 
+(defixture anecdotal-digraph
+  (:setup (setf *graph*
+                (populate (make-instance 'digraph)
+                  :nodes '(:a :b :s :t)
+                  :edges-w-values
+                  '(((:t :b) . 1)
+                    ((:b :t) . 1)
+                    ((:a :t) . 4)
+                    ((:b :s) . 1)
+                    ((:s :a) . 2)
+                    ((:a :b) . 1)))))
+  (:teardown (setf *graph* nil)))
+
 (defixture cycle
   (:setup (setf *cycle*
                 (populate (make-instance 'digraph)
@@ -364,6 +377,12 @@
     (is (tree-equal (shortest-path *star* :a :g)
                     '((:a :s) (:g :s))))))
 
+(deftest shortest-path-on-anecdotal-example ()
+  (with-fixture anecdotal-digraph
+    (multiple-value-bind (path cost) (shortest-path *graph* :s :t)
+      (is (tree-equal path '((:s :a) (:a :b) (:b :t))))
+      (is (= cost 4)))))
+
 (deftest residual-of-a-small-network ()
   (with-fixture small-network
     (let ((orig-edges (copy-tree (edges-w-values *network*)))
@@ -378,7 +397,7 @@
   (with-fixture small-network
     (multiple-value-bind (path flow) (max-flow (digraph-of *network*) :s :t)
       (is (set-equal path
-                     '(((:A :T) . 2) ((:S :A) . 2) ((:B :T) . 1) ((:S :B) . 1))
+                     '(((:A :T) . 1) ((:A :B) . 1) ((:S :A) . 2) ((:B :T) . 2) ((:S :B) . 1))
                      :test #'tree-equal))
       (is (= flow 3)))))
 
@@ -450,7 +469,7 @@
 
 (deftest farness-of-s-in-network ()
   (with-fixture small-network
-    (is (= 4 (farness *network* :s)))))
+    (is (= 6 (farness *network* :s)))))
 
 (deftest betweenness-of-center-of-a-star ()
   (with-fixture star
