@@ -483,3 +483,11 @@
                                                         (nil nil nil))))
                  '(((1 2) . 2) ((0 1) . 1))
                  :test 'equalp)))
+
+(deftest digraph-node-classification ()
+  (with-fixture digraph
+    (is (equal (transmitters *digraph*) '(a)))
+    (is (equal (receivers *digraph*) '(f)))
+    (is (equal (isolates *digraph*) '(g)))
+    (is (not (set-difference (carriers *digraph*) '(c d))))
+    (is (not (set-difference (ordinaries *digraph*) '(b e))))))

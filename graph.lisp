@@ -134,6 +134,8 @@
    :degree
    :indegree
    :outdegree
+   :adjacent-to
+   :adjacent-from
    :delete-node
    :edge-value
    :delete-edge
@@ -181,7 +183,19 @@
    :katz-centrality
    ;; Degeneracy
    :degeneracy
-   :k-cores))
+   :k-cores
+   ;; Digraph node classification predicates
+   :transmitterp
+   :receiverp
+   :isolatep
+   :carrierp
+   :ordinaryp
+   ;; Digraph node classes
+   :transmitters
+   :receivers
+   :isolates
+   :ordinaries
+   :carriers))
 (in-package :graph)
 (in-readtable :curry-compose-reader-macros)
 
@@ -528,6 +542,20 @@ edge in the results."))
 (defmethod outdegree ((digraph digraph) node)
   (length (remove-if-not [{equal node} #'car] (node-edges digraph node))))
 
+(defgeneric adjacent-from (digraph node)
+  (:documentation "List nodes adjacent from NODE in DIGRAPH."))
+
+(defmethod adjacent-from ((digraph digraph) node)
+  (mapcar #'(lambda (x) (nth 1 x))
+          (remove-if-not [{equal node} #'car] (node-edges digraph node))))
+
+(defgeneric adjacent-to (digraph node)
+  (:documentation "List nodes adjacent to NODE in DIGRAPH."))
+
+(defmethod adjacent-to ((digraph digraph) node)
+  (mapcar #'(lambda (x) (nth 0 x))
+          (remove-if-not [{member node} #'cdr] (node-edges digraph node))))
+
 (defgeneric transmitterp (digraph node)
   (:documentation "Returns t if node is a transmitter, i.e., has
   indegree of 0 and positive outdegree."))
@@ -583,7 +611,7 @@ edge in the results."))
       (when (receiverp digraph n) (push n r)))))
 
 (defgeneric isolates (digraph)
-  (:documentation "Return a list of the isolated node in digraph."))
+  (:documentation "Return a list of the isolated nodes in digraph."))
 
 (defmethod isolates ((digraph digraph))
   (let ((r))
@@ -597,6 +625,14 @@ edge in the results."))
   (let ((r))
     (dolist (n (nodes digraph) r)
       (when (ordinaryp digraph n) (push n r)))))
+
+(defgeneric carriers (digraph)
+  (:documentation "Return a list of the carrier nodes in digraph."))
+
+(defmethod carriers ((digraph digraph))
+  (let ((r))
+    (dolist (n (nodes digraph) r)
+      (when (carrierp digraph n) (push n r)))))
 
 (defgeneric (setf node-edges) (new graph node) ;; TODO: seg-faults in clisp
   (:documentation "Set the edges of NODE in GRAPH to NEW.
