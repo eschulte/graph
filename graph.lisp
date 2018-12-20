@@ -205,7 +205,13 @@
   (set-equal edge1 edge2))
 
 (defun sxhash-edge (edge)
-  (sxhash (sort (copy-tree edge) (if (numberp (car edge)) #'< #'string<))))
+  (sxhash (sort (copy-tree edge)
+                (if (numberp (car edge))
+                    (lambda (a b)
+                      (or (< (imagpart a) (imagpart b))
+                          (and (= (imagpart a) (imagpart b))
+                               (< (realpart a) (realpart b)))))
+                    #'string<))))
 
 #+sbcl
 (sb-ext:define-hash-table-test edge-equalp sxhash-edge)
