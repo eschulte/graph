@@ -366,6 +366,10 @@
     (is (tree-equal (shortest-path (digraph-of *graph*) :foo :baz)
                     '((:FOO :BAR) (:BAR :BAZ))))))
 
+(deftest shortest-path-between-foo-and-foo ()
+  (with-fixture less-small-graph
+    (is (null (shortest-path (digraph-of *graph*) :foo :foo)))))
+
 (deftest shortest-path-through-a-residual ()
   (with-fixture cycle
     (let* ((flow '(((:A :T) . 1) ((:S :A) . 1) ((:B :T) . 2) ((:S :B) . 2)))
