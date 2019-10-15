@@ -198,6 +198,7 @@
    :carriers))
 (in-package :graph)
 (in-readtable :curry-compose-reader-macros)
+(declaim (optimize (speed 3)))
 
 
 ;;; Special hashes keyed for edges
@@ -272,7 +273,8 @@ Optional argument TEST specifies a new equality test to use for the
 copy.  Second optional argument COMB specifies a function to use to
 combine the values of elements of HASH which collide in the copy due
 to a new equality test specified with TEST."
-  (let ((copy
+  (let ((comb (when comb (fdefinition comb)))
+        (copy
          #+sbcl (make-hash-table :test (or test (hash-table-test hash)))
          #+clisp (make-hash-table :test (or test (hash-table-test hash)))
          #+ccl (make-hash-table
@@ -343,12 +345,14 @@ to a new equality test specified with TEST."
   (:documentation "Compare GRAPH1 and GRAPH2 for equality."))
 
 (defmethod graph-equal ((graph1 graph) (graph2 graph))
-  (every (lambda-bind ((test key)) ;; TODO: digraph's need a stricter graph-equal
-           (apply test (append (mapcar key (list graph1 graph2)))))
-         '((eq         type-of)
-           (equal      edge-eq)
-           (edge-hash-equal edge-h)
-           (node-hash-equal node-h))))
+  (every (lambda-bind ((test key))
+                      ;; TODO: digraph's need a stricter graph-equal
+                      (declare (type function test) (type function key))
+                      (apply test (append (mapcar key (list graph1 graph2)))))
+         (list (list #'eq              #'type-of)
+               (list #'equal           #'edge-eq)
+               (list #'edge-hash-equal #'edge-h)
+               (list #'node-hash-equal #'node-h))))
 
 
 ;;; Serialize graphs
@@ -359,11 +363,15 @@ and should return a plist of data to associate with the given node or
 edge in the results."))
 
 (defmethod to-plist ((graph graph) &key node-fn edge-fn)
-  (let ((counts (make-hash-table)) (counter -1))
+  (let ((node-fn (when node-fn (fdefinition node-fn)))
+        (edge-fn (when edge-fn (fdefinition edge-fn)))
+        (counts (make-hash-table)) (counter -1))
+    (declare (type fixnum counter))
     (list :nodes (mapcar (lambda (node)
                            (append (list :name node)
                                    (when node-fn (funcall node-fn node))))
-                         (mapc (lambda (n) (setf (gethash n counts) (incf counter)))
+                         (mapc (lambda (n) (setf (gethash n counts)
+                                                 (incf counter)))
                                (nodes graph)))
           :edges (map 'list (lambda (edge value)
                               (append (list :edge edge :value value)
@@ -390,6 +398,7 @@ edge in the results."))
 (defmethod to-value-matrix ((graph graph))
   (let ((node-index-hash (make-hash-table))
         (counter -1))
+    (declare (type fixnum counter))
     (mapc (lambda (node) (setf (gethash node node-index-hash) (incf counter)))
           (nodes graph))
     (let ((matrix (make-array (list (1+ counter) (1+ counter))
@@ -406,13 +415,17 @@ edge in the results."))
   (:documentation "Populate GRAPH from the value matrix MATRIX."))
 
 (defmethod from-value-matrix ((graph graph) matrix)
+  (declare (type simple-array matrix))
   (bind (((as bs) (array-dimensions matrix)))
+    (declare (type fixnum as) (type fixnum bs))
     (assert (= as bs) (matrix) "Value matrix ~S must be square." matrix)
-    (loop :for a :below as :do
-       (loop :for b :below bs :do
-          (when (aref matrix a b)
-            (add-edge graph (list a b)
-                      (if (eq t (aref matrix a b)) nil (aref matrix a b)))))))
+    (do ((a 0 (1+ a))) ((= a as))
+      (declare (type fixnum a))
+      (do ((b 0 (1+ b))) ((= b bs))
+        (declare (type fixnum b))
+        (when (aref matrix a b)
+          (add-edge graph (list a b)
+                    (if (eq t (aref matrix a b)) nil (aref matrix a b)))))))
   graph)
 
 
@@ -1413,10 +1426,10 @@ the `cdr' holds the nodes in the ordering."))
         by-degree output)
     ;; initialize
     (mapc (lambda (n)
-            (let ((degree (degree copy n)))
-              (incf num-nodes)
+            (let ((degree (the fixnum (degree copy n))))
+              (incf (the fixnum num-nodes))
               (setf (gethash n node-degree) degree)
-              (setf max-degree (max max-degree degree))))
+              (setf max-degree (the fixnum (max max-degree degree)))))
           (nodes copy))
     (setf by-degree (make-array (1+ max-degree) :initial-element nil))
     (maphash (lambda (node degree) (push node (aref by-degree degree)))
@@ -1426,14 +1439,15 @@ the `cdr' holds the nodes in the ordering."))
       (setf i 0)
       (loop :until (aref by-degree i) :do (incf i))
       ;; create alist element for the new core
-      (when (< k (setf k (max k i))) (push (list k) output))
+      (when (< k (setf k (max (the fixnum k) (the fixnum i))))
+        (push (list k) output))
       ;; drop a node and demote all neighbors
       (let ((node (pop (aref by-degree i))))
         (push node (cdr (assoc k output)))
         (mapc (lambda (node)
                 (setf (aref by-degree (gethash node node-degree))
                       (remove node (aref by-degree (gethash node node-degree))))
-                (decf (gethash node node-degree))
+                (decf (the fixnum (gethash node node-degree)))
                 (push node (aref by-degree (gethash node node-degree))))
               (prog1 (remove-duplicates (remove node (neighbors copy node)))
                 (delete-node copy node)))))))
