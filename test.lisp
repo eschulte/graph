@@ -11,9 +11,10 @@
         :metabang-bind
         :graph
         :stefil
+        :check-it
         :named-readtables
         :curry-compose-reader-macros)
-  (:export :test))
+  (:export :test :properties))
 (in-package :graph/test)
 (in-readtable :curry-compose-reader-macros)
 
@@ -514,3 +515,26 @@
     (is (equal (isolates *digraph*) '(g)))
     (is (not (set-difference (carriers *digraph*) '(c d))))
     (is (not (set-difference (ordinaries *digraph*) '(b e))))))
+
+
+;;;; Property based checks with check-it.
+(defsuite properties)
+(in-suite properties)
+
+(def-generator graph-g (class)
+  (generator
+   (chain ((edges (generator
+                   (chain ((nodes (generator
+                                   (guard [#'not #'emptyp] (list (integer))))))
+                          (generator (list (tuple (random-elt nodes)
+                                                  (random-elt nodes))))))))
+          (populate (make-instance class)
+                    :edges edges))))
+
+(deftest only-trivial-connected-components-in-acyclic-digraphs ()
+  (let ((*size* 2000)
+        (*list-size* 50))
+    (is (check-it (generator (guard [#'null #'basic-cycles]
+                                    (graph-g 'digraph)))
+                  (lambda (dg)
+                    (every [{= 1} #'length] (connected-components dg)))))))
