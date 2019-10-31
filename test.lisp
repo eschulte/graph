@@ -518,6 +518,7 @@
 
 
 ;;;; Property based checks with check-it.
+(in-root-suite)
 (defsuite properties)
 (in-suite properties)
 
@@ -538,3 +539,39 @@
                                     (graph-g 'digraph)))
                   (lambda (dg)
                     (every [{= 1} #'length] (connected-components dg)))))))
+
+(def-generator node-of (graph)
+  (random-elt (nodes graph)))
+
+(def-generator new-node-of (graph)
+  (etypecase (first (nodes graph))
+    (integer (generator (integer)))
+    (real (generator (real)))
+    (character (generator (character)))
+    (symbol (generator (chain ((str (guard [#'not #'emptyp] (string))))
+                              (intern (string-upcase str)))))))
+
+(def-generator graph-grow (graph)
+  "Recursive generator, continually adds new nodes with edges to GRAPH."
+  (generator (chain ((node (new-node-of graph))
+                     (sources (list (node-of graph))))
+                    (push node (nodes graph))
+                    (dolist (s sources)
+                      (push (list s node) (edges graph)))
+                    (generator (or graph
+                                   (graph-grow graph)
+                                   (graph-grow graph)
+                                   (graph-grow graph)
+                                   (graph-grow graph)
+                                   (graph-grow graph)
+                                   (graph-grow graph)
+                                   (graph-grow graph))))))
+
+(deftest many-topological-sorts-of-digraphs ()
+  (let ((*num-trials* 10))
+    (is (check-it (generator
+                   (guard [#'null #'basic-cycles]
+                          (graph-grow (populate
+                                       (make-instance 'digraph)
+                                       :nodes '(first second third)))))
+                  #'topological-sort))))
