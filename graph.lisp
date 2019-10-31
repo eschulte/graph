@@ -857,19 +857,15 @@ directed graph by default."))
 (defmethod topological-sort (digraph)
   (assert (null (basic-cycles digraph)) (digraph)
           "~S has a cycle so no topological sort is possible" digraph)
-  (let ((index (make-hash-table))
-        stack)
-    (labels ((visit (node)
-               (mapc (lambda (neighbor)
-                       (unless (gethash neighbor index)
-                         (visit neighbor)))
-                     (neighbors digraph node))
-               ;; mark this node
-               (setf (gethash node index) 1)
-               (push node stack)))
-      (mapc (lambda (node) (unless (gethash node index) (visit node)))
-            (nodes digraph)))
-    stack))
+  (let ((pending (nodes digraph)) (seen (make-hash-table)) internal result)
+    (loop :while pending :do
+       (let ((node (pop pending)))
+         (setf pending (append (neighbors digraph node) pending))
+         (push node internal)))
+    (loop :for node :in internal :unless (gethash node seen) :do
+       (setf (gethash node seen) t)
+       (push node result))
+    result))
 
 (defgeneric levels (digraph &key alist)
   (:documentation "Assign a positive integer to each node in DIGRAPH,
