@@ -540,38 +540,27 @@
                   (lambda (dg)
                     (every [{= 1} #'length] (connected-components dg)))))))
 
-(def-generator node-of (graph)
-  (random-elt (nodes graph)))
+(def-generator some-elt (list)
+  (random-elt list))
 
-(def-generator new-node-of (graph)
-  (etypecase (first (nodes graph))
-    (integer (generator (integer)))
-    (real (generator (real)))
-    (character (generator (character)))
-    (symbol (generator (chain ((str (guard [#'not #'emptyp] (string))))
-                              (intern (string-upcase str)))))))
+(def-generator extend (previous)
+  (generator
+   (chain ((dest (integer))
+           (sources (list (some-elt (flatten previous)))))
+          (append previous (mapcar {list _ dest} sources)))))
 
-(def-generator graph-grow (graph)
-  "Recursive generator, continually adds new nodes with edges to GRAPH."
-  (generator (chain ((node (new-node-of graph))
-                     (sources (list (node-of graph))))
-                    (push node (nodes graph))
-                    (dolist (s sources)
-                      (push (list s node) (edges graph)))
-                    (generator (or graph
-                                   (graph-grow graph)
-                                   (graph-grow graph)
-                                   (graph-grow graph)
-                                   (graph-grow graph)
-                                   (graph-grow graph)
-                                   (graph-grow graph)
-                                   (graph-grow graph))))))
+(def-generator multi-extend (seeds times)
+  (if (zerop times)
+      seeds
+      (generator (chain ((next (extend seeds)))
+                        (generator (multi-extend next (1- times)))))))
 
-(deftest many-topological-sorts-of-digraphs ()
-  (let ((*num-trials* 10))
-    (is (check-it (generator
-                   (guard [#'null #'basic-cycles]
-                          (graph-grow (populate
-                                       (make-instance 'digraph)
-                                       :nodes '(first second third)))))
-                  #'topological-sort))))
+(defun edges-to-digraph (edges)
+  (populate (make-instance 'digraph)
+            :edges (remove-duplicates edges :test #'equalp)))
+
+(deftest growing-like-this-should-not-create-cycles ()
+  (let ((*size* 100000000))
+    (is (check-it (generator (multi-extend '((0 1) (0 2)) 30))
+                  (lambda (edges)
+                    (null (basic-cycles (edges-to-digraph edges))))))))
