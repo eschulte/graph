@@ -169,7 +169,12 @@ a list of SUBGRAPH structures.  RANKS is a list of RANK structures."))
                      subgraphs ranks)
   ;; by default edges are labeled with their values
   (unless (assoc :label edge-attrs)
-    (push (cons :label {edge-value graph}) edge-attrs))
+    (push (cons :label
+                (lambda (edge)
+                  (let ((value (edge-value graph edge)))
+                    (when value
+                      (format nil "\"~A\"" value)))))
+          edge-attrs))
   (format stream "~a to_dot {~%~{~a~}}~%"
           (etypecase graph
             (digraph "digraph")
