@@ -753,7 +753,7 @@ EDGE2 will be combined."))
   (:documentation "Return all nodes which share an edge with NODE in GRAPH."))
 
 (defmethod neighbors ((graph graph) node)
-  (apply {concatenate 'list} (node-edges graph node)))
+  (remove node (apply {concatenate 'list} (node-edges graph node))))
 
 (defmethod neighbors ((digraph digraph) node)
   (mapcan [#'cdr {member node}] (node-edges digraph node)))
