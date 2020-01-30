@@ -190,10 +190,10 @@ a list of SUBGRAPH structures.  RANKS is a list of RANK structures."))
   (:documentation "Write a dot representation of GRAPH to PATH."))
 
 (defmethod to-dot-file
-    ((graph graph) path &key attributes node-attrs edge-attrs
-                          subgraphs ranks)
+    ((object t) path &key attributes node-attrs edge-attrs
+                      subgraphs ranks)
   (with-open-file (out path :direction :output :if-exists :supersede)
-    (to-dot graph :stream out :attributes attributes :node-attrs node-attrs
+    (to-dot object :stream out :attributes attributes :node-attrs node-attrs
             :edge-attrs edge-attrs :subgraphs subgraphs :ranks ranks)))
 
 (defun from-dot (dot-string)
