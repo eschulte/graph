@@ -238,7 +238,7 @@
 (deftest neighbors-of-c-on-graph ()
   (with-fixture normal-graph
     (is (every (lambda (it) (member it (neighbors *graph* 'b)))
-               '(a b c)))))
+               '(a c)))))
 
 (deftest neighbors-of-e-on-digraph ()
   (with-fixture normal-graph
