@@ -232,7 +232,7 @@
   (make-hash-table :test 'edge-equalp)
   #+clisp
   (make-hash-table :test 'edge-equalp)
-  #+ccl
+  #+(or ccl lispworks)
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
   #+allegro
   (make-hash-table :test 'edge-equalp)
@@ -244,7 +244,7 @@
   (make-hash-table :test 'dir-edge-equalp)
   #+clisp
   (make-hash-table :test 'dir-edge-equalp)
-  #+ccl
+  #+(or ccl lispworks)
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
   #+allegro
   (make-hash-table :test 'dir-edge-equalp)
@@ -277,11 +277,12 @@ to a new equality test specified with TEST."
         (copy
          #+sbcl (make-hash-table :test (or test (hash-table-test hash)))
          #+clisp (make-hash-table :test (or test (hash-table-test hash)))
-         #+ccl (make-hash-table
-                :test (or test (hash-table-test hash))
-                :hash-function (case (or test (hash-table-test hash))
-                                 (edge-equalp 'sxhash-edge)
-                                 ((dir-edge-equalp equalp) 'sxhash)))
+         #+(or ccl lispworks)
+         (make-hash-table
+          :test (or test (hash-table-test hash))
+          :hash-function (case (or test (hash-table-test hash))
+                           (edge-equalp 'sxhash-edge)
+                           ((dir-edge-equalp equalp) 'sxhash)))
          #-(or sbcl clisp ccl) (error "unsupported lisp distribution")))
     (maphash (lambda (k v) (setf (gethash k copy)
                             (if (and (gethash k copy) comb)
