@@ -9,6 +9,8 @@
                metabang-bind
                named-readtables
                curry-compose-reader-macros
-               graph/graph))
+               graph/graph)
+  :in-order-to ((test-op (load-op "graph/test")))
+  :perform (test-op (o c) (symbol-call :graph/test '#:test)))
 
 (register-system-packages "femlisp-matlisp" '(:fl.matlisp))
