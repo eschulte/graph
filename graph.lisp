@@ -160,6 +160,8 @@
    :closedp
    :clustering-coefficient
    :cliques
+   ;; All paths
+   :all-paths
    ;; Shortest Path
    :shortest-path
    ;; Max Flow
@@ -1052,6 +1054,19 @@ The Bron-Kerbosh algorithm is used."))
                               x (union (list v) x))))))
     (bron-kerbosch nil (nodes graph) nil))
   cliques)
+
+(defgeneric all-paths (graph a b)
+  (:documentation "Return all paths in GRAPH from A to B.")
+  (:method ((graph graph) a b)
+    (labels
+        ((step-path (from to visited)
+           (if (equal from to)
+               (list (list to))
+               (mapcar {cons from}
+                       (mappend {step-path _ to (cons from visited)}
+                                (set-difference (neighbors graph from)
+                                                visited))))))
+      (step-path a b nil))))
 
 
 ;;; Shortest Path

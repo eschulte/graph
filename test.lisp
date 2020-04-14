@@ -362,6 +362,12 @@
                    '((:Q :S :R) (:C :S) (:A :C :B))
                    :test #'set-equal))))
 
+(deftest all-path-between-foo-and-baz-or-qux ()
+  (with-fixture normal-graph
+    (is (set-equal (all-paths *graph* 'a 'f)
+                   '((a b c d e f) (a b c e f) (a b f))
+                   :test #'equalp))))
+
 (deftest shortest-path-between-foo-and-baz-or-qux ()
   (with-fixture less-small-graph
     (is (tree-equal (shortest-path (digraph-of *graph*) :foo :baz)
