@@ -238,7 +238,7 @@
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
   #+allegro
   (make-hash-table :test 'edge-equalp)
-  #-(or sbcl clisp ccl allegro)
+  #-(or sbcl clisp ccl allegro lispworks)
   (error "unsupport lisp distribution"))
 
 (defun make-diedge-hash-table ()
@@ -250,7 +250,7 @@
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
   #+allegro
   (make-hash-table :test 'dir-edge-equalp)
-  #-(or sbcl clisp ccl allegro)
+  #-(or sbcl clisp ccl allegro lispworks)
   (error "unsupport lisp distribution"))
 
 
@@ -285,7 +285,8 @@ to a new equality test specified with TEST."
           :hash-function (case (or test (hash-table-test hash))
                            (edge-equalp 'sxhash-edge)
                            ((dir-edge-equalp equalp) 'sxhash)))
-         #-(or sbcl clisp ccl) (error "unsupported lisp distribution")))
+         #-(or sbcl clisp ccl lispworks)
+         (error "unsupported lisp distribution")))
     (maphash (lambda (k v) (setf (gethash k copy)
                             (if (and (gethash k copy) comb)
                                 (funcall comb (gethash k copy) v)
