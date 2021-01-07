@@ -105,7 +105,8 @@
 (uiop/package:define-package :graph/graph
   (:nicknames :graph)
   (:use :common-lisp :alexandria :metabang-bind
-        :named-readtables :curry-compose-reader-macros :cl-heap)
+        :named-readtables :curry-compose-reader-macros
+        :damn-fast-priority-queue)
   (:export
    :graph
    :digraph
@@ -1085,7 +1086,7 @@ implementation of A*.")
               (heuristic (constantly 0))
             &aux
               (from (make-hash-table))
-              (fringe (make-instance 'priority-queue))
+              (fringe (make-queue))
               (open (make-hash-table))
               (closed (make-hash-table))
               (g (make-hash-table))
