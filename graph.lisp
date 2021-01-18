@@ -105,8 +105,9 @@
 (uiop/package:define-package :graph/graph
   (:nicknames :graph)
   (:use :common-lisp :alexandria :metabang-bind
-        :named-readtables :curry-compose-reader-macros
-        :damn-fast-priority-queue)
+        :named-readtables :curry-compose-reader-macros)
+  (:import-from :damn-fast-priority-queue
+                :make-queue :enqueue :dequeue)
   (:export
    :graph
    :digraph
