@@ -240,7 +240,9 @@
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
   #+allegro
   (make-hash-table :test 'edge-equalp)
-  #-(or sbcl clisp ccl allegro lispworks)
+  #+ecl
+  (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
+  #-(or sbcl clisp ccl allegro lispworks ecl)
   (error "unsupport lisp distribution"))
 
 (defun make-diedge-hash-table ()
@@ -252,7 +254,9 @@
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
   #+allegro
   (make-hash-table :test 'dir-edge-equalp)
-  #-(or sbcl clisp ccl allegro lispworks)
+  #+ecl
+  (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
+  #-(or sbcl clisp ccl allegro lispworks ecl)
   (error "unsupport lisp distribution"))
 
 
@@ -277,6 +281,7 @@ Optional argument TEST specifies a new equality test to use for the
 copy.  Second optional argument COMB specifies a function to use to
 combine the values of elements of HASH which collide in the copy due
 to a new equality test specified with TEST."
+  (declare (optimize debug))
   (let ((comb (when comb (fdefinition comb)))
         (copy
          #+sbcl (make-hash-table :test (or test (hash-table-test hash)))
@@ -287,7 +292,14 @@ to a new equality test specified with TEST."
           :hash-function (case (or test (hash-table-test hash))
                            (edge-equalp 'sxhash-edge)
                            ((dir-edge-equalp equalp) 'sxhash)))
-         #-(or sbcl clisp ccl lispworks)
+         #+ecl
+         (make-hash-table
+          :test (or test (hash-table-test hash))
+          :hash-function (let ((test (or test (hash-table-test hash))))
+                           (cond ((eql test #'edge-equalp) 'sxhash-edge)
+                                 ((member test (list #'dir-edge-equalp #'equalp))
+                                  'sxhash))))
+         #-(or sbcl clisp ccl lispworks ecl)
          (error "unsupported lisp distribution")))
     (maphash (lambda (k v) (setf (gethash k copy)
                             (if (and (gethash k copy) comb)
