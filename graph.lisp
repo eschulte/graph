@@ -281,7 +281,6 @@ Optional argument TEST specifies a new equality test to use for the
 copy.  Second optional argument COMB specifies a function to use to
 combine the values of elements of HASH which collide in the copy due
 to a new equality test specified with TEST."
-  (declare (optimize debug))
   (let ((comb (when comb (fdefinition comb)))
         (copy
          #+sbcl (make-hash-table :test (or test (hash-table-test hash)))
