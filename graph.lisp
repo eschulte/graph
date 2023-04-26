@@ -239,7 +239,7 @@
   #+(or ccl lispworks)
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
   #+allegro
-  (make-hash-table :test 'edge-equalp)
+  (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
   #+ecl
   (make-hash-table :test 'edge-equalp :hash-function 'sxhash-edge)
   #-(or sbcl clisp ccl allegro lispworks ecl)
@@ -253,7 +253,7 @@
   #+(or ccl lispworks)
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
   #+allegro
-  (make-hash-table :test 'dir-edge-equalp)
+  (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
   #+ecl
   (make-hash-table :test 'dir-edge-equalp :hash-function 'sxhash)
   #-(or sbcl clisp ccl allegro lispworks ecl)
@@ -291,6 +291,11 @@ to a new equality test specified with TEST."
           :hash-function (case (or test (hash-table-test hash))
                            (edge-equalp 'sxhash-edge)
                            ((dir-edge-equalp equalp) 'sxhash)))
+         #+allegro
+         (make-hash-table :test (or test (hash-table-test hash))
+                          :hash-function (case (or test (hash-table-test hash))
+                                           (edge-equalp 'sxhash-edge)
+                                           ((dir-edge-equalp equalp) 'sxhash)))
          #+ecl
          (make-hash-table
           :test (or test (hash-table-test hash))
@@ -298,7 +303,7 @@ to a new equality test specified with TEST."
                            (cond ((eql test #'edge-equalp) 'sxhash-edge)
                                  ((member test (list #'dir-edge-equalp #'equalp))
                                   'sxhash))))
-         #-(or sbcl clisp ccl lispworks ecl)
+         #-(or sbcl clisp ccl lispworks ecl allegro)
          (error "unsupported lisp distribution")))
     (maphash (lambda (k v) (setf (gethash k copy)
                             (if (and (gethash k copy) comb)
@@ -1487,4 +1492,5 @@ the `cdr' holds the nodes in the ordering."))
 
 (defmethod k-cores ((graph graph))
   (multiple-value-bind (k cores) (degeneracy graph)
-    (declare (ignorable k)) cores))
+    (declare (ignorable k))
+    cores))
