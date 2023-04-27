@@ -543,14 +543,21 @@ edge in the results."))
 (defmethod add-edge ((graph graph) edge &optional value)
   (mapc (lambda (node)
           (add-node graph node)
-          (pushnew (case (type-of graph)
-                     (graph (remove-duplicates edge))
-                     (digraph edge))
+          (pushnew (edge-to-add graph edge)
                    (gethash node (node-h graph))
                    :test (edge-eq graph)))
         edge)
   (setf (gethash edge (edge-h graph)) value)
   edge)
+
+;;; internal function to preprocess the edge based on the
+;;; type of graph. Helper for edge-add
+(defgeneric edge-to-add (graph edge)
+  (:method ((graph digraph) edge)
+    edge)
+  ;; self-edges turn into singletons
+  (:method ((graph graph) edge)
+    (remove-duplicates edge)))
 
 (defgeneric node-edges (graph node)
   (:documentation "Return the value of NODE in GRAPH."))
@@ -853,7 +860,7 @@ directed graph by default."))
                   (push cc ccs)))
              ccs)))
     (cond
-      ((and type (eq (type-of graph) 'graph))
+      ((and type (not (typep graph 'digraph)))
        (warn "type parameter has no effect for undirected graphs")
        (cc-helper))
       ((eq type :unilateral)
@@ -861,7 +868,7 @@ directed graph by default."))
        (cc-helper))
       ((or (eq type :strong)
            (and (null type)
-                (eq (type-of graph) 'digraph)))
+                (typep graph 'digraph)))
        (strongly-connected-components graph))
       (t (cc-helper)))))
 
@@ -959,9 +966,7 @@ Uses Tarjan's algorithm."))
                (push node seen)
                (dolist (edge (node-edges graph node))
                  (unless (member edge used-edges :test (edge-eq graph))
-                   (dolist (neighbor (case (type-of graph)
-                                       (graph   (remove node edge))
-                                       (digraph (cdr (member node edge)))))
+                   (dolist (neighbor (neighbors-for-cycles graph node edge))
                      (cond ((member neighbor path)
                             (push (subseq path 0 (1+ (position neighbor path)))
                                   cycles))
@@ -972,6 +977,14 @@ Uses Tarjan's algorithm."))
         (unless (member node seen)
           (follow node (list node) nil))))
     (remove-duplicates cycles :test 'set-equal)))
+
+;;; helper function for basic-cycles
+(defgeneric neighbors-for-cycles (graph node edge)
+  (:method ((graph digraph) node edge)
+    (cdr (member node edge)))
+  (:method  ((graph graph) node edge)
+    (remove node edge)))
+
 
 (defgeneric cycles (graph)
   (:documentation "Return all cycles of GRAPH (both basic and compound)."))
@@ -1402,23 +1415,24 @@ A* search used in `shortest-path'.")
 Fraction of node pairs (s,t) s.t. s and t ≠ NODE and the shortest path
 between s and t in GRAPH passes through NODE.")
   (:method ((graph graph) node &optional (heuristic nil heuristic-p))
-    (flet ((all-pairs (lst)
-             (case (type-of graph)
-               (graph
-                (mapcan (lambda (n) (mapcar {list n} (cdr (member n lst)))) lst))
-               (digraph
-                (mapcan (lambda (n) (mapcar {list n} (remove n lst))) lst)))))
-      (let ((num 0) (denom 0))
-        (mapc (lambda-bind ((a b))
-                (when (member node
-                              (apply #'append
-                                     (if heuristic-p
-                                         (shortest-path graph a b heuristic)
-                                         (shortest-path graph a b))))
-                  (incf num))
-                (incf denom))
-              (all-pairs (remove node (nodes graph))))
-        (/ num denom)))))
+    (let ((num 0) (denom 0))
+      (mapc (lambda-bind ((a b))
+              (when (member node
+                            (apply #'append
+                                   (if heuristic-p
+                                       (shortest-path graph a b heuristic)
+                                       (shortest-path graph a b))))
+                (incf num))
+              (incf denom))
+            (betweenness-all-pairs graph (remove node (nodes graph))))
+      (/ num denom))))
+
+(defgeneric betweenness-all-pairs (graph lst)
+  (:method  ((graph graph) lst)
+    (mapcan (lambda (n) (mapcar {list n} (cdr (member n lst)))) lst))
+  (:method  ((graph digraph) lst)
+    (mapcan (lambda (n) (mapcar {list n} (remove n lst))) lst)))
+
 
 (defgeneric katz-centrality (graph node &key attenuation)
   (:documentation
