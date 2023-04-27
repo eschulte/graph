@@ -1,7 +1,7 @@
 (defsystem :graph
   :description "simple library for building and manipulating graphs"
-  :version "0.0.0"
-  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye")
+  :version "0.1.0"
+  :author ("Eric Schulte <schulte.eric@gmail.com>" "Thomas Dye" "Robert P. Goldman")
   :licence "MIT"
   :class :package-inferred-system
   :defsystem-depends-on (:asdf-package-system)
