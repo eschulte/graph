@@ -1275,7 +1275,7 @@ through to guide the A* search used in `shortest-path'.")
                 (rest (remove (car a) (nodes g))))
            (loop :while rest :do
               ;; grow A by adding the node most tightly connected to A
-              (let ((new (car (sort rest #'> :key {connection-weight a}))))
+              (let ((new (extremum rest #'> :key {connection-weight a})))
                 (setf rest (remove new rest))
                 (push new a)))
            ;; store the cut-of-phase
