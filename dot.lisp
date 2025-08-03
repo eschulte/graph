@@ -37,7 +37,7 @@
 ;;
 ;;     (setf *graph* (populate (make-instance 'digraph)
 ;;                     :edges '((A T2) (T1 B) (T2 B) (T2 C) (T1 D))))
-;;     
+;;
 ;;     (let ((s1 (make-subgraph :attributes '(("color" . "lightgrey")
 ;;                                            ("label" . "One" ))
 ;;                              :node-list (first
@@ -64,7 +64,7 @@
         :curry-compose-reader-macros
         :graph
         :cl-ppcre)
-  (:export :to-dot :to-dot-file :from-dot :make-subgraph))
+  (:export :to-dot :to-dot-file :from-dot :make-subgraph :make-rank))
 (in-package :graph/dot)
 (in-readtable :curry-compose-reader-macros)
 
