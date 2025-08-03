@@ -41,13 +41,6 @@
    :strong-component-of
    :to-distance-matrix
    :distance-from-to
-   :reflexivep
-   :irreflexivep
-   :symmetricp
-   :asymmetricp
-   :transitivep
-   :intransitivep
-   :completep
    :relational-structure
    :infinite
    :infinitep))
